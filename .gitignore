@@ -1,41 +1,29 @@
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+# Datos (nunca en git — usar make data para reproducir)
+data/raw/
+data/processed/
 
-# dependencies
-node_modules/
+# MLflow — los runs viven aquí localmente, no en git
+mlruns/
+mlartifacts/
 
-# Expo
-.expo/
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
 dist/
-web-build/
-expo-env.d.ts
+build/
+.env
 
-# Native
-.kotlin/
-*.orig.*
-*.jks
-*.p8
-*.p12
-*.key
-*.mobileprovision
+# Entorno virtual
+venv/
+.venv/
 
-# Metro
-.metro-health-check*
+# Jupyter
+.ipynb_checkpoints/
 
-# debug
-npm-debug.*
-yarn-debug.*
-yarn-error.*
-
-# macOS
+# OS
 .DS_Store
-*.pem
+Thumbs.db
 
-# local env files
-.env*.local
-
-# typescript
-*.tsbuildinfo
-
-# generated native folders
-/ios
-/android
+# Reports generados (sí se commitean manualmente)
+# reports/*.png → excepción: sí queremos comparar visualmente

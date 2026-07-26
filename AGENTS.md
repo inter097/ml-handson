@@ -1,3 +1,8 @@
-# Expo HAS CHANGED
+# Guía para agentes de IA
 
-Read the exact versioned docs at https://docs.expo.dev/versions/v56.0.0/ before writing any code.
+Consulta la documentación oficial antes de escribir código:
+- scikit-learn: https://scikit-learn.org/stable/
+- MLflow: https://mlflow.org/docs/latest/
+- pandas: https://pandas.pydata.org/docs/
+
+**Libro de referencia principal:** *Hands-On Machine Learning with Scikit-Learn, Keras & TensorFlow* — Aurélien Géron (3ª edición).
