@@ -48,16 +48,18 @@ source venv/bin/activate   # Mac/Linux
 ## Pipeline completo
 
 ```bash
-make all          # descarga datos → procesa features → entrena 3 modelos
+make all          # descarga datos → procesa features → entrena 3 modelos (baseline)
 make ui           # abre http://localhost:5000 para comparar runs
 ```
 
 O paso a paso:
 
 ```bash
-make data         # Descarga California Housing → data/raw/housing.parquet
-make features     # Limpieza + feature engineering → data/processed/
-make train-all    # Entrena los 3 modelos y loggea en MLflow
+make data           # Descarga California Housing → data/raw/housing.parquet
+make features       # Limpieza + feature engineering → data/processed/
+make train-all      # Baseline: 3 modelos con params fijos
+make tune-all       # Tuning: busca mejores hiperparámetros (RandomizedSearchCV)
+make ui             # Compara todos los runs en la UI
 ```
 
 ---
@@ -90,7 +92,7 @@ El dataset tiene 20,640 filas y 9 columnas (8 features + target `MedHouseVal`).
 - **Split train/test**: 80/20 estratificado, semilla fija para reproducibilidad
 - **Escalado**: `StandardScaler` ajustado **solo en train** para evitar data leakage
 
-### Fase 3 — Entrenamiento (`src/train.py`)
+### Fase 3a — Entrenamiento baseline (`src/train.py`)
 *Géron §2: "Select and Train a Model"*
 
 Cada ejecución crea un run en MLflow con:
@@ -99,6 +101,34 @@ Cada ejecución crea un run en MLflow con:
 - artefacto del modelo serializado (descargable desde la UI)
 
 Modelos disponibles: `linear_regression`, `random_forest`, `gradient_boosting`
+
+Los parámetros son defaults razonables — **no son los mejores**. Son el baseline para saber desde dónde mejoramos.
+
+### Fase 3b — Búsqueda de hiperparámetros (`src/tune.py`)
+*Géron §2: "Fine-Tune Your Model"*
+
+**Por qué los parámetros fijos no son suficientes:**
+`n_estimators=100` es arbitrario. El modelo puede mejorar cambiando `max_depth`, `learning_rate`, `min_samples_leaf`, etc. Probar todas las combinaciones posibles (GridSearchCV) sería lentísimo. La solución: **RandomizedSearchCV** samplea `n_iter` combinaciones aleatorias del espacio — estadísticamente tan efectivo como buscar todo, pero mucho más rápido.
+
+**Cómo mejora el modelo:**
+```
+Espacio de búsqueda (random_forest):
+  n_estimators:    [50, 100, 200, 300]
+  max_features:    ["sqrt", "log2", 0.5, 0.8]
+  max_depth:       [None, 10, 20, 30]
+  min_samples_split: [2, 5, 10]
+  min_samples_leaf:  [1, 2, 4]
+  → 4×4×4×3×3 = 576 combinaciones posibles
+  → con n_iter=20 se prueban 20 aleatorias con CV=5
+```
+
+```bash
+make tune-random_forest            # 20 combinaciones (rápido, ~2 min)
+make tune-random_forest N_ITER=50  # más exhaustivo
+make tune-all                      # random_forest + gradient_boosting
+```
+
+Cada combinación probada aparece como un run en MLflow. Compara el `cv_rmse` (estimado real de generalización via cross-validation) vs el RMSE del baseline.
 
 ### Fase 4 — Evaluación final (`src/evaluate.py`)
 *Géron §2: "Evaluate Your System on the Test Set"*

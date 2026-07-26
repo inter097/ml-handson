@@ -1,4 +1,4 @@
-.PHONY: all setup data features train-all ui clean help
+.PHONY: all setup data features train-all tune-all ui clean help
 
 PYTHON = venv/bin/python
 PIP    = venv/bin/pip
@@ -31,6 +31,17 @@ train-all:
 	$(PYTHON) src/train.py --model random_forest
 	$(PYTHON) src/train.py --model gradient_boosting
 
+# ── Búsqueda de hiperparámetros (RandomizedSearchCV) ────────────────────────
+# make tune-random_forest | make tune-gradient_boosting
+# N_ITER=50 para buscar más combinaciones (default: 20)
+
+tune-%:
+	$(PYTHON) src/tune.py --model $* --n-iter $(or $(N_ITER),20)
+
+tune-all:
+	$(PYTHON) src/tune.py --model random_forest --n-iter $(or $(N_ITER),20)
+	$(PYTHON) src/tune.py --model gradient_boosting --n-iter $(or $(N_ITER),20)
+
 # ── Evaluación del mejor modelo ──────────────────────────────────────────────
 # Uso: make evaluate RUN_ID=<id copiado del mlflow ui>
 
@@ -54,7 +65,10 @@ help:
 	@echo "  make data           Descargar dataset"
 	@echo "  make features       Procesar features"
 	@echo "  make train-MODEL    Entrenar un modelo (linear_regression, random_forest, gradient_boosting)"
-	@echo "  make train-all      Entrenar todos los modelos"
+	@echo "  make train-all      Entrenar todos los modelos (params fijos, baseline)"
+	@echo "  make tune-MODEL     Buscar mejores hiperparámetros (random_forest, gradient_boosting)"
+	@echo "  make tune-all       Tuning de todos los modelos"
+	@echo "  make tune-MODEL N_ITER=50  Más iteraciones de búsqueda"
 	@echo "  make ui             Abrir MLflow UI en http://localhost:5000"
 	@echo "  make evaluate RUN_ID=<id>  Evaluar el mejor run y guardar reporte"
 	@echo "  make clean          Borrar datos y runs locales"
