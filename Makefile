@@ -1,4 +1,4 @@
-.PHONY: all setup data features train-all tune-all analysis evaluate predict site site-serve ui clean help
+.PHONY: all setup data features train-all tune-all analysis evaluate predict site site-serve svr-study ui clean help
 
 PYTHON = venv/bin/python
 PIP    = venv/bin/pip
@@ -52,10 +52,11 @@ tune-all:
 	$(PYTHON) src/tune.py --model gradient_boosting --n-iter $(or $(N_ITER),20)
 	$(PYTHON) src/tune.py --model xgboost --n-iter $(or $(N_ITER),30)
 	$(PYTHON) src/tune.py --model mlp --n-iter $(or $(N_ITER),15)
-# svr queda fuera a propósito: SVR con kernel RBF escala O(n²) y sobre 16,512
-# filas una búsqueda de 15 combinaciones × 5 folds tarda >20 min sin llegar a
-# competir (baseline 0.54 vs 0.44 de xgboost). Corre `make tune-svr` si lo
-# quieres, idealmente sobre una submuestra como sugiere Géron.
+# svr queda fuera a propósito, pero no por el tamaño del dataset: medido con
+# `make svr-study`, SVR escala ~n^1.3 y un ajuste completo toma segundos. Lo que
+# hace lenta la búsqueda es C=100 con kernel poly o linear — hasta 121× más
+# lento que rbf con C=1. Y aun tuneado se queda en 0.53 contra 0.43 de xgboost.
+# Corre `make tune-svr` si lo quieres.
 
 # ── Análisis: importancia de features + curvas de aprendizaje ────────────────
 
@@ -114,3 +115,9 @@ help:
 	@echo "  make site-serve            Servir site/ en http://localhost:8000"
 	@echo "  make clean          Borrar datos y runs locales"
 	@echo ""
+
+# ── Estudio de SVR (Géron cap. 2, ejercicio 1) ───────────────────────────────
+# Mide el escalado O(n^p) y tunea sobre submuestra. QUICK=1 para versión corta.
+
+svr-study:
+	$(PYTHON) src/svr_study.py $(if $(QUICK),--quick,)

@@ -206,9 +206,9 @@ padre para ver las N combinaciones y entender qué hiperparámetro movió la agu
 Compara el `cv_rmse` (estimado real de generalización via cross-validation) vs el
 RMSE del baseline.
 
-**Nota sobre `svr`:** quedó fuera de `make tune-all`. SVR con kernel RBF escala O(n²)
-y sobre 16,512 filas una búsqueda tarda >20 min sin acercarse a xgboost. Sigue
-disponible con `make tune-svr`, idealmente sobre una submuestra como sugiere Géron.
+**Nota sobre `svr`:** quedó fuera de `make tune-all`, pero **no por el tamaño del
+dataset** — esa era la explicación intuitiva y resultó falsa al medirla. Ver
+[Estudio de SVR](#estudio-de-svr-src-svr_studypy). Sigue disponible con `make tune-svr`.
 
 #### El preprocesamiento también se tunea
 
@@ -257,6 +257,95 @@ exactamente donde se rompen los despliegues reales (*training/serving skew*): el
 que cambias el imputador en el entrenamiento y se te olvida cambiarlo en producción.
 
 Esa garantía es el pago del refactor del Pipeline.
+
+---
+
+## Ejercicios del capítulo
+
+### Estudio de SVR (`src/svr_study.py`)
+*Ejercicio 1 — "try a Support Vector Machine regressor with various hyperparameters"*
+
+```bash
+make svr-study          # completo
+make svr-study QUICK=1  # versión corta
+```
+
+Una búsqueda de SVR sobre las 16,512 filas tardaba más de 20 minutos, y la
+explicación que parecía obvia era *"SVR escala O(n²)"*. **Medido, resultó falso.**
+
+| n | segundos |
+|---|---|
+| 500 | 0.07 |
+| 1,000 | 0.09 |
+| 2,000 | 0.34 |
+| 4,000 | 0.84 |
+| 8,000 | 2.38 |
+
+El exponente ajustado es **n^1.33**, no n². Extrapolado al train completo da ~6
+segundos por ajuste. El tamaño no era el problema.
+
+El costo real lo domina **`C`**, medido a n fijo de 4,000:
+
+| kernel | C=1 | C=10 | C=100 |
+|---|---|---|---|
+| rbf | 0.4 s | 0.8 s | 5.8 s |
+| linear | 1.2 s | 5.2 s | **39.9 s** |
+| poly | 1.2 s | 5.5 s | **60.5 s** |
+
+`poly` con `C=100` es **135× más lento** que `rbf` con `C=1`. Un `C` alto reduce la
+tolerancia al error, lo que multiplica los vectores de soporte y las iteraciones de
+libsvm. El espacio de búsqueda original incluía justo esas combinaciones.
+
+Tuneado sobre 8,000 filas, el mejor SVR (`rbf`, `C=10`) llega a **0.5307** de RMSE
+contra 0.4291 de XGBoost. No compite — pero ahora se sabe por qué, y no por una
+razón inventada.
+
+### `KNNGeoFeature` — k-NN sobre coordenadas
+*Ejercicio 4*
+
+Un `KNeighborsRegressor` sobre lat/long responde *"¿cuánto cuestan las casas
+vecinas?"*, y esa respuesta entra al modelo como columna.
+
+**El detalle que lo hace no trivial:** si el k-NN se entrena y predice sobre las
+mismas filas, cada casa se ve a sí misma entre sus vecinos y la feature filtra el
+target. Con `cross_val_predict` cada fila recibe la predicción de un k-NN que no la
+vio. La diferencia es medible — correlación con el target:
+
+| | correlación |
+|---|---|
+| Fuera de fold (correcto) | 0.845 |
+| Dentro de fold (con fuga) | **0.993** |
+
+Ese 0.993 se vería precioso en entrenamiento y se desplomaría en producción.
+
+### `SelectFromModel` — selección de features
+*Ejercicio 3*
+
+Paso opcional (`select_features=True`) que descarta las columnas por debajo del
+umbral de importancia según un RandomForest.
+
+### `StandardScalerClone`
+*Ejercicio 6*
+
+`StandardScaler` reimplementado desde cero. No aporta nada al modelo —el de sklearn
+hace lo mismo y mejor— pero obliga a entender el contrato: `BaseEstimator` da
+`get_params`/`set_params` (y con eso funciona la búsqueda de hiperparámetros),
+`TransformerMixin` da `fit_transform`, los atributos aprendidos llevan guion bajo
+final. Verificado idéntico a sklearn, incluida la columna constante.
+
+### Ablación de los dos aportes al modelo
+
+Mismo split, única diferencia el transformer:
+
+| Modelo | base | +k-NN geo | +selección | columnas |
+|---|---|---|---|---|
+| random_forest | 0.4630 | **0.4484** | 0.4699 | 26 → 13 |
+| xgboost | 0.4575 | **0.4454** | 0.4611 | 26 → 13 |
+
+El k-NN geográfico es la segunda feature que más rinde del proyecto, tras
+`ClusterSimilarity`. La selección de features **empeora** el error: descarta la mitad
+de las columnas a cambio de precisión. Sigue disponible por si el tamaño del modelo
+importa más que el último decimal.
 
 ---
 
@@ -365,10 +454,16 @@ se extendió a 60.
 | Evaluate on the Test Set | ✅ con intervalo de confianza |
 | Launch, Monitor, Maintain | ⚠️ `predict.py` cubre inferencia; falta monitoreo |
 
-**Ejercicios del capítulo pendientes:**
-- Tunear SVR sobre una submuestra (aquí quedó fuera por costo)
-- Un transformer que seleccione las features más importantes
-- Reemplazar `RandomizedSearchCV` por búsqueda bayesiana
+**Ejercicios del final del capítulo — los 6:**
+
+| # | Ejercicio | Estado |
+|---|---|---|
+| 1 | SVR con distintos kernels y valores de `C` | ✅ `src/svr_study.py` |
+| 2 | Reemplazar `GridSearchCV` por `RandomizedSearchCV` | ✅ `src/tune.py` |
+| 3 | Transformer que seleccione las features más importantes | ✅ `SelectFromModel`, opcional |
+| 4 | Transformer con k-NN sobre lat/long como feature | ✅ `KNNGeoFeature` |
+| 5 | Explorar opciones de preparación con la búsqueda | ✅ `PREP_PARAMS` en `tune.py` |
+| 6 | Reimplementar `StandardScaler` desde cero | ✅ `StandardScalerClone` |
 
 ---
 
