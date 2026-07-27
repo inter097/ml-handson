@@ -1,0 +1,155 @@
+---
+import Base from "../layouts/Base.astro";
+
+// Un capítulo por entrada. `href` vacío = todavía no tiene página propia y la
+// tarjeta lleva al repositorio, que es más honesto que inventar una página.
+const capitulos = [
+  {
+    n: 2,
+    titulo: "Proyecto de punta a punta",
+    dataset: "California Housing · regresión",
+    href: "/ch02",
+    estado: "completo",
+    hallazgo:
+      "Los tres mejores modelos resultaron estadísticamente indistinguibles. Decir cuál ganó era sobreinterpretar.",
+    cifras: [
+      ["Error", "USD 42,910"],
+      ["R²", "0.863"],
+      ["Modelos", "9"],
+    ],
+  },
+  {
+    n: 3,
+    titulo: "Clasificación",
+    dataset: "MNIST · dígitos escritos a mano",
+    href: "/ch03",
+    estado: "completo",
+    hallazgo:
+      "Un modelo que no miró un solo píxel acertó el 91% de las veces. La exactitud casi nunca es la métrica.",
+    cifras: [
+      ["Exactitud", "0.976"],
+      ["Imágenes", "70,000"],
+      ["Ejercicios", "4 de 4"],
+    ],
+  },
+  {
+    n: 4,
+    titulo: "Entrenar modelos",
+    dataset: "Qué ocurre dentro del ajuste",
+    href: "",
+    estado: "pendiente",
+    hallazgo: "Descenso de gradiente, regresión polinómica y regularización.",
+    cifras: [],
+  },
+];
+---
+
+<Base
+  title="Aprendiendo machine learning — un capítulo por proyecto"
+  description="Trabajando Hands-On Machine Learning de Aurélien Géron: un proyecto completo por capítulo, con lo que salió al revés de lo esperado."
+  back={false}
+>
+  <header class="wrap hero">
+    <span class="eyebrow">Cuaderno de trabajo</span>
+    <h1>Aprendiendo machine learning<br />sin saltarme las partes incómodas</h1>
+    <p class="lede">
+      Trabajando <em>Hands-On Machine Learning</em> de Aurélien Géron, un proyecto
+      completo por capítulo. Lo que documento no es que los modelos funcionen —
+      es <strong>qué resultó al revés de lo esperado</strong> y cómo se comprobó.
+    </p>
+    <div class="byline">
+      <span>scikit-learn · XGBoost · MLflow</span>
+      <span><a href="https://github.com/inter097/ml-handson">Código en GitHub</a></span>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <svg class="interval-rule" viewBox="0 0 100 13" preserveAspectRatio="none" aria-hidden="true">
+      <line class="band" x1="18" y1="6.5" x2="82" y2="6.5"></line>
+      <line class="cap" x1="18" y1="2.5" x2="18" y2="10.5"></line>
+      <line class="cap" x1="82" y1="2.5" x2="82" y2="10.5"></line>
+      <circle class="pt" cx="44" cy="6.5" r="3"></circle>
+    </svg>
+  </div>
+
+  <section class="wide">
+    <div class="cards">
+      {capitulos.map((c) => {
+        const Tag = c.href ? "a" : "div";
+        const props = c.href ? { href: c.href } : {};
+        return (
+          <Tag class="card" data-estado={c.estado} {...props}>
+            <div class="card-head">
+              <span class="num">Capítulo {c.n}</span>
+              {c.estado === "pendiente" && <span class="pill">Pendiente</span>}
+            </div>
+            <h2>{c.titulo}</h2>
+            <p class="dataset">{c.dataset}</p>
+            <p class="hallazgo">{c.hallazgo}</p>
+            {c.cifras.length > 0 && (
+              <dl class="cifras">
+                {c.cifras.map(([k, v]) => (
+                  <div><dt>{k}</dt><dd>{v}</dd></div>
+                ))}
+              </dl>
+            )}
+            <span class="ir">
+              {c.href ? "Ver el caso de estudio →" : "Aún sin página"}
+            </span>
+          </Tag>
+        );
+      })}
+    </div>
+  </section>
+
+  <section class="wrap stack">
+    <span class="eyebrow">Cómo trabajo esto</span>
+    <h2>Toda afirmación va medida</h2>
+    <p>
+      La regla del repositorio es simple: si algo se afirma, se mide. Ha costado
+      corregir varias cosas que parecían obvias — que una variable importante mejoraría
+      el modelo, que cierto algoritmo era lento por el tamaño de los datos, que
+      la métrica más alta señalaba al mejor modelo. Ninguna resistió la medición.
+    </p>
+    <p class="note">
+      Los errores también quedan documentados, incluido uno que agotó la memoria de
+      una máquina de 16 GB. Un cuaderno donde todo sale bien a la primera no enseña
+      nada a quien lo lee.
+    </p>
+  </section>
+
+  <style>
+    .hero { padding-top: clamp(3.5rem, 9vw, 6.5rem); display: flex; flex-direction: column; gap: 1.4rem; }
+    .hero .lede { font-size: 1.18rem; color: var(--ink-2); max-width: 58ch; }
+    .byline { font-family: var(--mono); font-size: .78rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: .35rem 1.1rem; }
+
+    .cards { display: grid; gap: 1.1rem; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+
+    .card {
+      display: flex; flex-direction: column; gap: .7rem;
+      background: var(--surface); border: 1px solid var(--hairline);
+      border-radius: 10px; padding: 1.5rem 1.5rem 1.35rem;
+      box-shadow: var(--shadow); text-decoration: none; color: inherit;
+      transition: border-color .15s, transform .15s;
+    }
+    a.card:hover { border-color: var(--rule); transform: translateY(-2px); }
+    .card[data-estado="pendiente"] { opacity: .62; box-shadow: none; }
+
+    .card-head { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+    .num { font-family: var(--mono); font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+    .pill {
+      font-family: var(--mono); font-size: .62rem; letter-spacing: .08em; text-transform: uppercase;
+      border: 1px solid var(--hairline); border-radius: 999px; padding: .12rem .5rem; color: var(--muted);
+    }
+    .card h2 { font-size: 1.32rem; }
+    .dataset { font-family: var(--mono); font-size: .74rem; color: var(--muted); }
+    .hallazgo { font-size: .95rem; color: var(--ink-2); }
+
+    .cifras { display: flex; flex-wrap: wrap; gap: .3rem 1.4rem; margin: .3rem 0 0; }
+    .cifras dt { font-family: var(--mono); font-size: .62rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+    .cifras dd { margin: 0; font-size: 1.05rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+    .ir { margin-top: auto; padding-top: .5rem; font-family: var(--mono); font-size: .73rem; color: var(--accent-ink); }
+    .card[data-estado="pendiente"] .ir { color: var(--muted); }
+  </style>
+</Base>

@@ -1,0 +1,352 @@
+---
+import Base from "../layouts/Base.astro";
+---
+
+<Base
+  title="California Housing — Caso de estudio de ML"
+  description="Pipeline de machine learning sobre California Housing: qué mejoró el modelo, qué no, y qué no se puede afirmar."
+>
+  <header class="wrap hero">
+    <span class="eyebrow">Capítulo 2 · Proyecto de punta a punta</span>
+    <h1>Lo que el modelo aprendió,<br />y lo que no se puede afirmar</h1>
+    <p class="lede">
+      Un pipeline completo sobre <strong>California Housing</strong> — 20,640 viviendas,
+      nueve modelos, 180 experimentos registrados. El resultado interesante no fue el
+      error más bajo, sino descubrir cuáles de las mejoras eran reales y cuáles solo lo
+      parecían.
+    </p>
+
+    <div class="stat-row">
+      <div class="stat"><span class="k">Modelo desplegado</span><span class="v">XGBoost</span><span class="n">300 árboles · 2.4 MB</span></div>
+      <div class="stat"><span class="k">RMSE en test</span><span class="v">0.429</span><span class="n">± USD 42,910</span></div>
+      <div class="stat"><span class="k">R²</span><span class="v">0.863</span><span class="n">4,128 casas</span></div>
+      <div class="stat"><span class="k">Latencia</span><span class="v">2.3 ms</span><span class="n">por predicción</span></div>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <svg class="interval-rule" viewBox="0 0 100 13" preserveAspectRatio="none" aria-hidden="true">
+      <line class="band" x1="18" y1="6.5" x2="82" y2="6.5"></line>
+      <line class="cap" x1="18" y1="2.5" x2="18" y2="10.5"></line>
+      <line class="cap" x1="82" y1="2.5" x2="82" y2="10.5"></line>
+      <circle class="pt" cx="44" cy="6.5" r="3"></circle>
+    </svg>
+  </div>
+
+  <section class="wrap stack">
+    <span class="eyebrow">El encargo</span>
+    <h2>Predecir el precio medio de una vivienda por distrito</h2>
+    <p>
+      El dataset trae ocho variables por distrito censal de California — ingreso medio,
+      antigüedad, habitaciones, población, coordenadas — y el precio medio de la
+      vivienda. Es el problema con el que arranca el libro, y su virtud es que todas las
+      trampas del oficio caben en él.
+    </p>
+    <p>
+      El capítulo no enseña trucos, enseña un orden de trabajo. Ocho pasos que se siguen
+      siempre, en un problema de casas o en cualquier otro.
+    </p>
+  </section>
+
+  <section class="wide stack">
+    <figure>
+      <div class="fig-head"><span class="fig-title">Los ocho pasos, y qué fue cada uno aquí</span></div>
+      <div class="fig-body">
+        <table class="prose">
+          <thead><tr><th>Paso</th><th>Qué significó en este proyecto</th></tr></thead>
+          <tbody>
+            <tr><td>Enmarcar el problema</td><td>Regresión supervisada. La métrica es el error en dólares, no la exactitud.</td></tr>
+            <tr><td>Obtener los datos</td><td>20,640 distritos del censo. Apartar el 20% <em>antes</em> de mirarlos.</td></tr>
+            <tr><td>Explorar</td><td>Mapas y correlaciones. El ingreso medio manda; la geografía pesa.</td></tr>
+            <tr><td>Preparar</td><td>Rellenar huecos, escalar, codificar categorías — todo dentro del pipeline.</td></tr>
+            <tr><td>Entrenar</td><td>Nueve modelos con parámetros por defecto, para saber desde dónde se parte.</td></tr>
+            <tr><td>Afinar</td><td>Búsqueda aleatoria sobre modelo y preparación. 137 combinaciones.</td></tr>
+            <tr><td>Presentar</td><td>Esta página.</td></tr>
+            <tr><td>Desplegar</td><td>El modelo elegido recibe datos crudos y responde en 2.3 ms.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption>
+        El paso que más se salta en la práctica es el segundo: apartar el conjunto de
+        prueba antes de explorar. Mirar los datos completos y después decidir cómo
+        partirlos contamina la evaluación sin que se note.
+      </figcaption>
+    </figure>
+  </section>
+
+  <section class="wrap stack">
+    <p>
+      Seguir ese orden es la mitad del capítulo. La otra mitad es lo que se aprende al
+      hacerlo — y ahí lo interesante fueron las veces que el resultado contradijo lo que
+      parecía obvio.
+    </p>
+  </section>
+
+  <!-- ══ MAPA ══════════════════════════════════════════════════════════ -->
+  <section class="wide stack">
+    <span class="eyebrow">Explorador</span>
+    <h2>Dónde se equivoca el modelo</h2>
+    <p style="max-width:var(--measure)">
+      Cada punto es uno de los 4,128 distritos del conjunto de prueba — casas que el
+      modelo nunca vio al entrenar. El color indica si <strong>subestimó</strong> o
+      <strong>sobreestimó</strong> el precio. Filtra y las métricas de abajo se
+      recalculan sobre el subconjunto.
+    </p>
+
+    <figure>
+      <div class="filters">
+        <div class="fgroup">
+          <span class="eyebrow">Proximidad al océano</span>
+          <div class="chips" id="fOcean"></div>
+        </div>
+        <div class="fgroup">
+          <span class="eyebrow">Categoría de ingreso</span>
+          <div class="chips" id="fInc"></div>
+        </div>
+        <div class="fgroup">
+          <span class="eyebrow">Colorear por</span>
+          <div class="chips" id="fModo"></div>
+        </div>
+      </div>
+
+      <div class="map-shell">
+        <canvas id="map" width="1000" height="820" role="img"
+          aria-label="Mapa de California con 4,128 distritos coloreados por error de predicción"></canvas>
+        <div class="tip" id="tip" role="status"></div>
+      </div>
+
+      <div class="map-live" id="live"></div>
+
+      <div class="fig-body legend-row">
+        <div class="legend" id="legend"></div>
+        <button class="toggle" id="tblMapBtn" aria-pressed="false" aria-controls="tblMap">Ver tabla</button>
+      </div>
+      <div class="fig-body scroll-x" id="tblMap" hidden style="padding-top:0"></div>
+
+      <figcaption>
+        Predicciones reales del modelo XGBoost sobre el conjunto de prueba, calculadas
+        una sola vez y servidas como JSON. Los filtros y las métricas se computan en tu
+        navegador — no hay servidor detrás.
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- ══ HALLAZGOS ═════════════════════════════════════════════════════ -->
+  <section class="wrap">
+    <div class="stack" style="margin-bottom:.6rem">
+      <span class="eyebrow">Hallazgos</span>
+      <h2>Tres cosas que resultaron al revés de lo esperado</h2>
+    </div>
+
+    <div class="finding">
+      <div class="finding-head">
+        <h3>La variable “más importante” no mejoraba nada</h3>
+        <span class="evidence" data-tone="none">+0.004 RMSE en XGBoost</span>
+      </div>
+      <p>
+        El dataset incluye una variable categórica que dice si el distrito está tierra
+        adentro, cerca de la bahía o frente al mar. Al añadirla, XGBoost la reportó como
+        su variable <strong>número uno</strong> por importancia — 0.61 contra 0.14 del
+        ingreso medio, que era el favorito hasta entonces. Parecía la mejora grande del
+        proyecto.
+      </p>
+      <p>
+        Midiendo con una ablación — mismo conjunto, misma semilla, única diferencia la
+        columna — resultó que mejora seis de siete modelos por márgenes mínimos, y que a
+        XGBoost <strong>lo empeora</strong>.
+      </p>
+      <p class="note">
+        La explicación: latitud y longitud ya estaban ahí. “Cerca del mar” era deducible
+        de las coordenadas, solo que costaba varios cortes. Al recibirlo servido, el
+        modelo lo usa de inmediato y reordena su ranking de importancia — pero la
+        información no era nueva. <strong>Importancia alta no significa mejora
+        predictiva</strong> cuando hay redundancia.
+      </p>
+    </div>
+
+    <div class="finding">
+      <div class="finding-head">
+        <h3>Lo que sí funcionó fue darle la geografía masticada</h3>
+        <span class="evidence" data-tone="gain">−0.036 RMSE</span>
+      </div>
+      <p>
+        Un árbol solo puede partir el espacio con cortes rectangulares sobre latitud y
+        longitud, así que aproximar “cerca de San Francisco” le cuesta muchos cortes y
+        nunca queda fino. La solución del libro es un transformador propio: agrupar las
+        coordenadas con <strong>K-means</strong> y reemplazar cada casa por su
+        <strong>similitud a cada centro</strong>.
+      </p>
+      <p>
+        Fue el cambio que más rindió de todo el proyecto — más que cualquier ajuste de
+        hiperparámetros. Y reordenó por completo la tabla: los métodos que promedian
+        árboles independientes, que eran los más penalizados por tener que aproximar la
+        geografía a mano, pasaron a ganarle a los de boosting.
+      </p>
+    </div>
+
+    <div class="finding">
+      <div class="finding-head">
+        <h3>Una variable que se veía excelente estaba haciendo trampa</h3>
+        <span class="evidence" data-tone="none">correlación 0.85 → 0.99</span>
+      </div>
+      <p>
+        Siguiendo la misma idea, se añadió otra variable geográfica: un
+        <strong>k-vecinos</strong> sobre las coordenadas que responde <em>“¿cuánto
+        cuestan las casas de al lado?”</em>. Su respuesta entra al modelo como una
+        columna más.
+      </p>
+      <p>
+        En la primera versión su correlación con el precio era de <strong>0.993</strong>.
+        Una variable casi perfecta — y ahí estaba el problema: <strong>era demasiado
+        buena</strong>.
+      </p>
+      <p class="note">
+        El k-vecinos se había entrenado con las mismas casas sobre las que después
+        predecía, así que <strong>cada casa aparecía entre sus propios vecinos</strong>.
+        Estaba copiando la respuesta. Calculando la predicción de cada fila con un modelo
+        que nunca la vio, la correlación cae a <strong>0.845</strong> — ese es su valor
+        real.
+      </p>
+      <p>
+        Aun corregida, sigue siendo la segunda variable más útil del proyecto. Pero sin
+        ese ajuste habría lucido espléndida durante el entrenamiento y se habría
+        derrumbado en producción.
+      </p>
+    </div>
+  </section>
+
+  <section class="wide stack">
+    <figure>
+      <div class="fig-head">
+        <span class="fig-title">Cuánto aportó cada decisión</span>
+        <button class="toggle" id="tblAportesBtn" aria-pressed="false" aria-controls="tblAportes">Ver tabla</button>
+      </div>
+      <div class="fig-body">
+        <svg class="chart" id="aportes" viewBox="0 0 720 352" role="img"
+          aria-label="Cambio en RMSE por decisión de modelado; valores negativos mejoran"></svg>
+      </div>
+      <div class="fig-body scroll-x" id="tblAportes" hidden style="padding-top:0"></div>
+      <figcaption>
+        Cambio en RMSE al añadir cada elemento, medido con ablación sobre el mismo
+        conjunto. Hacia la izquierda es mejor. La selección de variables aparece del lado
+        malo: descarta la mitad de las columnas y cuesta precisión. La partición
+        estratificada no aparece porque no mueve el error — hace que el número sea
+        confiable, que es otra cosa.
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- ══ INTERVALOS ════════════════════════════════════════════════════ -->
+  <section class="wrap stack">
+    <span class="eyebrow">El hallazgo incómodo</span>
+    <h2>Tres modelos empatados, aunque la tabla diga otra cosa</h2>
+    <p>
+      Con todo afinado, <code>extra_trees</code> quedó primero con 0.4063 de RMSE y
+      XGBoost tercero con 0.4291. Ordenar por esa columna y declarar un ganador es el
+      reflejo natural. Es también un error.
+    </p>
+    <p>
+      El RMSE sale de una muestra concreta de 4,128 casas. Con otras 4,128 habría dado
+      distinto. El intervalo de confianza acota cuánto puede moverse — y cuando dos
+      intervalos se traslapan, <strong>la diferencia cabe dentro del ruido del
+      muestreo</strong>.
+    </p>
+  </section>
+
+  <section class="wide stack">
+    <figure>
+      <div class="fig-head">
+        <span class="fig-title">RMSE con intervalo de confianza al 95%</span>
+        <button class="toggle" id="tblCiBtn" aria-pressed="false" aria-controls="tblCi">Ver tabla</button>
+      </div>
+      <div class="fig-body">
+        <svg class="chart" id="ci" viewBox="0 0 720 236" role="img"
+          aria-label="RMSE de cuatro modelos con sus intervalos de confianza al 95 por ciento"></svg>
+      </div>
+      <div class="fig-body scroll-x" id="tblCi" hidden style="padding-top:0"></div>
+      <figcaption>
+        Calculado con la distribución t sobre los errores cuadrados del conjunto de
+        prueba. Los tres primeros se solapan entre sí: no hay evidencia para ordenarlos.
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- ══ PRACTICIDAD ═══════════════════════════════════════════════════ -->
+  <section class="wrap stack">
+    <span class="eyebrow">La decisión</span>
+    <h2>Entonces gana el que se puede desplegar</h2>
+    <p>
+      Si la precisión no distingue a los tres primeros, el desempate lo pone lo que sí se
+      puede medir sin ambigüedad. Y ahí la diferencia no es sutil.
+    </p>
+  </section>
+
+  <section class="wide stack">
+    <figure>
+      <div class="fig-head"><span class="fig-title">Costo de servir cada modelo</span></div>
+      <div class="fig-body scroll-x" id="tblCosto"></div>
+      <figcaption>
+        Medido cargando cada artefacto y cronometrando 20 predicciones individuales.
+        <code>extra_trees</code> crece 300 árboles sin límite de profundidad; XGBoost los
+        poda a 7 niveles.
+      </figcaption>
+    </figure>
+  </section>
+
+  <section class="wrap stack">
+    <p>
+      <code>extra_trees</code> pide <strong>1.3 GB de memoria</strong> — no entra en
+      ningún plan gratuito ni en un servidor pequeño — y tarda trece veces más por
+      petición. XGBoost ocupa 2.4 MB, cabe en cualquier lado y responde en 2.3
+      milisegundos.
+    </p>
+    <p class="note">
+      Renunciar a 0.023 de RMSE que no se puede demostrar, a cambio de un modelo 293
+      veces más pequeño, no es una concesión. Es la decisión correcta, y es la que se toma
+      en producción todos los días.
+    </p>
+  </section>
+
+  <section class="wide stack">
+    <span class="eyebrow">Resultados</span>
+    <h2>Tabla completa</h2>
+    <figure>
+      <div class="fig-body scroll-x" id="tblTodos"></div>
+      <figcaption>
+        Nueve modelos, todos con búsqueda aleatoria de hiperparámetros sobre el modelo
+        <em>y</em> el preprocesamiento. Cada combinación probada quedó registrada en
+        MLflow como ejecución anidada: 137 candidatos en total.
+      </figcaption>
+    </figure>
+  </section>
+
+  <section class="wrap stack">
+    <span class="eyebrow">Detalles</span>
+    <dl class="kv">
+      <dt>Datos</dt><dd>California Housing, 20,640 distritos del censo de 1990. CSV original del repositorio del libro.</dd>
+      <dt>Partición</dt><dd>80/20 estratificada por categoría de ingreso. Una partición aleatoria simple subrepresentaba el estrato más pobre en 9.4%.</dd>
+      <dt>Preprocesamiento</dt><dd>Imputación por mediana, estandarización, codificación one-hot y similitud a centros geográficos — todo dentro del <code>Pipeline</code>.</dd>
+      <dt>Seguimiento</dt><dd>MLflow. 180 ejecuciones, 137 de ellas candidatos anidados de las búsquedas.</dd>
+    </dl>
+  </section>
+
+  <style>
+    .hero { padding-top: clamp(2.5rem, 7vw, 4.5rem); display: flex; flex-direction: column; gap: 1.4rem; }
+    .hero .lede { font-size: 1.18rem; color: var(--ink-2); max-width: 58ch; }
+    .hero .stat-row { margin-top: 1rem; }
+
+    .filters { display: flex; flex-wrap: wrap; gap: 1.1rem 1.6rem; align-items: flex-end; padding: 1.1rem 1.25rem; border-bottom: 1px solid var(--hairline); }
+    .fgroup { display: flex; flex-direction: column; gap: .45rem; }
+    .fgroup > .eyebrow { font-size: .65rem; }
+    .chips { display: flex; flex-wrap: wrap; gap: .35rem; }
+
+    .map-shell { position: relative; }
+    #map { display: block; width: 100%; height: auto; touch-action: pan-y; }
+    .map-live { display: grid; grid-template-columns: repeat(auto-fit, minmax(112px, 1fr)); gap: 1px; background: var(--hairline); border-top: 1px solid var(--hairline); }
+    .legend-row { display: flex; flex-wrap: wrap; gap: .9rem 1.5rem; align-items: center; justify-content: space-between; }
+  </style>
+
+  <script>
+    import "../scripts/ch02.ts";
+  </script>
+</Base>

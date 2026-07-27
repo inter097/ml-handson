@@ -1,12 +1,13 @@
 """
-Generador del caso de estudio estático
+Generador de datos para el sitio
 
-Toma un run de MLflow, predice sobre el conjunto de prueba e inyecta esas
-predicciones dentro de site/template.html para producir site/index.html.
+Toma un run de MLflow, predice sobre el conjunto de prueba y deja esas
+predicciones como JSON en web/public/data/, donde el proyecto Astro las
+consume para el mapa interactivo del capítulo 2.
 
-El resultado es un solo archivo sin dependencias externas: se sirve desde
-cualquier hosting estático (Vercel, GitHub Pages, nginx en un VPS) sin build,
-sin backend y sin variables de entorno.
+Antes este script producía un HTML completo por su cuenta. Ahora solo produce
+los datos: la página la construye Astro, que es lo que corresponde cuando el
+sitio tiene varias páginas compartiendo diseño.
 
 Por qué las predicciones van precalculadas y no vía API:
   el artefacto de XGBoost pesa 2.4 MB pero sus dependencias (numpy, scipy,
@@ -28,27 +29,10 @@ import pandas as pd
 from predict import load_model
 from preprocessing import load_data
 
-SITE_DIR = Path("site")
-TEMPLATE = SITE_DIR / "template.html"
-OUTPUT = SITE_DIR / "index.html"
-PLACEHOLDER = "__DATA__"
+# El sitio vive en la raíz del repo, un nivel arriba del capítulo.
+RAIZ = Path(__file__).resolve().parents[2]
+SALIDA = RAIZ / "web" / "public" / "data" / "ch02.json"
 
-# El template guarda solo el contenido; aquí se envuelve en un documento válido.
-# Sin <!doctype html> el navegador entra en quirks mode y box-sizing deja de
-# comportarse como dice el CSS.
-DOC_OPEN = """<!doctype html>
-<html lang="es">
-<head>
-<meta charset="utf-8">
-"""
-DOC_MID = """</head>
-<body>
-"""
-DOC_CLOSE = """</body>
-</html>
-"""
-
-# El orden fija los índices que usa el JavaScript de la página.
 OCEAN_ORDER = ["<1H OCEAN", "INLAND", "NEAR BAY", "NEAR OCEAN", "ISLAND"]
 INCOME_BINS = [0.0, 1.5, 3.0, 4.5, 6.0, np.inf]
 
@@ -74,32 +58,21 @@ def build(run_id: str) -> None:
         )
     ]
 
-    payload = json.dumps(
-        {"ocean": OCEAN_ORDER, "cols": ["lat", "lon", "real", "pred", "ocean", "inc"], "rows": rows},
+    SALIDA.parent.mkdir(parents=True, exist_ok=True)
+    SALIDA.write_text(json.dumps(
+        {"ocean": OCEAN_ORDER, "cols": ["lat", "lon", "real", "pred", "ocean", "inc"],
+         "rows": rows, "run_id": run_id, "rmse": round(rmse, 4)},
         separators=(",", ":"),
-    )
+    ), encoding="utf-8")
 
-    template = TEMPLATE.read_text(encoding="utf-8")
-    if PLACEHOLDER not in template:
-        raise ValueError(f"{TEMPLATE} no contiene el marcador {PLACEHOLDER}")
-    body = template.replace(PLACEHOLDER, payload)
-
-    # Las etiquetas de <head> viven al inicio del template; se cortan ahí para
-    # colocarlas donde corresponde en el documento final.
-    split = body.index("<style>")
-    head, rest = body[:split], body[split:]
-    OUTPUT.write_text(DOC_OPEN + head + rest.replace("</style>", "</style>" + DOC_MID, 1) + DOC_CLOSE,
-                      encoding="utf-8")
-
-    kb = OUTPUT.stat().st_size / 1024
+    kb = SALIDA.stat().st_size / 1024
     print(f"[site] modelo del run {run_id[:8]} · RMSE {rmse:.4f}")
-    print(f"[site] {len(rows):,} predicciones embebidas ({len(payload)/1024:.0f} KB)")
-    print(f"[site] {OUTPUT} · {kb:.0f} KB en total")
-    print(f"[site] pruébalo con: python -m http.server -d {SITE_DIR}")
+    print(f"[site] {len(rows):,} predicciones → {SALIDA.relative_to(RAIZ)} ({kb:.0f} KB)")
+    print("[site] construye el sitio con: cd web && npm run build")
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Generar el caso de estudio estático.")
+    parser = argparse.ArgumentParser(description="Generar los datos del sitio.")
     parser.add_argument("--run-id", required=True, help="MLflow run ID del modelo a mostrar")
     args = parser.parse_args()
     build(args.run_id)

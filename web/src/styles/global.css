@@ -1,0 +1,225 @@
+/*
+  Sistema de diseño del sitio.
+
+  Color: papel verde-grisáceo y tinta oscura, con un acento pino. El par
+  divergente teal↔óxido que usan los gráficos está validado para separación
+  bajo daltonismo, piso de croma y contraste contra ambas superficies.
+
+  Tipografía: serif de libro para títulos —el proyecto sale de un libro—,
+  sans de sistema para texto corrido, mono para cifras y etiquetas.
+*/
+
+:root {
+  color-scheme: light;
+  --paper:      #f6f7f4;
+  --surface:    #fbfcfa;
+  --surface-2:  #eef1ec;
+  --ink:        #0b100f;
+  --ink-2:      #4c5651;
+  --muted:      #7e8783;
+  --hairline:   #e1e4de;
+  --rule:       #ccd2cb;
+  --accent:     #00695c;
+  --accent-ink: #00544a;
+  --cool:       #00937f;
+  --warm:       #c2571f;
+  --mid:        #d9ddd6;
+  --shadow:     0 1px 2px rgba(11,16,15,.05), 0 8px 24px -16px rgba(11,16,15,.28);
+
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+
+  --measure: 68ch;
+  --gutter: clamp(1.25rem, 4vw, 3rem);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --paper:     #0b100f;
+    --surface:   #141b19;
+    --surface-2: #1b2422;
+    --ink:       #e9efec;
+    --ink-2:     #a9b4af;
+    --muted:     #79837f;
+    --hairline:  #232c29;
+    --rule:      #2f3a37;
+    --accent:    #4cc2a8;
+    --accent-ink:#6fd0ba;
+    --cool:      #12a88e;
+    --warm:      #d2733a;
+    --mid:       #333b38;
+    --shadow:    0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper:     #0b100f;
+  --surface:   #141b19;
+  --surface-2: #1b2422;
+  --ink:       #e9efec;
+  --ink-2:     #a9b4af;
+  --muted:     #79837f;
+  --hairline:  #232c29;
+  --rule:      #2f3a37;
+  --accent:    #4cc2a8;
+  --accent-ink:#6fd0ba;
+  --cool:      #12a88e;
+  --warm:      #d2733a;
+  --mid:       #333b38;
+  --shadow:    0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 17px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap { max-width: calc(var(--measure) + var(--gutter) * 2); margin-inline: auto; padding-inline: var(--gutter); }
+.wide { max-width: 1120px; margin-inline: auto; padding-inline: var(--gutter); }
+
+h1, h2, h3 { font-family: var(--serif); font-weight: 600; text-wrap: balance; line-height: 1.2; margin: 0; }
+h1 { font-size: clamp(2.1rem, 5.5vw, 3.3rem); letter-spacing: -.015em; }
+h2 { font-size: clamp(1.5rem, 3.2vw, 2rem); letter-spacing: -.01em; }
+h3 { font-size: 1.16rem; }
+p { margin: 0; }
+a { color: var(--accent-ink); text-underline-offset: 3px; text-decoration-thickness: 1px; }
+a:focus-visible, button:focus-visible, .chip:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 3px;
+}
+
+.eyebrow {
+  font-family: var(--mono); font-size: .69rem; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--muted);
+}
+
+/* Marca de intervalo: el motivo estructural del sitio.
+   El punto con banda encima es la tesis del proyecto — lo que se mide viene
+   con un rango, no con un número exacto. */
+.interval-rule { display: block; width: 100%; height: 13px; overflow: visible; margin-block: clamp(2rem, 5vw, 3.25rem); }
+.interval-rule .band, .interval-rule .cap { stroke: var(--rule); stroke-width: 1.5; }
+.interval-rule .pt { fill: var(--accent); }
+
+section { padding-block: clamp(2.75rem, 7vw, 4.5rem); }
+.stack { display: flex; flex-direction: column; gap: 1.15rem; }
+
+.note {
+  border-left: 2px solid var(--rule); padding: .1rem 0 .1rem 1.1rem;
+  color: var(--ink-2); font-size: .96rem;
+}
+
+.stat-row {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1px; background: var(--hairline); border: 1px solid var(--hairline);
+  border-radius: 6px; overflow: hidden;
+}
+.stat { background: var(--surface); padding: 1rem 1.1rem; display: flex; flex-direction: column; gap: .28rem; }
+.stat .k { font-family: var(--mono); font-size: .67rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.stat .v { font-size: 1.75rem; font-weight: 600; line-height: 1.1; letter-spacing: -.02em; }
+.stat .n { font-size: .78rem; color: var(--muted); font-family: var(--mono); }
+
+/* Hallazgos */
+.finding { display: flex; flex-direction: column; gap: .85rem; padding-block: 1.9rem; border-top: 1px solid var(--hairline); }
+.finding:first-of-type { border-top: 0; }
+.finding-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: .55rem 1rem; }
+.evidence {
+  font-family: var(--mono); font-size: .74rem; font-weight: 600;
+  padding: .2rem .5rem; border-radius: 3px; white-space: nowrap;
+  background: var(--surface-2); color: var(--ink-2); border: 1px solid var(--hairline);
+}
+.evidence[data-tone="gain"] { color: var(--cool); }
+.evidence[data-tone="none"] { color: var(--warm); }
+
+/* Figuras */
+figure { margin: 0; background: var(--surface); border: 1px solid var(--hairline); border-radius: 8px; box-shadow: var(--shadow); }
+.fig-head { padding: 1.1rem 1.25rem .85rem; display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: baseline; justify-content: space-between; border-bottom: 1px solid var(--hairline); }
+.fig-title { font-family: var(--serif); font-size: 1.08rem; font-weight: 600; }
+.fig-body { padding: 1.15rem 1.25rem 1.3rem; }
+figcaption { padding: 0 1.25rem 1.2rem; color: var(--muted); font-size: .85rem; }
+figure img { display: block; width: 100%; height: auto; border-radius: 4px; }
+
+.toggle {
+  font-family: var(--mono); font-size: .7rem; letter-spacing: .06em; text-transform: uppercase;
+  background: none; border: 1px solid var(--hairline); color: var(--ink-2);
+  padding: .3rem .6rem; border-radius: 4px; cursor: pointer;
+}
+.toggle:hover { background: var(--surface-2); }
+.toggle[aria-pressed="true"] { background: var(--surface-2); color: var(--ink); border-color: var(--rule); }
+
+/* Tablas de datos */
+.scroll-x { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: .87rem; }
+th, td { text-align: right; padding: .5rem .6rem; border-bottom: 1px solid var(--hairline); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+thead th { font-family: var(--mono); font-size: .67rem; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+tbody td { font-variant-numeric: tabular-nums; }
+tbody tr[data-hi="1"] td { background: var(--surface-2); }
+tbody tr[data-hi="1"] td:first-child { font-weight: 600; }
+.barcell { display: flex; align-items: center; gap: .5rem; justify-content: flex-end; }
+.barcell i { display: block; height: 6px; border-radius: 0 2px 2px 0; background: var(--accent); opacity: .55; }
+
+/* Tabla de prosa: a diferencia de las de datos, aquí el texto debe fluir */
+table.prose td, table.prose th { white-space: normal; text-align: left; vertical-align: baseline; }
+table.prose td:first-child { width: 11rem; font-family: var(--mono); font-size: .78rem; color: var(--ink-2); }
+
+code { font-family: var(--mono); font-size: .87em; background: var(--surface-2); padding: .1em .32em; border-radius: 3px; }
+
+/* Filtros */
+.chip {
+  font-family: var(--mono); font-size: .72rem; cursor: pointer;
+  padding: .28rem .55rem; border-radius: 999px;
+  border: 1px solid var(--hairline); background: var(--surface); color: var(--ink-2);
+}
+.chip:hover { border-color: var(--rule); }
+.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--paper); }
+
+/* Métricas vivas bajo el mapa */
+.map-live > div { background: var(--surface); padding: .7rem .9rem; display: flex; flex-direction: column; gap: .2rem; }
+.map-live .k { font-family: var(--mono); font-size: .63rem; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+.map-live .v { font-size: 1.12rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* Tooltip del mapa */
+.tip {
+  position: absolute; pointer-events: none; opacity: 0; transition: opacity .12s;
+  background: var(--surface); border: 1px solid var(--rule); border-radius: 6px;
+  padding: .55rem .7rem; font-size: .78rem; box-shadow: var(--shadow); z-index: 5;
+  font-variant-numeric: tabular-nums; min-width: 168px;
+}
+.tip[data-on="1"] { opacity: 1; }
+.tip dl { margin: 0; display: grid; grid-template-columns: auto auto; gap: .12rem .7rem; }
+.tip dt { color: var(--muted); font-family: var(--mono); font-size: .68rem; }
+.tip dd { margin: 0; text-align: right; }
+.tip .head { font-family: var(--mono); font-size: .68rem; color: var(--muted); margin-bottom: .35rem; }
+
+/* Leyenda de color */
+.legend { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .9rem; font-size: .78rem; color: var(--ink-2); }
+.ramp { display: flex; align-items: center; gap: .4rem; }
+.ramp i { width: 132px; height: 9px; border-radius: 2px; display: block; }
+.ramp .lbl, .legend .hint { font-family: var(--mono); font-size: .72rem; }
+.legend .hint { color: var(--muted); }
+
+/* Gráficas en SVG */
+.chart { width: 100%; height: auto; overflow: visible; }
+.chart text { font-family: var(--mono); font-size: 11px; fill: var(--muted); }
+.chart .lbl { font-family: var(--sans); font-size: 12.5px; fill: var(--ink); }
+.chart .val { font-family: var(--mono); font-size: 11.5px; fill: var(--ink-2); }
+.chart .grid { stroke: var(--hairline); stroke-width: 1; }
+.chart .axis { stroke: var(--rule); stroke-width: 1; }
+.chart .band { stroke-width: 2; stroke-linecap: round; }
+.chart .whisk { stroke-width: 1; }
+.chart .dot { r: 4.5; }
+.chart .halo { r: 6.5; fill: var(--surface); }
+
+.kv { display: grid; grid-template-columns: auto 1fr; gap: .3rem 1.1rem; font-size: .88rem; }
+.kv dt { font-family: var(--mono); font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; }
+.kv dd { margin: 0; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }

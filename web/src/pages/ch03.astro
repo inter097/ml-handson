@@ -1,0 +1,314 @@
+---
+import Base from "../layouts/Base.astro";
+---
+
+<Base
+  title="MNIST — Clasificación y las métricas que engañan"
+  description="Un modelo que no miró un solo píxel acertó el 91% de las veces. Por qué la exactitud casi nunca es la métrica."
+>
+  <header class="wrap hero">
+    <span class="eyebrow">Capítulo 3 · Clasificación</span>
+    <h1>Un modelo que no aprendió nada<br />y aun así acertó el 91%</h1>
+    <p class="lede">
+      70,000 dígitos escritos a mano. El objetivo del capítulo <strong>no es
+      clasificarlos</strong> — es aprender a medir un clasificador, que resulta bastante
+      más resbaladizo que medir una regresión.
+    </p>
+
+    <div class="stat-row">
+      <div class="stat"><span class="k">Mejor exactitud</span><span class="v">0.976</span><span class="n">k-vecinos + aumento</span></div>
+      <div class="stat"><span class="k">Imágenes</span><span class="v">70,000</span><span class="n">28×28 píxeles</span></div>
+      <div class="stat"><span class="k">Ejercicios</span><span class="v">4 de 4</span><span class="n">del capítulo</span></div>
+      <div class="stat"><span class="k">Datasets</span><span class="v">3</span><span class="n">MNIST · Titanic · correo</span></div>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <svg class="interval-rule" viewBox="0 0 100 13" preserveAspectRatio="none" aria-hidden="true">
+      <line class="band" x1="18" y1="6.5" x2="82" y2="6.5"></line>
+      <line class="cap" x1="18" y1="2.5" x2="18" y2="10.5"></line>
+      <line class="cap" x1="82" y1="2.5" x2="82" y2="10.5"></line>
+      <circle class="pt" cx="44" cy="6.5" r="3"></circle>
+    </svg>
+  </div>
+
+  <!-- ══ LA TRAMPA ═════════════════════════════════════════════════════ -->
+  <section class="wrap stack">
+    <span class="eyebrow">El gancho del capítulo</span>
+    <h2>La exactitud miente cuando una clase es rara</h2>
+    <p>
+      El primer ejercicio es un detector de una sola cosa: <em>¿esta imagen es un 5?</em>
+    </p>
+    <p>
+      Solo el <strong>9% de las imágenes son cincos</strong>. Así que un modelo que
+      responda “no es un 5” a todo acierta el 91% de las veces sin haber mirado un solo
+      píxel. Ese modelo tonto se entrena a propósito, para ponerlo al lado del real:
+    </p>
+
+    <div class="compara">
+      <div>
+        <span class="etq">Clasificador real</span>
+        <span class="num">0.9696</span>
+      </div>
+      <div>
+        <span class="etq">Responder «no es 5» a todo</span>
+        <span class="num warm">0.9096</span>
+      </div>
+    </div>
+
+    <p class="note">
+      <strong>Seis puntos</strong> separan un modelo que aprendió de uno que no hizo
+      nada. Y en la práctica las clases raras son la norma, no la excepción: el fraude,
+      la enfermedad, la falla del equipo. Ahí la exactitud regala el 90% de entrada.
+    </p>
+  </section>
+
+  <section class="wide stack">
+    <figure>
+      <div class="fig-head"><span class="fig-title">Lo que sí distingue</span></div>
+      <div class="fig-body">
+        <table class="prose">
+          <thead><tr><th>Métrica</th><th>Qué responde</th><th style="text-align:right">Valor</th></tr></thead>
+          <tbody>
+            <tr><td>Precisión</td><td>De lo que llamó 5, ¿cuánto era 5?</td><td style="text-align:right">0.809</td></tr>
+            <tr><td>Exhaustividad</td><td>De todos los 5 que había, ¿cuántos encontró?</td><td style="text-align:right">0.868</td></tr>
+            <tr><td>F1</td><td>Media armónica — penaliza el desequilibrio entre ambas</td><td style="text-align:right">0.838</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption>
+        Todas se calculan con validación cruzada: cada imagen la puntúa un modelo que no
+        la vio al entrenarse. Medirlas sobre el propio entrenamiento daría números
+        inflados.
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- ══ EL COMPROMISO ═════════════════════════════════════════════════ -->
+  <section class="wrap stack">
+    <span class="eyebrow">La decisión que no es técnica</span>
+    <h2>Precisión y exhaustividad se mueven en direcciones opuestas</h2>
+    <p>
+      Un clasificador no responde sí o no: calcula una puntuación y la compara contra un
+      umbral. Subirlo lo vuelve más exigente — se equivoca menos cuando dice “sí”, pero
+      se le escapan más.
+    </p>
+  </section>
+
+  <section class="wide stack">
+    <figure>
+      <div class="fig-head"><span class="fig-title">Subir el umbral sube una métrica y baja la otra</span></div>
+      <div class="fig-body">
+        <img src="/img/ch03/umbral.png" alt="Precisión y exhaustividad trazadas contra el umbral de decisión; las curvas se cruzan" loading="lazy" width="1200" height="630" />
+      </div>
+      <figcaption>
+        Pedirle <strong>90% de precisión</strong> a este modelo cuesta bajar la
+        exhaustividad a 0.789: para fallar solo 1 de cada 10 veces que dice “es un 5”,
+        deja escapar 1 de cada 5 cincos.
+      </figcaption>
+    </figure>
+  </section>
+
+  <section class="wrap stack">
+    <p class="note">
+      <strong>Dónde pararse en esa curva no es una decisión técnica.</strong> Un filtro
+      de spam quiere precisión — mandar un correo importante a la basura es peor que
+      dejar pasar publicidad. Un detector de tumores quiere exhaustividad — revisar de
+      más es un susto, pasar uno por alto es otra cosa. Mismo modelo, distinto punto de
+      operación, según lo que cueste equivocarse.
+    </p>
+  </section>
+
+  <section class="wide stack">
+    <figure>
+      <div class="fig-head"><span class="fig-title">Comparar modelos sin fijar un umbral</span></div>
+      <div class="fig-body">
+        <img src="/img/ch03/curva_roc.png" alt="Curva ROC comparando un modelo lineal y un bosque aleatorio" loading="lazy" width="800" height="750" />
+      </div>
+      <figcaption>
+        El área bajo la curva resume el desempeño en todos los umbrales a la vez: 0.971
+        para el modelo lineal, 0.998 para el bosque.
+      </figcaption>
+    </figure>
+  </section>
+
+  <section class="wrap stack">
+    <p class="note">
+      ⚠️ <strong>Pero esta métrica engaña cuando la clase positiva es rara.</strong> La
+      curva ROC usa la proporción de falsos positivos, y con 54,000 negativos contra
+      5,400 positivos el denominador es tan grande que la curva se ve optimista. Para
+      clases desbalanceadas, la curva de precisión contra exhaustividad cuenta la verdad
+      más incómoda.
+    </p>
+  </section>
+
+  <!-- ══ ANÁLISIS DE ERRORES ═══════════════════════════════════════════ -->
+  <section class="wrap stack">
+    <span class="eyebrow">Lo más útil del capítulo</span>
+    <h2>Qué arreglar, no cuánto fallas</h2>
+    <p>
+      Saber que el modelo acierta el 91% no dice qué hacer después. La matriz de
+      confusión sí: muestra <strong>qué dígito se confunde con cuál</strong>.
+    </p>
+  </section>
+
+  <section class="wide stack">
+    <figure>
+      <div class="fig-head"><span class="fig-title">La diagonal hay que borrarla para ver algo</span></div>
+      <div class="fig-body">
+        <img src="/img/ch03/confusion.png" alt="Dos matrices de confusión: con la diagonal y sin ella" loading="lazy" width="1875" height="810" />
+      </div>
+      <figcaption>
+        Sin normalizar, la diagonal se lleva todo el color y los errores son invisibles.
+        Normalizada por fila y con la diagonal en cero, aparece el patrón: el peor par es
+        el 4 confundido con el 9, en el 5.1% de los casos.
+      </figcaption>
+    </figure>
+  </section>
+
+  <section class="wide stack">
+    <figure>
+      <div class="fig-head"><span class="fig-title">Y aquí está el valor real del ejercicio</span></div>
+      <div class="fig-body">
+        <img src="/img/ch03/peor_par.png" alt="Montaje de imágenes de 4 y 9 correctamente clasificados y confundidos" loading="lazy" width="1140" height="1200" />
+      </div>
+      <figcaption>
+        Los 4 mal clasificados tienen la parte superior <strong>cerrada</strong>; los 9
+        mal clasificados la tienen <strong>abierta</strong>.
+      </figcaption>
+    </figure>
+  </section>
+
+  <section class="wrap stack">
+    <p>
+      El modelo no está siendo tonto — esos dígitos son genuinamente ambiguos incluso
+      para una persona. Y eso cambia qué se hace después.
+    </p>
+    <p class="note">
+      No es “entrena más”: un modelo lineal ve píxeles sueltos y <strong>no puede
+      representar «tiene un lazo cerrado arriba»</strong>, que es justamente la
+      diferencia entre un 4 y un 9. La solución no está en este capítulo, está en el 14 —
+      redes convolucionales, que sí capturan forma.
+    </p>
+  </section>
+
+  <!-- ══ MULTISALIDA ═══════════════════════════════════════════════════ -->
+  <section class="wide stack">
+    <figure>
+      <div class="fig-head"><span class="fig-title">Cuando la respuesta ya no es una etiqueta</span></div>
+      <div class="fig-body">
+        <img src="/img/ch03/denoise.png" alt="Tres filas de dígitos: con ruido, limpiados por el modelo, y originales" loading="lazy" width="1350" height="700" />
+      </div>
+      <figcaption>
+        Entrenar con imágenes ruidosas como entrada y limpias como objetivo: 784 salidas,
+        cada una con 256 valores posibles. El error medio por píxel baja de 45.5 a 15.2.
+      </figcaption>
+    </figure>
+  </section>
+
+  <section class="wrap stack">
+    <p>
+      Este ejercicio deja clara una frontera borrosa: quitar ruido de una imagen suena a
+      regresión, no a clasificación. La distinción no siempre es nítida — las categorías
+      del libro son herramientas, no compartimentos.
+    </p>
+  </section>
+
+  <!-- ══ EJERCICIOS ════════════════════════════════════════════════════ -->
+  <section class="wrap">
+    <div class="stack" style="margin-bottom:.6rem">
+      <span class="eyebrow">Los ejercicios</span>
+      <h2>Dos errores que costaron más que los modelos</h2>
+    </div>
+
+    <div class="finding">
+      <div class="finding-head">
+        <h3>El Titanic: once puntos escondidos en el orden del archivo</h3>
+        <span class="evidence" data-tone="gain">0.70 → 0.81</span>
+      </div>
+      <p>
+        La primera corrida daba 0.70 de exactitud, muy por debajo de lo normal en este
+        dataset. La causa no era el modelo: <strong>el archivo viene ordenado por clase
+        de pasaje</strong>, así que sin barajar, el primer pliegue de la validación
+        cruzada era 100% primera clase y los dos últimos 100% tercera. El modelo se
+        entrenaba con un perfil de pasajero y se evaluaba con otro.
+      </p>
+      <p class="note">
+        Lo insidioso es que la partición estratificada <strong>no lo detecta</strong>:
+        equilibra la supervivencia, no la clase. Basta barajar para pasar de 0.70 a 0.81.
+        Es la lección del capítulo anterior —la partición importa— reapareciendo con otra
+        cara.
+      </p>
+    </div>
+
+    <div class="finding">
+      <div class="finding-head">
+        <h3>El filtro de spam: elegir por una sola métrica también engaña</h3>
+        <span class="evidence" data-tone="none">84 spam contra 28</span>
+      </div>
+      <p>
+        3,000 correos reales, con cabeceras, HTML y codificaciones rotas. Aquí la
+        precisión pesa más que la exhaustividad: mandar un correo legítimo a la basura es
+        mucho peor que dejar pasar publicidad.
+      </p>
+      <p>
+        Pero optimizar <em>solo</em> precisión lleva a otro sitio. La regresión logística
+        alcanza precisión perfecta —cero legítimos perdidos— a cambio de dejar pasar
+        <strong>84 spam</strong>. El SVM lineal pierde 2 legítimos y solo deja pasar 28.
+        Cuál conviene depende de cuánto duele cada error, y ninguna métrica sola lo
+        responde.
+      </p>
+    </div>
+
+    <div class="finding">
+      <div class="finding-head">
+        <h3>k-vecinos, y una máquina congelada</h3>
+        <span class="evidence" data-tone="gain">3.00 GB → 0.49 GB</span>
+      </div>
+      <p>
+        El ejercicio pide superar el 97% de exactitud. Se logra con k-vecinos afinado
+        (0.9714) y sube a <strong>0.9763</strong> replicando cada imagen desplazada un
+        píxel en las cuatro direcciones — el conjunto pasa de 60,000 a 300,000.
+      </p>
+      <p>
+        Pero la primera versión del script <strong>agotó la memoria de una máquina de 16
+        GB</strong>. Pedía paralelismo en dos niveles a la vez: la búsqueda lanzaba diez
+        procesos, cada uno con su copia completa de los datos, y cada uno pedía otros
+        diez hilos.
+      </p>
+      <p class="note">
+        El culpable oculto fue un valor por defecto: scikit-learn reserva hasta
+        <strong>1 GB por hilo</strong> para los bloques de distancias. Con diez núcleos,
+        diez gigas. Bajarlo a 128 MB y usar precisión simple llevó el pico de 3.00 GB a
+        0.49 GB — y encima quedó más rápido.
+      </p>
+      <p>
+        El error de método fue peor que el bug: la estimación de costo se midió con una
+        configuración y después se escribió el script con otra, sin volver a medir.
+      </p>
+    </div>
+  </section>
+
+  <section class="wrap stack">
+    <span class="eyebrow">Detalles</span>
+    <dl class="kv">
+      <dt>Datos</dt><dd>MNIST, 70,000 dígitos de 28×28. Partición canónica 60k/10k, sin barajar.</dd>
+      <dt>Por qué no se baraja</dt><dd>Las 10,000 imágenes de prueba son las mismas desde 1998 y todos los resultados publicados las usan. Además vienen de personas distintas a las del entrenamiento — empleados del censo contra estudiantes.</dd>
+      <dt>Ejercicios</dt><dd>Los cuatro: k-vecinos afinado, aumento de datos, Titanic y filtro de spam.</dd>
+      <dt>Seguimiento</dt><dd>MLflow, mismo registro que el capítulo 2.</dd>
+    </dl>
+  </section>
+
+  <style>
+    .hero { padding-top: clamp(2.5rem, 7vw, 4.5rem); display: flex; flex-direction: column; gap: 1.4rem; }
+    .hero .lede { font-size: 1.18rem; color: var(--ink-2); max-width: 58ch; }
+    .hero .stat-row { margin-top: 1rem; }
+
+    .compara { display: grid; gap: 1px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      background: var(--hairline); border: 1px solid var(--hairline); border-radius: 6px; overflow: hidden; }
+    .compara > div { background: var(--surface); padding: 1.1rem 1.25rem; display: flex; flex-direction: column; gap: .3rem; }
+    .compara .etq { font-family: var(--mono); font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+    .compara .num { font-size: 2rem; font-weight: 600; letter-spacing: -.02em; line-height: 1; }
+    .compara .num.warm { color: var(--warm); }
+  </style>
+</Base>

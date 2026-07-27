@@ -4,6 +4,12 @@ data/raw/
 data/processed/
 data/
 
+# Excepción: los datos del sitio sí van en git. Son las predicciones ya
+# calculadas que consume la página, y sin ellas Vercel construiría un sitio
+# sin mapa — no hay Python en el build.
+!web/public/data/
+!web/public/data/*.json
+
 # MLflow — los runs viven aquí localmente, no en git
 mlruns/
 mlartifacts/
@@ -36,3 +42,8 @@ Thumbs.db
 # Vercel
 .vercel
 .env*
+
+# Astro / Node
+web/node_modules/
+web/dist/
+web/.astro/
