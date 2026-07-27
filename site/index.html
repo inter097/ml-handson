@@ -341,7 +341,7 @@
 <section class="wrap">
   <div class="stack" style="margin-bottom:.6rem">
     <span class="eyebrow">Hallazgos</span>
-    <h2>Cuatro cosas que resultaron al revés de lo esperado</h2>
+    <h2>Seis cosas que resultaron al revés de lo esperado</h2>
   </div>
 
   <div class="finding">
@@ -426,6 +426,59 @@
       pasaron a ganarle a los de boosting.
     </p>
   </div>
+
+  <div class="finding">
+    <div class="finding-head">
+      <h3>Una variable que se veía excelente estaba haciendo trampa</h3>
+      <span class="evidence" data-tone="none">correlación 0.85 → 0.99</span>
+    </div>
+    <p>
+      Siguiendo la misma idea, se añadió otra variable geográfica: un <strong>k-vecinos</strong>
+      sobre las coordenadas que responde <em>“¿cuánto cuestan las casas de al lado?”</em>. Su
+      respuesta entra al modelo como una columna más.
+    </p>
+    <p>
+      En la primera versión su correlación con el precio era de <strong>0.993</strong>. Una
+      variable casi perfecta — y ahí estaba el problema: <strong>era demasiado buena</strong>.
+    </p>
+    <p class="note">
+      El k-vecinos se había entrenado con las mismas casas sobre las que después predecía, así
+      que <strong>cada casa aparecía entre sus propios vecinos</strong>. Estaba copiando la
+      respuesta. Calculando la predicción de cada fila con un modelo que nunca la vio, la
+      correlación cae a <strong>0.845</strong> — ese es su valor real.
+    </p>
+    <p>
+      Aun corregida, sigue siendo la segunda variable más útil del proyecto. Pero sin ese ajuste
+      habría lucido espléndida durante el entrenamiento y se habría derrumbado en producción.
+    </p>
+  </div>
+
+  <div class="finding">
+    <div class="finding-head">
+      <h3>La explicación intuitiva del modelo lento era falsa</h3>
+      <span class="evidence" data-tone="gain">n<sup>1.33</sup>, no n²</span>
+    </div>
+    <p>
+      Un modelo del conjunto —<code>SVR</code>— tardaba más de veinte minutos y se excluyó de
+      la búsqueda. La razón anotada fue la que todo el mundo repite: <em>“escala con el cuadrado
+      del número de filas”</em>. Suena correcta y está en los libros.
+    </p>
+    <p>
+      Al medirla resultó falsa. El exponente real es <strong>n<sup>1.33</sup></strong> y un
+      ajuste sobre el conjunto completo toma unos seis segundos. El tamaño de los datos nunca
+      fue el problema.
+    </p>
+    <p class="note">
+      El costo lo dominaba un solo hiperparámetro. Con el kernel polinómico y el parámetro de
+      regularización en su valor más alto, el ajuste es <strong>135 veces más lento</strong> que
+      con la configuración barata. El espacio de búsqueda incluía justo esa esquina.
+    </p>
+    <p>
+      La decisión de excluirlo se sostiene —incluso ajustado se queda en 0.531 de error frente a
+      0.429— pero durante un tiempo el proyecto documentó una explicación inventada. La
+      diferencia entre creer algo razonable y haberlo medido.
+    </p>
+  </div>
 </section>
 
 <section class="wide stack">
@@ -434,13 +487,14 @@
       <span class="fig-title">Cuánto aportó cada decisión</span>
       <button class="toggle" id="tblNeedleBtn" aria-pressed="false" aria-controls="tblNeedle">Ver tabla</button>
     </div>
-    <div class="fig-body"><svg class="chart" id="needle" viewBox="0 0 720 250" role="img"
+    <div class="fig-body"><svg class="chart" id="needle" viewBox="0 0 720 352" role="img"
       aria-label="Cambio en RMSE por decisión de modelado; valores negativos mejoran"></svg></div>
     <div class="fig-body scroll-x" id="tblNeedle" hidden style="padding-top:0"></div>
     <figcaption>
       Cambio en RMSE al añadir cada elemento, medido con ablación sobre el mismo split.
-      Hacia la izquierda es mejor. La estratificación no aparece porque no mueve el error —
-      hace que el número sea confiable, que es otra cosa.
+      Hacia la izquierda es mejor. La selección de variables aparece del lado malo: descarta la
+      mitad de las columnas y cuesta precisión. La partición estratificada no aparece porque no
+      mueve el error — hace que el número sea confiable, que es otra cosa.
     </figcaption>
   </figure>
 </section>
@@ -574,9 +628,12 @@
   ];
   const NEEDLE = [
     { k:"Similitud geográfica (K-means)", v:-0.0356, m:"random_forest" },
-    { k:"Similitud geográfica (K-means)", v:-0.0176, m:"xgboost" },
     { k:"Ajuste de hiperparámetros",      v:-0.0284, m:"xgboost" },
+    { k:"Similitud geográfica (K-means)", v:-0.0176, m:"xgboost" },
+    { k:"Precio de las casas vecinas",    v:-0.0146, m:"random_forest" },
+    { k:"Precio de las casas vecinas",    v:-0.0121, m:"xgboost" },
     { k:"Proximidad al océano",           v:-0.0111, m:"random_forest" },
+    { k:"Selección de variables",         v:+0.0068, m:"random_forest" },
     { k:"Proximidad al océano",           v:+0.0039, m:"xgboost" }
   ];
 
@@ -773,7 +830,7 @@
 
   /* ── Chart: qué movió la aguja ──────────────────────────────────────── */
   function drawNeedle() {
-    const W = 720, H = 250, L = 232, R = 78, T = 20, B = 36;
+    const W = 720, H = 352, L = 232, R = 78, T = 20, B = 36;
     const lo = -0.040, hi = 0.010;
     const X = v => L + (v - lo) / (hi - lo) * (W - L - R);
     const rowH = (H - T - B) / NEEDLE.length;
