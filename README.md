@@ -1,5 +1,7 @@
 # ml-handson-california-housing
 
+**[→ Ver el caso de estudio](https://ml-handson-california-housing-26e4.vercel.app)**
+
 Pipeline de Machine Learning completo sobre el dataset **California Housing**, guiado por el libro
 *Hands-On Machine Learning with Scikit-Learn, Keras & TensorFlow* — Aurélien Géron (cap. 2).
 
@@ -393,15 +395,19 @@ filtros y las métricas sí se computan en vivo, en el navegador.
 
 Es HTML estático sin build, así que sirve en cualquier lado:
 
+**Desplegado en:** https://ml-handson-california-housing-26e4.vercel.app
+
 | Destino | Cómo |
 |---|---|
-| Vercel | Importar el repo, *Output Directory* → `site`, sin build command |
+| Vercel | Importar el repo — `vercel.json` ya trae la configuración |
 | GitHub Pages | Settings → Pages → rama `main`, carpeta `/site` |
 | VPS con nginx | `root /var/www/houses;` y copiar `site/index.html` |
 | Cualquier CDN | Subir `site/index.html` tal cual |
 
-Para un subdominio propio (`houses.eliuth.dev`), apunta un registro `CNAME` al
-proveedor y regístralo en su panel de dominios.
+Para el subdominio `houses.eliuth.dev`: agrégalo en *Vercel → Settings → Domains* y
+crea el `CNAME` que indique en el DNS de Cloudflare. Hay que hacer ambas cosas — solo
+el registro DNS no basta, Vercel necesita tener el dominio registrado en el proyecto
+para emitir el certificado.
 
 **Regenerar tras reentrenar:** `make site RUN_ID=<nuevo id>` y commitear
 `site/index.html`. El HTML lleva las predicciones dentro, así que si cambia el modelo
