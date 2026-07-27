@@ -45,6 +45,14 @@ errors:
 multioutput:
 	$(PYTHON) src/multioutput.py
 
+# ── Ejercicios del capítulo ─────────────────────────────────────────────────
+
+titanic:
+	$(PYTHON) src/titanic.py
+
+spam:
+	$(PYTHON) src/spam.py
+
 # ── MLflow UI ───────────────────────────────────────────────────────────────
 
 ui:
@@ -66,6 +74,8 @@ help:
 	@echo "  make multiclass      Los 10 dígitos: OvR vs OvO + efecto del escalado"
 	@echo "  make errors          Matriz de confusión 10x10 y qué confunde con qué"
 	@echo "  make multioutput     Multietiqueta y quitar ruido de imágenes"
+	@echo "  make titanic         Ejercicio 3 — clasificador de supervivencia"
+	@echo "  make spam            Ejercicio 4 — filtro de spam desde cero"
 	@echo "  make ui              Abrir MLflow UI"
 	@echo "  make clean           Borrar datos locales"
 	@echo ""

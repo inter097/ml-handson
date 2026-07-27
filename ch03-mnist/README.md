@@ -14,6 +14,8 @@ make metrics     # umbral, curvas PR y ROC → reports/
 make multiclass  # los 10 dígitos: OvR vs OvO
 make errors      # matriz de confusión y qué confunde con qué
 make multioutput # multietiqueta y quitar ruido de imágenes
+make titanic     # ejercicio 3 — supervivencia
+make spam        # ejercicio 4 — filtro de spam
 ```
 
 ---
@@ -213,10 +215,74 @@ su escala original, y escalar solo la entrada las desalinearía.
 
 ---
 
+---
+
+## Ejercicio 3 — Titanic
+
+```bash
+make titanic
+```
+
+1,309 pasajeros con edades faltantes y columnas mezcladas. Vuelve toda la maquinaria
+del capítulo 2 —imputar, escalar, codificar dentro del `Pipeline`— pero se juzga con
+las métricas del 3.
+
+| Modelo | Exactitud | Precisión | Exhaustividad |
+|---|---|---|---|
+| SVC | **0.8098** | 0.7795 | 0.7000 |
+| Bosque | 0.7945 | 0.7538 | 0.6860 |
+| Regresión logística | 0.7876 | 0.7372 | 0.6900 |
+
+**Un error que costó once puntos.** La primera corrida daba 0.70 de exactitud, muy por
+debajo de lo esperado para este dataset. La causa no era el modelo: **el archivo viene
+ordenado por clase de pasaje**, así que sin barajar, el primer pliegue de la validación
+cruzada era 100% primera clase y los dos últimos 100% tercera. El modelo se entrenaba
+con un perfil de pasajero y se evaluaba con otro.
+
+`StratifiedKFold` no lo detecta porque equilibra la **supervivencia**, no la clase.
+Basta `shuffle=True` para pasar de 0.70 a 0.81.
+
+Es la lección del capítulo 2 —la partición importa— reapareciendo con otra cara.
+
+## Ejercicio 4 — Filtro de spam
+
+```bash
+make spam
+```
+
+3,000 correos reales del corpus de Apache SpamAssassin, con cabeceras, HTML y
+codificaciones rotas. El trabajo está antes del modelo: preferir texto plano sobre
+HTML, anteponer el asunto, y reemplazar URLs, correos y números por marcadores — que
+aparezca *una* URL importa, cuál exactamente no.
+
+| Modelo | Exactitud | Precisión | Exhaustividad |
+|---|---|---|---|
+| SVM lineal | **0.9900** | 0.9958 | **0.9440** |
+| Regresión logística | 0.9720 | **1.0000** | 0.8320 |
+| Naive Bayes | 0.9280 | 0.9931 | 0.5720 |
+
+**Aquí la precisión pesa más que la exhaustividad**: mandar un correo legítimo a la
+basura es mucho peor que dejar pasar publicidad.
+
+Pero elegir *solo* por precisión también engaña. La regresión logística tiene precisión
+perfecta —cero legítimos perdidos— a cambio de dejar pasar **84 spam**. El SVM lineal
+pierde 2 legítimos y solo deja pasar 28. Cuál conviene depende de cuánto duele cada
+error, y ninguna métrica sola lo responde.
+
+Ajustando el umbral para 99% de precisión:
+
+| | |
+|---|---|
+| Umbral | 0.273 |
+| Precisión | 0.9915 |
+| Exhaustividad | 0.9280 |
+
+---
+
 ## Pendiente del capítulo
 
-Los cuatro ejercicios finales: k-vecinos afinado hasta ~97%, aumentar datos desplazando
-las imágenes, el Titanic, y un filtro de spam.
+Los dos ejercicios caros: k-vecinos afinado hasta ~97% y aumentar los datos desplazando
+las imágenes un píxel en cada dirección.
 
 ## Estructura
 
@@ -229,6 +295,8 @@ las imágenes, el Titanic, y un filtro de spam.
 | `src/multiclass.py` | Los 10 dígitos: OvR vs OvO, efecto del escalado |
 | `src/errors.py` | Matriz de confusión 10×10 y montaje del peor par |
 | `src/multioutput.py` | Multietiqueta y quitar ruido de imágenes |
+| `src/titanic.py` | Ejercicio 3 — supervivencia, datos tabulares mixtos |
+| `src/spam.py` | Ejercicio 4 — filtro de spam sobre correos reales |
 
 **Por qué no se baraja la partición:** las 10,000 imágenes de prueba de MNIST son las
 mismas desde 1998 y todos los resultados publicados las usan. Además vienen de
