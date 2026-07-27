@@ -1,6 +1,6 @@
 # ml-handson-california-housing
 
-**[→ Ver el caso de estudio](https://ml-handson-california-housing-26e4.vercel.app)**
+**[→ Ver el caso de estudio](https://houses.eliuth.dev)**
 
 Pipeline de Machine Learning completo sobre el dataset **California Housing**, guiado por el libro
 *Hands-On Machine Learning with Scikit-Learn, Keras & TensorFlow* — Aurélien Géron (cap. 2).
@@ -395,7 +395,7 @@ filtros y las métricas sí se computan en vivo, en el navegador.
 
 Es HTML estático sin build, así que sirve en cualquier lado:
 
-**Desplegado en:** https://ml-handson-california-housing-26e4.vercel.app
+**Desplegado en:** https://houses.eliuth.dev
 
 | Destino | Cómo |
 |---|---|
@@ -404,11 +404,9 @@ Es HTML estático sin build, así que sirve en cualquier lado:
 | VPS con nginx | `root /var/www/houses;` y copiar `site/index.html` |
 | Cualquier CDN | Subir `site/index.html` tal cual |
 
-> **Pendiente:** apuntar el sitio a `houses.eliuth.dev`. La URL autogenerada de Vercel
-> sirve, pero se ve mal para portafolio. Requiere dos pasos —agregar el dominio en
-> *Vercel → Settings → Domains* **y** crear el `CNAME` en Cloudflare en modo *DNS only*—
-> porque Vercel no emite el certificado si el dominio no está registrado en el proyecto.
-> Detalle completo y credenciales necesarias en [`AGENTS.md`](AGENTS.md).
+El dominio `houses.eliuth.dev` apunta a Vercel con un registro **A** a `76.76.21.21`
+en Cloudflare, en modo *DNS only* — con el proxy activo Vercel no puede validar el
+dominio ni emitir el certificado. Detalle en [`AGENTS.md`](AGENTS.md).
 
 **Regenerar tras reentrenar:** `make site RUN_ID=<nuevo id>` y commitear
 `site/index.html`. El HTML lleva las predicciones dentro, así que si cambia el modelo

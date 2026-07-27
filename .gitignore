@@ -30,3 +30,5 @@ Thumbs.db
 
 # Reports generados (sí se commitean manualmente)
 # reports/*.png → excepción: sí queremos comparar visualmente
+.vercel
+.env*
