@@ -1,0 +1,10 @@
+{
+  "name": "ml-handson",
+  "private": true,
+  "type": "module",
+  "description": "Delegador para el build del sitio. Su existencia hace que Vercel detecte un proyecto Node en la raíz; sin él intenta construirlo como proyecto Python y falla buscando un entrypoint.",
+  "scripts": {
+    "build": "npm --prefix web install && npm --prefix web run build",
+    "dev": "npm --prefix web run dev"
+  }
+}
