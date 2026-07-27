@@ -165,6 +165,10 @@
   .barcell { display: flex; align-items: center; gap: .5rem; justify-content: flex-end; }
   .barcell i { display: block; height: 6px; border-radius: 0 2px 2px 0; background: var(--accent); opacity: .55; }
 
+  /* Tabla de prosa: a diferencia de las de datos, aquí el texto debe fluir */
+  table.prose td, table.prose th { white-space: normal; text-align: left; vertical-align: baseline; }
+  table.prose td:first-child { width: 11rem; font-family: var(--mono); font-size: .78rem; color: var(--ink-2); }
+
   /* ── Filtros ─────────────────────────────────────────────────────────── */
   .filters { display: flex; flex-wrap: wrap; gap: 1.1rem 1.6rem; align-items: flex-end; padding: 1.1rem 1.25rem; border-bottom: 1px solid var(--hairline); }
   .fgroup { display: flex; flex-direction: column; gap: .45rem; }
@@ -278,8 +282,41 @@
     todas las trampas del oficio caben en él.
   </p>
   <p>
-    Lo que sigue no es un recorrido por los modelos. Es lo que cambió de opinión durante el
-    proceso: cuatro hallazgos que contradijeron lo que parecía obvio al empezar.
+    El capítulo que guía este proyecto no enseña trucos, enseña un orden de trabajo. Ocho pasos
+    que se siguen siempre, en un problema de casas o en cualquier otro.
+  </p>
+</section>
+
+<section class="wide stack">
+  <figure>
+    <div class="fig-head"><span class="fig-title">Los ocho pasos, y qué fue cada uno aquí</span></div>
+    <div class="fig-body">
+      <table class="prose">
+        <thead><tr><th>Paso</th><th>Qué significó en este proyecto</th></tr></thead>
+        <tbody>
+          <tr><td>Enmarcar el problema</td><td>Regresión supervisada. La métrica es el error en dólares, no la exactitud.</td></tr>
+          <tr><td>Obtener los datos</td><td>20,640 distritos del censo. Apartar el 20% <em>antes</em> de mirarlos.</td></tr>
+          <tr><td>Explorar</td><td>Mapas y correlaciones. El ingreso medio manda; la geografía pesa.</td></tr>
+          <tr><td>Preparar</td><td>Rellenar huecos, escalar, codificar categorías — todo dentro del pipeline.</td></tr>
+          <tr><td>Entrenar</td><td>Nueve modelos con parámetros por defecto, para saber desde dónde se parte.</td></tr>
+          <tr><td>Afinar</td><td>Búsqueda aleatoria sobre modelo y preparación. 137 combinaciones.</td></tr>
+          <tr><td>Presentar</td><td>Esta página.</td></tr>
+          <tr><td>Desplegar</td><td>El modelo elegido recibe datos crudos y responde en 2.3 ms.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <figcaption>
+      El paso que más se salta en la práctica es el segundo: apartar el conjunto de prueba antes
+      de explorar. Mirar los datos completos y después decidir cómo partirlos contamina la
+      evaluación sin que se note.
+    </figcaption>
+  </figure>
+</section>
+
+<section class="wrap stack">
+  <p>
+    Seguir ese orden es la mitad del capítulo. La otra mitad es lo que se aprende al hacerlo — y
+    ahí lo interesante fueron las veces que el resultado contradijo lo que parecía obvio.
   </p>
 </section>
 
@@ -335,7 +372,7 @@
 <section class="wrap">
   <div class="stack" style="margin-bottom:.6rem">
     <span class="eyebrow">Hallazgos</span>
-    <h2>Cuatro cosas que resultaron al revés de lo esperado</h2>
+    <h2>Tres cosas que resultaron al revés de lo esperado</h2>
   </div>
 
   <div class="finding">
@@ -404,33 +441,6 @@
     <p>
       Aun corregida, sigue siendo la segunda variable más útil del proyecto. Pero sin ese ajuste
       habría lucido espléndida durante el entrenamiento y se habría derrumbado en producción.
-    </p>
-  </div>
-
-  <div class="finding">
-    <div class="finding-head">
-      <h3>La explicación intuitiva del modelo lento era falsa</h3>
-      <span class="evidence" data-tone="gain">n<sup>1.33</sup>, no n²</span>
-    </div>
-    <p>
-      Un modelo del conjunto —<code>SVR</code>— tardaba más de veinte minutos y se excluyó de
-      la búsqueda. La razón anotada fue la que todo el mundo repite: <em>“escala con el cuadrado
-      del número de filas”</em>. Suena correcta y está en los libros.
-    </p>
-    <p>
-      Al medirla resultó falsa. El exponente real es <strong>n<sup>1.33</sup></strong> y un
-      ajuste sobre el conjunto completo toma unos seis segundos. El tamaño de los datos nunca
-      fue el problema.
-    </p>
-    <p class="note">
-      El costo lo dominaba un solo hiperparámetro. Con el kernel polinómico y el parámetro de
-      regularización en su valor más alto, el ajuste es <strong>135 veces más lento</strong> que
-      con la configuración barata. El espacio de búsqueda incluía justo esa esquina.
-    </p>
-    <p>
-      La decisión de excluirlo se sostiene —incluso ajustado se queda en 0.531 de error frente a
-      0.429— pero durante un tiempo el proyecto documentó una explicación inventada. La
-      diferencia entre creer algo razonable y haberlo medido.
     </p>
   </div>
 </section>
