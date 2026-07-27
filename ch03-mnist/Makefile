@@ -42,6 +42,9 @@ multiclass:
 errors:
 	$(PYTHON) src/errors.py
 
+multioutput:
+	$(PYTHON) src/multioutput.py
+
 # ── MLflow UI ───────────────────────────────────────────────────────────────
 
 ui:
@@ -62,6 +65,7 @@ help:
 	@echo "  make metrics PRECISION=0.99  Objetivo de precisión distinto"
 	@echo "  make multiclass      Los 10 dígitos: OvR vs OvO + efecto del escalado"
 	@echo "  make errors          Matriz de confusión 10x10 y qué confunde con qué"
+	@echo "  make multioutput     Multietiqueta y quitar ruido de imágenes"
 	@echo "  make ui              Abrir MLflow UI"
 	@echo "  make clean           Borrar datos locales"
 	@echo ""

@@ -13,6 +13,7 @@ make baseline    # detector binario + la trampa de la exactitud
 make metrics     # umbral, curvas PR y ROC → reports/
 make multiclass  # los 10 dígitos: OvR vs OvO
 make errors      # matriz de confusión y qué confunde con qué
+make multioutput # multietiqueta y quitar ruido de imágenes
 ```
 
 ---
@@ -167,11 +168,57 @@ capturan forma.
 
 ---
 
+---
+
+## Multietiqueta: varias respuestas a la vez
+
+```bash
+make multioutput
+```
+
+En vez de «¿cuál dígito?», dos preguntas binarias simultáneas sobre la misma imagen:
+*¿es grande (≥7)?* y *¿es impar?*. Puede ser las dos, una, o ninguna. El caso real
+típico es reconocimiento facial — en una foto con tres personas conocidas, la respuesta
+correcta son tres etiquetas encendidas.
+
+| | F1 |
+|---|---|
+| ¿Es grande? | **0.9416** |
+| ¿Es impar? | 0.9664 |
+| Macro (promedia por igual) | 0.9540 |
+| Ponderado (pesa por frecuencia) | 0.9572 |
+
+**«Es grande» salió más difícil, y no era lo esperado** — parece la pregunta más simple
+de las dos. Ninguna de las dos corresponde a una forma visual: el modelo tiene que
+reconocer el dígito y después responder, así que hereda las confusiones del análisis de
+errores. Cuál sale peor depende de qué pares confunde y de qué lado de cada pregunta
+caen.
+
+## Multisalida: cuando la respuesta es una imagen
+
+![Quitar ruido](reports/denoise.png)
+
+Llevado al extremo: entrenar con imágenes ruidosas como entrada y limpias como
+objetivo. Son **784 salidas, cada una con 256 valores posibles**.
+
+| Error medio por píxel | |
+|---|---|
+| Con ruido | 45.54 |
+| Después del modelo | **15.15** |
+
+Esto deja clara una frontera borrosa: quitar ruido de una imagen suena a regresión, no
+a clasificación. La distinción no siempre es nítida — y el capítulo lo usa justo para
+mostrar que las categorías del libro son herramientas, no compartimentos estancos.
+
+Detalle de implementación: aquí **no** se escala la entrada. La salida son píxeles en
+su escala original, y escalar solo la entrada las desalinearía.
+
+---
+
 ## Pendiente del capítulo
 
-- Clasificación multietiqueta y multisalida
-- Ejercicios: k-vecinos afinado hasta ~97%, aumentar datos desplazando las imágenes,
-  el Titanic, y un filtro de spam
+Los cuatro ejercicios finales: k-vecinos afinado hasta ~97%, aumentar datos desplazando
+las imágenes, el Titanic, y un filtro de spam.
 
 ## Estructura
 
@@ -183,6 +230,7 @@ capturan forma.
 | `src/metrics.py` | Umbral, curvas PR y ROC |
 | `src/multiclass.py` | Los 10 dígitos: OvR vs OvO, efecto del escalado |
 | `src/errors.py` | Matriz de confusión 10×10 y montaje del peor par |
+| `src/multioutput.py` | Multietiqueta y quitar ruido de imágenes |
 
 **Por qué no se baraja la partición:** las 10,000 imágenes de prueba de MNIST son las
 mismas desde 1998 y todos los resultados publicados las usan. Además vienen de
