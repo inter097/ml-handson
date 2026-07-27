@@ -10,8 +10,8 @@ Cada ejecución crea un run en MLflow con:
 Uso:
     python src/train.py --model linear_regression
     python src/train.py --model random_forest
-    python src/train.py --model gradient_boosting
-    # o simplemente: make train-all
+    python src/train.py --model xgboost
+    # o: make train-all
 """
 import argparse
 from pathlib import Path
@@ -20,16 +20,37 @@ import mlflow
 import mlflow.sklearn
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
-from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import (
+    ExtraTreesRegressor,
+    GradientBoostingRegressor,
+    RandomForestRegressor,
+)
+from sklearn.linear_model import LinearRegression, Ridge
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from sklearn.neural_network import MLPRegressor
+from sklearn.svm import SVR
+from sklearn.tree import DecisionTreeRegressor
+from xgboost import XGBRegressor
 
 PROCESSED_DIR = Path("data/processed")
 
+# Tipos necesarios para serializar XGBoost y MLP via MLflow/skops
+SKOPS_TRUSTED = [
+    "xgboost.core.Booster",
+    "xgboost.sklearn.XGBRegressor",
+    "sklearn.neural_network._stochastic_optimizers.AdamOptimizer",
+]
+
 MODELS: dict = {
     "linear_regression": LinearRegression(),
+    "ridge": Ridge(alpha=1.0),
+    "decision_tree": DecisionTreeRegressor(max_depth=10, random_state=42),
     "random_forest": RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1),
+    "extra_trees": ExtraTreesRegressor(n_estimators=100, random_state=42, n_jobs=-1),
     "gradient_boosting": GradientBoostingRegressor(n_estimators=100, random_state=42),
+    "xgboost": XGBRegressor(n_estimators=100, random_state=42, n_jobs=-1, verbosity=0),
+    "svr": SVR(kernel="rbf", C=10, epsilon=0.1),
+    "mlp": MLPRegressor(hidden_layer_sizes=(128, 64), max_iter=500, random_state=42),
 }
 
 
@@ -61,19 +82,14 @@ def train(model_name: str) -> None:
         r2 = float(r2_score(y_test, preds))
 
         mlflow.log_metrics({"rmse": rmse, "mae": mae, "r2": r2})
-        mlflow.sklearn.log_model(model, artifact_path="model")
+        mlflow.sklearn.log_model(model, artifact_path="model", skops_trusted_types=SKOPS_TRUSTED)
 
         run_id = mlflow.active_run().info.run_id
-        print(f"[{model_name}] RMSE={rmse:.4f} | MAE={mae:.4f} | R²={r2:.4f} | run_id={run_id}")
+        print(f"[{model_name:20s}] RMSE={rmse:.4f} | MAE={mae:.4f} | R²={r2:.4f} | run_id={run_id}")
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Entrenar un modelo y loggear en MLflow.")
-    parser.add_argument(
-        "--model",
-        required=True,
-        choices=list(MODELS.keys()),
-        help="Nombre del modelo a entrenar",
-    )
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--model", required=True, choices=list(MODELS.keys()))
     args = parser.parse_args()
     train(args.model)

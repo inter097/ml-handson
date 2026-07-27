@@ -28,7 +28,24 @@ REPORTS_DIR = Path("reports")
 def evaluate(run_id: str) -> None:
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
-    model = mlflow.sklearn.load_model(f"runs:/{run_id}/model")
+    import os, mlflow.artifacts, joblib, tempfile
+    # Descarga el artefacto y carga con joblib (compatible con todos los modelos)
+    with tempfile.TemporaryDirectory() as tmp:
+        mlflow.artifacts.download_artifacts(
+            run_id=run_id, artifact_path="model", dst_path=tmp
+        )
+        model_file = next(Path(tmp).rglob("model.pkl"), None) or \
+                     next(Path(tmp).rglob("*.pkl"), None) or \
+                     next(Path(tmp).rglob("*.joblib"), None)
+        if model_file is None:
+            # fallback: usar mlflow.pyfunc
+            import mlflow.pyfunc
+            pyfunc_model = mlflow.pyfunc.load_model(f"runs:/{run_id}/model")
+            class _Wrapper:
+                def predict(self, X): return pyfunc_model.predict(X)
+            model = _Wrapper()
+        else:
+            model = joblib.load(model_file)
 
     X_test = pd.read_parquet(PROCESSED_DIR / "X_test.parquet").values
     y_test = pd.read_parquet(PROCESSED_DIR / "y_test.parquet").values.ravel()

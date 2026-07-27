@@ -1,4 +1,4 @@
-.PHONY: all setup data features train-all tune-all ui clean help
+.PHONY: all setup data features train-all tune-all analysis ui clean help
 
 PYTHON = venv/bin/python
 PIP    = venv/bin/pip
@@ -28,8 +28,14 @@ train-%:
 
 train-all:
 	$(PYTHON) src/train.py --model linear_regression
+	$(PYTHON) src/train.py --model ridge
+	$(PYTHON) src/train.py --model decision_tree
 	$(PYTHON) src/train.py --model random_forest
+	$(PYTHON) src/train.py --model extra_trees
 	$(PYTHON) src/train.py --model gradient_boosting
+	$(PYTHON) src/train.py --model xgboost
+	$(PYTHON) src/train.py --model svr
+	$(PYTHON) src/train.py --model mlp
 
 # ── Búsqueda de hiperparámetros (RandomizedSearchCV) ────────────────────────
 # make tune-random_forest | make tune-gradient_boosting
@@ -39,8 +45,19 @@ tune-%:
 	$(PYTHON) src/tune.py --model $* --n-iter $(or $(N_ITER),20)
 
 tune-all:
+	$(PYTHON) src/tune.py --model ridge --n-iter $(or $(N_ITER),10)
+	$(PYTHON) src/tune.py --model decision_tree --n-iter $(or $(N_ITER),20)
 	$(PYTHON) src/tune.py --model random_forest --n-iter $(or $(N_ITER),20)
+	$(PYTHON) src/tune.py --model extra_trees --n-iter $(or $(N_ITER),20)
 	$(PYTHON) src/tune.py --model gradient_boosting --n-iter $(or $(N_ITER),20)
+	$(PYTHON) src/tune.py --model xgboost --n-iter $(or $(N_ITER),30)
+	$(PYTHON) src/tune.py --model svr --n-iter $(or $(N_ITER),15)
+	$(PYTHON) src/tune.py --model mlp --n-iter $(or $(N_ITER),15)
+
+# ── Análisis: importancia de features + curvas de aprendizaje ────────────────
+
+analysis:
+	$(PYTHON) src/analysis.py
 
 # ── Evaluación del mejor modelo ──────────────────────────────────────────────
 # Uso: make evaluate RUN_ID=<id copiado del mlflow ui>
@@ -69,6 +86,7 @@ help:
 	@echo "  make tune-MODEL     Buscar mejores hiperparámetros (random_forest, gradient_boosting)"
 	@echo "  make tune-all       Tuning de todos los modelos"
 	@echo "  make tune-MODEL N_ITER=50  Más iteraciones de búsqueda"
+	@echo "  make analysis       Importancia de features + curvas de aprendizaje → reports/"
 	@echo "  make ui             Abrir MLflow UI en http://localhost:5000"
 	@echo "  make evaluate RUN_ID=<id>  Evaluar el mejor run y guardar reporte"
 	@echo "  make clean          Borrar datos y runs locales"

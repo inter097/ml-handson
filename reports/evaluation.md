@@ -1,13 +1,13 @@
-# Evaluación Final — GradientBoostingRegressor
+# Evaluación Final — _Wrapper
 
-**run_id:** `c4ff94f43c5d42768d0eb84b8bbae4a2`
+**run_id:** `7c61917003d54f14987f9e39442327a5`
 
 | Métrica | Valor |
 |---------|-------|
-| RMSE    | 0.4419 |
-| MAE     | 0.3329 |
-| R²      | 0.8350 |
+| RMSE    | 0.4405 |
+| MAE     | 0.3350 |
+| R²      | 0.8360 |
 
-> RMSE en unidades originales: USD 44,189 promedio de error por casa.
+> RMSE en unidades originales: USD 44,055 promedio de error por casa.
 
 ![Residuos](evaluation.png)
