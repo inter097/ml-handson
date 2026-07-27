@@ -341,49 +341,7 @@
 <section class="wrap">
   <div class="stack" style="margin-bottom:.6rem">
     <span class="eyebrow">Hallazgos</span>
-    <h2>Seis cosas que resultaron al revés de lo esperado</h2>
-  </div>
-
-  <div class="finding">
-    <div class="finding-head">
-      <h3>La librería estándar entregaba datos recortados</h3>
-      <span class="evidence" data-tone="gain">+1 variable · 207 nulos</span>
-    </div>
-    <p>
-      El proyecto usaba <code>fetch_california_housing</code> de scikit-learn. Al comparar contra
-      el CSV original del libro apareció que la versión de la librería <strong>descarta la columna
-      <code>ocean_proximity</code></strong> e imputa en silencio los 207 valores faltantes de
-      <code>total_bedrooms</code>.
-    </p>
-    <p class="note">
-      Justo las dos cosas que el capítulo enseña a tratar — codificación de categóricas e
-      imputación — eran las que la versión conveniente escondía. Cambiar a la fuente cruda también
-      reveló que trae las filas en otro orden, así que con la misma semilla el conjunto de prueba
-      cae en casas distintas: las métricas anteriores dejaron de ser comparables.
-    </p>
-  </div>
-
-  <div class="finding">
-    <div class="finding-head">
-      <h3>La validación cruzada se estaba mintiendo a sí misma</h3>
-      <span class="evidence" data-tone="gain">fuga eliminada</span>
-    </div>
-    <p>
-      El escalado se aplicaba una vez sobre todo el conjunto de entrenamiento, antes de partirlo en
-      pliegues. Cada pliegue de validación se evaluaba entonces con estadísticas calculadas
-      <em>incluyéndolo a él mismo</em>. El <code>cv_rmse</code> salía optimista.
-    </p>
-    <p>
-      La corrección fue meter el preprocesamiento dentro del <code>Pipeline</code>, donde
-      scikit-learn lo reajusta en cada pliegue. La señal de que funcionó es sutil pero clara: antes
-      la validación cruzada reportaba un error <em>menor</em> que el del conjunto de prueba; ahora
-      reporta uno ligeramente mayor, que es lo que debe pasar.
-    </p>
-    <p class="note">
-      Beneficio colateral: el artefacto guardado contiene el preprocesamiento. Quien lo carga le
-      pasa datos crudos y funciona — no hay que replicar los pasos en producción, que es donde
-      esto se rompe en la vida real.
-    </p>
+    <h2>Cuatro cosas que resultaron al revés de lo esperado</h2>
   </div>
 
   <div class="finding">
@@ -392,13 +350,15 @@
       <span class="evidence" data-tone="none">+0.004 RMSE en XGBoost</span>
     </div>
     <p>
-      Recuperada <code>ocean_proximity</code>, XGBoost la reportó como su variable
-      <strong>número uno</strong> por importancia — 0.61 contra 0.14 del ingreso medio. Parecía la
-      mejora grande del proyecto.
+      El dataset incluye una variable categórica que dice si el distrito está tierra adentro,
+      cerca de la bahía o frente al mar. Al añadirla, XGBoost la reportó como su variable
+      <strong>número uno</strong> por importancia — 0.61 contra 0.14 del ingreso medio, que era
+      el favorito hasta entonces. Parecía la mejora grande del proyecto.
     </p>
     <p>
-      Midiendo con una ablación — mismo split, misma semilla, única diferencia la columna — resultó
-      que mejora seis de siete modelos por márgenes mínimos, y que a XGBoost <strong>lo empeora</strong>.
+      Midiendo con una ablación — mismo conjunto, misma semilla, única diferencia la columna —
+      resultó que mejora seis de siete modelos por márgenes mínimos, y que a XGBoost
+      <strong>lo empeora</strong>.
     </p>
     <p class="note">
       La explicación: latitud y longitud ya estaban ahí. “Cerca del mar” era deducible de las
