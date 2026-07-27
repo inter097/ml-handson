@@ -404,10 +404,11 @@ Es HTML estático sin build, así que sirve en cualquier lado:
 | VPS con nginx | `root /var/www/houses;` y copiar `site/index.html` |
 | Cualquier CDN | Subir `site/index.html` tal cual |
 
-Para el subdominio `houses.eliuth.dev`: agrégalo en *Vercel → Settings → Domains* y
-crea el `CNAME` que indique en el DNS de Cloudflare. Hay que hacer ambas cosas — solo
-el registro DNS no basta, Vercel necesita tener el dominio registrado en el proyecto
-para emitir el certificado.
+> **Pendiente:** apuntar el sitio a `houses.eliuth.dev`. La URL autogenerada de Vercel
+> sirve, pero se ve mal para portafolio. Requiere dos pasos —agregar el dominio en
+> *Vercel → Settings → Domains* **y** crear el `CNAME` en Cloudflare en modo *DNS only*—
+> porque Vercel no emite el certificado si el dominio no está registrado en el proyecto.
+> Detalle completo y credenciales necesarias en [`AGENTS.md`](AGENTS.md).
 
 **Regenerar tras reentrenar:** `make site RUN_ID=<nuevo id>` y commitear
 `site/index.html`. El HTML lleva las predicciones dentro, así que si cambia el modelo
