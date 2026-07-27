@@ -53,6 +53,12 @@ titanic:
 spam:
 	$(PYTHON) src/spam.py
 
+knn:
+	$(PYTHON) src/knn.py
+
+augment:
+	$(PYTHON) src/augment.py
+
 # ── MLflow UI ───────────────────────────────────────────────────────────────
 
 ui:
@@ -76,6 +82,8 @@ help:
 	@echo "  make multioutput     Multietiqueta y quitar ruido de imágenes"
 	@echo "  make titanic         Ejercicio 3 — clasificador de supervivencia"
 	@echo "  make spam            Ejercicio 4 — filtro de spam desde cero"
+	@echo "  make knn             Ejercicio 1 — k-vecinos afinado (>97%)"
+	@echo "  make augment         Ejercicio 2 — aumentar datos desplazando imágenes"
 	@echo "  make ui              Abrir MLflow UI"
 	@echo "  make clean           Borrar datos locales"
 	@echo ""

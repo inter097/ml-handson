@@ -1,0 +1,8 @@
+{
+  "params": {
+    "n_neighbors": 4,
+    "weights": "distance"
+  },
+  "cv_accuracy": 0.9703500000000002,
+  "test_accuracy": 0.9714
+}
