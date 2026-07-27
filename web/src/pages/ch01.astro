@@ -63,13 +63,15 @@ import Base from "../layouts/Base.astro";
         <table class="prose">
           <tbody>
             <tr><td>Por lotes / en línea</td><td>Reentrenar de cero cada tanto, o ir actualizando con cada dato que llega. Este proyecto es por lotes: se entrena, se evalúa, se despliega.</td></tr>
-            <tr><td>Por instancia / por modelo</td><td>Memorizar los ejemplos y comparar contra ellos, o resumirlos en parámetros. El k-vecinos del capítulo 3 es lo primero — y por eso su artefacto pesa 703 MB frente a los 2.4 MB de XGBoost.</td></tr>
+            <tr><td>Por instancia / por modelo</td><td>Memorizar los ejemplos y comparar contra ellos, o resumirlos en parámetros. El k-vecinos que clasifica dígitos es lo primero: no entrena, guarda las 60,000 imágenes y compara cada dígito nuevo contra todas.</td></tr>
           </tbody>
         </table>
       </div>
       <figcaption>
         Esa última distinción parece académica hasta que hay que desplegar. Un modelo que
-        memoriza carga con todos sus datos a producción.
+        memoriza carga con todos sus datos a producción — y cuando ampliamos el
+        entrenamiento a 300,000 imágenes, el modelo “creció” otro tanto sin haber
+        aprendido un solo parámetro nuevo.
       </figcaption>
     </figure>
   </section>
@@ -77,10 +79,11 @@ import Base from "../layouts/Base.astro";
   <!-- ══ LO IMPORTANTE ═════════════════════════════════════════════════ -->
   <section class="wrap stack">
     <span class="eyebrow">Donde está el capítulo</span>
-    <h2>Cuatro advertencias que resultaron ciertas</h2>
+    <h2>Cuatro advertencias que resultaron ciertas, y una que falta</h2>
     <p>
       La segunda mitad enumera las formas en que un proyecto de machine learning fracasa.
-      Leídas antes de empezar suenan a sentido común. Cada una nos costó una corrección.
+      Leídas antes de empezar suenan a sentido común. Cada una nos costó una corrección —
+      y al final apareció una quinta que el libro no lista.
     </p>
   </section>
 
@@ -167,20 +170,32 @@ import Base from "../layouts/Base.astro";
         tienes que probarlos.
       </p>
       <p>
-        Este proyecto lo confirmó, y con un giro incómodo. Tras probar nueve modelos y
-        137 combinaciones de hiperparámetros, los tres primeros quedaron con errores de
-        0.4063, 0.4235 y 0.4291 — un orden claro en la tabla.
+        <strong>En los dígitos</strong> el resultado fue casi cómico. Compitieron un
+        modelo lineal, un bosque de 100 árboles, una máquina de vectores de soporte —y
+        ganó <strong>k-vecinos</strong>, que es el algoritmo más tonto de todos: no
+        aprende nada, guarda las imágenes y compara.
+      </p>
+      <div class="marcador">
+        <div><span class="etq">k-vecinos</span><span class="num cool">0.9763</span><span class="pie">memoriza y compara</span></div>
+        <div><span class="etq">Bosque aleatorio</span><span class="num">0.9646</span><span class="pie">100 árboles</span></div>
+        <div><span class="etq">Modelo lineal</span><span class="num">0.9097</span><span class="pie">10 clasificadores</span></div>
+      </div>
+      <p>
+        Para píxeles de dígitos centrados, «parecerse a los que ya vi» resulta ser una
+        estrategia excelente. Para predecir precios de vivienda sería malísima. El mismo
+        algoritmo, dos problemas, resultados opuestos — que es literalmente lo que dice
+        el teorema.
+      </p>
+      <p>
+        <strong>En los precios</strong> el giro fue otro, y más incómodo. Tras nueve
+        modelos y 137 combinaciones de hiperparámetros, los tres primeros quedaron con
+        errores de 0.4063, 0.4235 y 0.4291 — un orden claro en la tabla.
       </p>
       <p class="note">
         Pero calculando el intervalo de confianza de cada uno,
         <strong>los tres se traslapan</strong>. Ese orden es ruido del muestreo: con otro
         conjunto de prueba podría invertirse. No solo no se puede saber de antemano cuál
         gana — a veces tampoco se puede saber después.
-      </p>
-      <p>
-        El desempate acabó siendo práctico. El modelo “ganador” pesaba
-        <strong>703 MB</strong> y pedía 1.3 GB de memoria; el tercero pesa 2.4 MB y
-        responde en 2.3 milisegundos. Se desplegó el tercero.
       </p>
     </div>
 
@@ -212,16 +227,65 @@ import Base from "../layouts/Base.astro";
       </div>
       <p class="note">
         Una sola variable bien pensada rindió más que las 137 combinaciones de
-        hiperparámetros juntas. Y en el capítulo 3 pasó lo mismo por otra vía: replicar
-        cada imagen desplazada un píxel —sin tocar el modelo— subió la exactitud de
-        0.9714 a 0.9763.
+        hiperparámetros juntas.
       </p>
       <p>
-        La contracara: más datos no siempre es la respuesta. Añadimos una variable que
-        parecía obviamente útil —si el distrito está frente al mar— y
+        <strong>En los dígitos la demostración es aún más limpia</strong>, porque ni
+        siquiera hubo variable nueva. Cada imagen se replicó desplazada un píxel arriba,
+        abajo, izquierda y derecha — el mismo dígito, cinco veces, en posiciones
+        ligeramente distintas. El conjunto pasó de 60,000 a 300,000 imágenes.
+      </p>
+      <div class="marcador">
+        <div><span class="etq">Antes</span><span class="num">0.9714</span><span class="pie">60,000 imágenes</span></div>
+        <div><span class="etq">Después</span><span class="num cool">0.9763</span><span class="pie">300,000 imágenes</span></div>
+      </div>
+      <p>
+        <strong>Sin tocar el modelo ni un solo hiperparámetro.</strong> Solo enseñándole
+        que un 7 corrido un píxel sigue siendo un 7 — algo obvio para una persona, y que
+        un modelo que compara píxel contra píxel no tenía forma de saber.
+      </p>
+      <p class="note">
+        La contracara: más datos no siempre es la respuesta. En los precios añadimos una
+        variable que parecía obviamente útil —si el distrito está frente al mar— y
         <strong>no mejoró nada</strong>, porque las coordenadas ya contenían esa
         información. Lo que importa no es la cantidad de datos sino cuánta información
         <em>nueva</em> aportan.
+      </p>
+    </div>
+
+    <div class="finding">
+      <div class="finding-head">
+        <h3>La que el capítulo no lista</h3>
+        <span class="evidence" data-tone="none">91% sin aprender nada</span>
+      </div>
+      <p>
+        Las cuatro anteriores están en el libro. Esta la añade el proyecto, y resultó ser
+        la más peligrosa de todas: <strong>medir con la métrica equivocada</strong>.
+      </p>
+      <p>
+        En el capítulo 3 la primera tarea es detectar un solo dígito: <em>¿esta imagen es
+        un 5?</em>. Solo el 9% de las imágenes lo son. Así que un modelo que responda «no»
+        a absolutamente todo acierta el 91% de las veces sin haber mirado un píxel.
+      </p>
+      <div class="marcador">
+        <div><span class="etq">Clasificador real</span><span class="num">0.9696</span><span class="pie">aprendió algo</span></div>
+        <div><span class="etq">Responder «no» a todo</span><span class="num warm">0.9096</span><span class="pie">no miró nada</span></div>
+      </div>
+      <p>
+        Seis puntos separan un modelo que funciona de uno que no existe. Y un 91% en un
+        informe se ve muy bien.
+      </p>
+      <p class="note">
+        Esto no es una curiosidad de los dígitos. <strong>Las clases raras son la norma
+        en los problemas que importan</strong>: el fraude, la enfermedad, la falla del
+        equipo, el candidato que sí encaja. En todos ellos la exactitud regala el 90% de
+        entrada, y quien reporte solo esa cifra estará reportando el desequilibrio de
+        sus datos, no el mérito de su modelo.
+      </p>
+      <p>
+        La salida es cambiar de métrica — precisión, exhaustividad, y decidir cuál pesa
+        más según lo que cueste cada tipo de error. Pero eso ya no es una decisión
+        técnica, y ahí termina lo que el capítulo 1 puede decir.
       </p>
     </div>
   </section>
