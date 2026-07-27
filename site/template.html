@@ -1,0 +1,845 @@
+<title>California Housing — Caso de estudio de ML</title>
+<meta name="description" content="Pipeline de machine learning sobre California Housing: qué mejoró el modelo, qué no, y qué no se puede afirmar.">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+  :root {
+    color-scheme: light;
+    --paper:      #f6f7f4;
+    --surface:    #fbfcfa;
+    --surface-2:  #eef1ec;
+    --ink:        #0b100f;
+    --ink-2:      #4c5651;
+    --muted:      #7e8783;
+    --hairline:   #e1e4de;
+    --rule:       #ccd2cb;
+    --accent:     #00695c;
+    --accent-ink: #00544a;
+    --cool:       #00937f;
+    --warm:       #c2571f;
+    --mid:        #d9ddd6;
+    --shadow:     0 1px 2px rgba(11,16,15,.05), 0 8px 24px -16px rgba(11,16,15,.28);
+
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+
+    --measure: 68ch;
+    --gutter: clamp(1.25rem, 4vw, 3rem);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --paper:     #0b100f;
+      --surface:   #141b19;
+      --surface-2: #1b2422;
+      --ink:       #e9efec;
+      --ink-2:     #a9b4af;
+      --muted:     #79837f;
+      --hairline:  #232c29;
+      --rule:      #2f3a37;
+      --accent:    #4cc2a8;
+      --accent-ink:#6fd0ba;
+      --cool:      #12a88e;
+      --warm:      #d2733a;
+      --mid:       #333b38;
+      --shadow:    0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --paper:     #0b100f;
+    --surface:   #141b19;
+    --surface-2: #1b2422;
+    --ink:       #e9efec;
+    --ink-2:     #a9b4af;
+    --muted:     #79837f;
+    --hairline:  #232c29;
+    --rule:      #2f3a37;
+    --accent:    #4cc2a8;
+    --accent-ink:#6fd0ba;
+    --cool:      #12a88e;
+    --warm:      #d2733a;
+    --mid:       #333b38;
+    --shadow:    0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 17px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: calc(var(--measure) + var(--gutter) * 2); margin-inline: auto; padding-inline: var(--gutter); }
+  .wide { max-width: 1120px; margin-inline: auto; padding-inline: var(--gutter); }
+
+  h1, h2, h3 { font-family: var(--serif); font-weight: 600; text-wrap: balance; line-height: 1.2; margin: 0; }
+  h1 { font-size: clamp(2.1rem, 5.5vw, 3.3rem); letter-spacing: -.015em; }
+  h2 { font-size: clamp(1.5rem, 3.2vw, 2rem); letter-spacing: -.01em; }
+  h3 { font-size: 1.16rem; }
+  p { margin: 0; }
+  a { color: var(--accent-ink); text-underline-offset: 3px; text-decoration-thickness: 1px; }
+  a:focus-visible, button:focus-visible, .chip:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 3px;
+  }
+
+  .eyebrow {
+    font-family: var(--mono); font-size: .69rem; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--muted);
+  }
+
+  /* ── Marca de intervalo: el motivo estructural ───────────────────────── */
+  .interval-rule { display: block; width: 100%; height: 13px; overflow: visible; }
+  .interval-rule .band { stroke: var(--rule); stroke-width: 1.5; }
+  .interval-rule .cap  { stroke: var(--rule); stroke-width: 1.5; }
+  .interval-rule .pt   { fill: var(--accent); }
+
+  /* ── Cabecera ────────────────────────────────────────────────────────── */
+  header.hero { padding: clamp(3.5rem, 9vw, 6.5rem) 0 0; }
+  .hero-inner { display: flex; flex-direction: column; gap: 1.4rem; }
+  .hero p.lede { font-size: 1.18rem; color: var(--ink-2); max-width: 58ch; }
+  .byline { font-family: var(--mono); font-size: .78rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: .35rem 1.1rem; }
+
+  .stat-row {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1px; background: var(--hairline); border: 1px solid var(--hairline);
+    border-radius: 6px; overflow: hidden; margin-top: 2.2rem;
+  }
+  .stat { background: var(--surface); padding: 1rem 1.1rem; display: flex; flex-direction: column; gap: .28rem; }
+  .stat .k { font-family: var(--mono); font-size: .67rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  .stat .v { font-size: 1.75rem; font-weight: 600; line-height: 1.1; letter-spacing: -.02em; }
+  .stat .n { font-size: .78rem; color: var(--muted); font-family: var(--mono); }
+
+  /* ── Secciones ───────────────────────────────────────────────────────── */
+  section { padding-block: clamp(2.75rem, 7vw, 4.5rem); }
+  .stack { display: flex; flex-direction: column; gap: 1.15rem; }
+  .stack--tight { gap: .8rem; }
+
+  .note {
+    border-left: 2px solid var(--rule); padding: .1rem 0 .1rem 1.1rem;
+    color: var(--ink-2); font-size: .96rem;
+  }
+
+  /* ── Hallazgos ───────────────────────────────────────────────────────── */
+  .finding { display: flex; flex-direction: column; gap: .85rem; padding-block: 1.9rem; border-top: 1px solid var(--hairline); }
+  .finding:first-of-type { border-top: 0; }
+  .finding-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: .55rem 1rem; }
+  .evidence {
+    font-family: var(--mono); font-size: .74rem; font-weight: 600;
+    padding: .2rem .5rem; border-radius: 3px; white-space: nowrap;
+    background: var(--surface-2); color: var(--ink-2); border: 1px solid var(--hairline);
+  }
+  .evidence[data-tone="gain"] { color: var(--cool); }
+  .evidence[data-tone="none"] { color: var(--warm); }
+
+  /* ── Tarjetas de figura ──────────────────────────────────────────────── */
+  figure { margin: 0; background: var(--surface); border: 1px solid var(--hairline); border-radius: 8px; box-shadow: var(--shadow); }
+  .fig-head { padding: 1.1rem 1.25rem .85rem; display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: baseline; justify-content: space-between; border-bottom: 1px solid var(--hairline); }
+  .fig-title { font-family: var(--serif); font-size: 1.08rem; font-weight: 600; }
+  .fig-body { padding: 1.15rem 1.25rem 1.3rem; }
+  figcaption { padding: 0 1.25rem 1.2rem; color: var(--muted); font-size: .85rem; }
+
+  .toggle {
+    font-family: var(--mono); font-size: .7rem; letter-spacing: .06em; text-transform: uppercase;
+    background: none; border: 1px solid var(--hairline); color: var(--ink-2);
+    padding: .3rem .6rem; border-radius: 4px; cursor: pointer;
+  }
+  .toggle:hover { background: var(--surface-2); }
+  .toggle[aria-pressed="true"] { background: var(--surface-2); color: var(--ink); border-color: var(--rule); }
+
+  /* ── Tablas ──────────────────────────────────────────────────────────── */
+  .scroll-x { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: .87rem; }
+  th, td { text-align: right; padding: .5rem .6rem; border-bottom: 1px solid var(--hairline); white-space: nowrap; }
+  th:first-child, td:first-child { text-align: left; }
+  thead th { font-family: var(--mono); font-size: .67rem; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+  tbody td { font-variant-numeric: tabular-nums; }
+  tbody tr[data-hi="1"] td { background: var(--surface-2); }
+  tbody tr[data-hi="1"] td:first-child { font-weight: 600; }
+  .barcell { display: flex; align-items: center; gap: .5rem; justify-content: flex-end; }
+  .barcell i { display: block; height: 6px; border-radius: 0 2px 2px 0; background: var(--accent); opacity: .55; }
+
+  /* ── Filtros ─────────────────────────────────────────────────────────── */
+  .filters { display: flex; flex-wrap: wrap; gap: 1.1rem 1.6rem; align-items: flex-end; padding: 1.1rem 1.25rem; border-bottom: 1px solid var(--hairline); }
+  .fgroup { display: flex; flex-direction: column; gap: .45rem; }
+  .fgroup > .eyebrow { font-size: .65rem; }
+  .chips { display: flex; flex-wrap: wrap; gap: .35rem; }
+  .chip {
+    font-family: var(--mono); font-size: .72rem; cursor: pointer;
+    padding: .28rem .55rem; border-radius: 999px;
+    border: 1px solid var(--hairline); background: var(--surface); color: var(--ink-2);
+  }
+  .chip:hover { border-color: var(--rule); }
+  .chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--paper); }
+
+  /* ── Mapa ────────────────────────────────────────────────────────────── */
+  .map-shell { position: relative; }
+  #map { display: block; width: 100%; height: auto; touch-action: pan-y; }
+  .map-live {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+    gap: 1px; background: var(--hairline); border-top: 1px solid var(--hairline);
+  }
+  .map-live > div { background: var(--surface); padding: .7rem .9rem; display: flex; flex-direction: column; gap: .2rem; }
+  .map-live .k { font-family: var(--mono); font-size: .63rem; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+  .map-live .v { font-size: 1.12rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .tip {
+    position: absolute; pointer-events: none; opacity: 0; transition: opacity .12s;
+    background: var(--surface); border: 1px solid var(--rule); border-radius: 6px;
+    padding: .55rem .7rem; font-size: .78rem; box-shadow: var(--shadow); z-index: 5;
+    font-variant-numeric: tabular-nums; min-width: 168px;
+  }
+  .tip[data-on="1"] { opacity: 1; }
+  .tip dl { margin: 0; display: grid; grid-template-columns: auto auto; gap: .12rem .7rem; }
+  .tip dt { color: var(--muted); font-family: var(--mono); font-size: .68rem; }
+  .tip dd { margin: 0; text-align: right; }
+  .tip .head { font-family: var(--mono); font-size: .68rem; color: var(--muted); margin-bottom: .35rem; }
+
+  .legend { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .9rem; font-size: .78rem; color: var(--ink-2); }
+  .ramp { display: flex; align-items: center; gap: .4rem; }
+  .ramp i { width: 132px; height: 9px; border-radius: 2px; display: block; }
+  .swatch { display: inline-flex; align-items: center; gap: .35rem; font-family: var(--mono); font-size: .72rem; }
+  .swatch b { width: 10px; height: 10px; border-radius: 2px; display: block; }
+
+  /* ── Charts SVG ──────────────────────────────────────────────────────── */
+  .chart { width: 100%; height: auto; overflow: visible; }
+  .chart text { font-family: var(--mono); font-size: 11px; fill: var(--muted); }
+  .chart .lbl { font-family: var(--sans); font-size: 12.5px; fill: var(--ink); }
+  .chart .val { font-family: var(--mono); font-size: 11.5px; fill: var(--ink-2); }
+  .chart .grid { stroke: var(--hairline); stroke-width: 1; }
+  .chart .axis { stroke: var(--rule); stroke-width: 1; }
+  .chart .band { stroke-width: 2; stroke-linecap: round; }
+  .chart .whisk { stroke-width: 1; }
+  .chart .dot { r: 4.5; }
+  .chart .halo { r: 6.5; fill: var(--surface); }
+
+  /* ── Pie ─────────────────────────────────────────────────────────────── */
+  footer { border-top: 1px solid var(--hairline); padding-block: 2.5rem 4rem; color: var(--ink-2); font-size: .92rem; }
+  .kv { display: grid; grid-template-columns: auto 1fr; gap: .3rem 1.1rem; font-size: .88rem; }
+  .kv dt { font-family: var(--mono); font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; }
+  .kv dd { margin: 0; }
+
+  code { font-family: var(--mono); font-size: .87em; background: var(--surface-2); padding: .1em .32em; border-radius: 3px; }
+
+  .theme-btn {
+    position: fixed; top: 1rem; right: 1rem; z-index: 20;
+    width: 34px; height: 34px; border-radius: 50%; cursor: pointer;
+    background: var(--surface); border: 1px solid var(--hairline); color: var(--ink-2);
+    display: grid; place-items: center; font-size: .9rem; box-shadow: var(--shadow);
+  }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<button class="theme-btn" id="themeBtn" aria-label="Cambiar tema">◐</button>
+
+<header class="hero">
+  <div class="wrap hero-inner">
+    <span class="eyebrow">Caso de estudio · Machine learning</span>
+    <h1>Lo que el modelo aprendió,<br>y lo que no se puede afirmar</h1>
+    <p class="lede">
+      Un pipeline completo sobre <strong>California Housing</strong> — 20,640 viviendas, nueve
+      modelos, 180 experimentos registrados. El resultado interesante no fue el error más bajo,
+      sino descubrir cuáles de las mejoras eran reales y cuáles solo lo parecían.
+    </p>
+    <div class="byline">
+      <span>Guiado por <em>Hands-On Machine Learning</em> — A. Géron, cap. 2</span>
+      <span>scikit-learn · XGBoost · MLflow</span>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat"><span class="k">Modelo desplegado</span><span class="v">XGBoost</span><span class="n">300 árboles · 2.4 MB</span></div>
+      <div class="stat"><span class="k">RMSE en test</span><span class="v">0.429</span><span class="n">± USD 42,910</span></div>
+      <div class="stat"><span class="k">R²</span><span class="v">0.863</span><span class="n">4,128 casas</span></div>
+      <div class="stat"><span class="k">Latencia</span><span class="v">2.3 ms</span><span class="n">por predicción</span></div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap"><svg class="interval-rule" viewBox="0 0 100 13" preserveAspectRatio="none" aria-hidden="true">
+  <line class="band" x1="18" y1="6.5" x2="82" y2="6.5"/>
+  <line class="cap" x1="18" y1="2.5" x2="18" y2="10.5"/>
+  <line class="cap" x1="82" y1="2.5" x2="82" y2="10.5"/>
+  <circle class="pt" cx="44" cy="6.5" r="3"/>
+</svg></div>
+
+<section class="wrap stack">
+  <span class="eyebrow">El encargo</span>
+  <h2>Predecir el precio medio de una vivienda por distrito</h2>
+  <p>
+    El dataset trae ocho variables por distrito censal de California — ingreso medio, antigüedad,
+    habitaciones, población, coordenadas — y el precio medio de la vivienda. El objetivo es
+    predecir ese precio. Es el problema con el que arranca el libro de Géron, y su virtud es que
+    todas las trampas del oficio caben en él.
+  </p>
+  <p>
+    Lo que sigue no es un recorrido por los modelos. Es lo que cambió de opinión durante el
+    proceso: cuatro hallazgos que contradijeron lo que parecía obvio al empezar.
+  </p>
+</section>
+
+<!-- ══ MAPA ══════════════════════════════════════════════════════════════ -->
+<section class="wide stack">
+  <span class="eyebrow">Explorador</span>
+  <h2>Dónde se equivoca el modelo</h2>
+  <p style="max-width:var(--measure)">
+    Cada punto es uno de los 4,128 distritos del conjunto de prueba — casas que el modelo
+    nunca vio al entrenar. El color indica si <strong>subestimó</strong> o <strong>sobreestimó</strong>
+    el precio. Filtra y las métricas de abajo se recalculan sobre el subconjunto.
+  </p>
+
+  <figure>
+    <div class="filters">
+      <div class="fgroup">
+        <span class="eyebrow">Proximidad al océano</span>
+        <div class="chips" id="fOcean"></div>
+      </div>
+      <div class="fgroup">
+        <span class="eyebrow">Categoría de ingreso</span>
+        <div class="chips" id="fInc"></div>
+      </div>
+      <div class="fgroup">
+        <span class="eyebrow">Colorear por</span>
+        <div class="chips" id="fMode"></div>
+      </div>
+    </div>
+
+    <div class="map-shell">
+      <canvas id="map" width="1000" height="820" role="img"
+        aria-label="Mapa de California con 4,128 distritos coloreados por error de predicción"></canvas>
+      <div class="tip" id="tip" role="status"></div>
+    </div>
+
+    <div class="map-live" id="live"></div>
+
+    <div class="fig-body" style="display:flex;flex-wrap:wrap;gap:.9rem 1.5rem;align-items:center;justify-content:space-between">
+      <div class="legend" id="legend"></div>
+      <button class="toggle" id="tblMapBtn" aria-pressed="false" aria-controls="tblMap">Ver tabla</button>
+    </div>
+    <div class="fig-body scroll-x" id="tblMap" hidden style="padding-top:0"></div>
+
+    <figcaption>
+      Predicciones reales del modelo XGBoost sobre el conjunto de prueba, calculadas una sola vez
+      y embebidas en la página. Los filtros y las métricas se computan en tu navegador — no hay
+      servidor detrás.
+    </figcaption>
+  </figure>
+</section>
+
+<!-- ══ HALLAZGOS ═════════════════════════════════════════════════════════ -->
+<section class="wrap">
+  <div class="stack" style="margin-bottom:.6rem">
+    <span class="eyebrow">Hallazgos</span>
+    <h2>Cuatro cosas que resultaron al revés de lo esperado</h2>
+  </div>
+
+  <div class="finding">
+    <div class="finding-head">
+      <h3>La librería estándar entregaba datos recortados</h3>
+      <span class="evidence" data-tone="gain">+1 variable · 207 nulos</span>
+    </div>
+    <p>
+      El proyecto usaba <code>fetch_california_housing</code> de scikit-learn. Al comparar contra
+      el CSV original del libro apareció que la versión de la librería <strong>descarta la columna
+      <code>ocean_proximity</code></strong> e imputa en silencio los 207 valores faltantes de
+      <code>total_bedrooms</code>.
+    </p>
+    <p class="note">
+      Justo las dos cosas que el capítulo enseña a tratar — codificación de categóricas e
+      imputación — eran las que la versión conveniente escondía. Cambiar a la fuente cruda también
+      reveló que trae las filas en otro orden, así que con la misma semilla el conjunto de prueba
+      cae en casas distintas: las métricas anteriores dejaron de ser comparables.
+    </p>
+  </div>
+
+  <div class="finding">
+    <div class="finding-head">
+      <h3>La validación cruzada se estaba mintiendo a sí misma</h3>
+      <span class="evidence" data-tone="gain">fuga eliminada</span>
+    </div>
+    <p>
+      El escalado se aplicaba una vez sobre todo el conjunto de entrenamiento, antes de partirlo en
+      pliegues. Cada pliegue de validación se evaluaba entonces con estadísticas calculadas
+      <em>incluyéndolo a él mismo</em>. El <code>cv_rmse</code> salía optimista.
+    </p>
+    <p>
+      La corrección fue meter el preprocesamiento dentro del <code>Pipeline</code>, donde
+      scikit-learn lo reajusta en cada pliegue. La señal de que funcionó es sutil pero clara: antes
+      la validación cruzada reportaba un error <em>menor</em> que el del conjunto de prueba; ahora
+      reporta uno ligeramente mayor, que es lo que debe pasar.
+    </p>
+    <p class="note">
+      Beneficio colateral: el artefacto guardado contiene el preprocesamiento. Quien lo carga le
+      pasa datos crudos y funciona — no hay que replicar los pasos en producción, que es donde
+      esto se rompe en la vida real.
+    </p>
+  </div>
+
+  <div class="finding">
+    <div class="finding-head">
+      <h3>La variable “más importante” no mejoraba nada</h3>
+      <span class="evidence" data-tone="none">+0.004 RMSE en XGBoost</span>
+    </div>
+    <p>
+      Recuperada <code>ocean_proximity</code>, XGBoost la reportó como su variable
+      <strong>número uno</strong> por importancia — 0.61 contra 0.14 del ingreso medio. Parecía la
+      mejora grande del proyecto.
+    </p>
+    <p>
+      Midiendo con una ablación — mismo split, misma semilla, única diferencia la columna — resultó
+      que mejora seis de siete modelos por márgenes mínimos, y que a XGBoost <strong>lo empeora</strong>.
+    </p>
+    <p class="note">
+      La explicación: latitud y longitud ya estaban ahí. “Cerca del mar” era deducible de las
+      coordenadas, solo que costaba varios cortes. Al recibirlo servido, el modelo lo usa de
+      inmediato y reordena su ranking de importancia — pero la información no era nueva.
+      <strong>Importancia alta no significa mejora predictiva</strong> cuando hay redundancia.
+    </p>
+  </div>
+
+  <div class="finding">
+    <div class="finding-head">
+      <h3>Lo que sí funcionó fue darle la geografía masticada</h3>
+      <span class="evidence" data-tone="gain">−0.036 RMSE</span>
+    </div>
+    <p>
+      Un árbol solo puede partir el espacio con cortes rectangulares sobre latitud y longitud, así
+      que aproximar “cerca de San Francisco” le cuesta muchos cortes y nunca queda fino. La
+      solución del libro es un transformador propio: agrupar las coordenadas con
+      <strong>K-means</strong> y reemplazar cada casa por su <strong>similitud a cada centro</strong>.
+    </p>
+    <p>
+      Fue el cambio que más rindió de todo el proyecto — más que cualquier ajuste de
+      hiperparámetros. Y reordenó por completo la tabla: los métodos que promedian árboles
+      independientes, que eran los más penalizados por tener que aproximar la geografía a mano,
+      pasaron a ganarle a los de boosting.
+    </p>
+  </div>
+</section>
+
+<section class="wide stack">
+  <figure>
+    <div class="fig-head">
+      <span class="fig-title">Cuánto aportó cada decisión</span>
+      <button class="toggle" id="tblNeedleBtn" aria-pressed="false" aria-controls="tblNeedle">Ver tabla</button>
+    </div>
+    <div class="fig-body"><svg class="chart" id="needle" viewBox="0 0 720 250" role="img"
+      aria-label="Cambio en RMSE por decisión de modelado; valores negativos mejoran"></svg></div>
+    <div class="fig-body scroll-x" id="tblNeedle" hidden style="padding-top:0"></div>
+    <figcaption>
+      Cambio en RMSE al añadir cada elemento, medido con ablación sobre el mismo split.
+      Hacia la izquierda es mejor. La estratificación no aparece porque no mueve el error —
+      hace que el número sea confiable, que es otra cosa.
+    </figcaption>
+  </figure>
+</section>
+
+<!-- ══ INTERVALOS ════════════════════════════════════════════════════════ -->
+<section class="wrap stack">
+  <span class="eyebrow">El hallazgo incómodo</span>
+  <h2>Tres modelos empatados, aunque la tabla diga otra cosa</h2>
+  <p>
+    Con todo afinado, <code>extra_trees</code> quedó primero con 0.4063 de RMSE y XGBoost tercero
+    con 0.4291. Ordenar por esa columna y declarar un ganador es el reflejo natural. Es también un
+    error.
+  </p>
+  <p>
+    El RMSE sale de una muestra concreta de 4,128 casas. Con otras 4,128 habría dado distinto. El
+    intervalo de confianza acota cuánto puede moverse — y cuando dos intervalos se traslapan,
+    <strong>la diferencia cabe dentro del ruido del muestreo</strong>.
+  </p>
+</section>
+
+<section class="wide stack">
+  <figure>
+    <div class="fig-head">
+      <span class="fig-title">RMSE con intervalo de confianza al 95%</span>
+      <button class="toggle" id="tblCiBtn" aria-pressed="false" aria-controls="tblCi">Ver tabla</button>
+    </div>
+    <div class="fig-body"><svg class="chart" id="ci" viewBox="0 0 720 236" role="img"
+      aria-label="RMSE de cuatro modelos con sus intervalos de confianza al 95 por ciento"></svg></div>
+    <div class="fig-body scroll-x" id="tblCi" hidden style="padding-top:0"></div>
+    <figcaption>
+      Calculado con la distribución t sobre los errores cuadrados del conjunto de prueba.
+      Los tres primeros se solapan entre sí: no hay evidencia para ordenarlos.
+    </figcaption>
+  </figure>
+</section>
+
+<!-- ══ PRACTICIDAD ═══════════════════════════════════════════════════════ -->
+<section class="wrap stack">
+  <span class="eyebrow">La decisión</span>
+  <h2>Entonces gana el que se puede desplegar</h2>
+  <p>
+    Si la precisión no distingue a los tres primeros, el desempate lo pone lo que sí se puede
+    medir sin ambigüedad. Y ahí la diferencia no es sutil.
+  </p>
+</section>
+
+<section class="wide stack">
+  <figure>
+    <div class="fig-head"><span class="fig-title">Costo de servir cada modelo</span></div>
+    <div class="fig-body scroll-x" id="tblCost"></div>
+    <figcaption>
+      Medido cargando cada artefacto y cronometrando 20 predicciones individuales.
+      <code>extra_trees</code> crece 300 árboles sin límite de profundidad; XGBoost los poda a 7 niveles.
+    </figcaption>
+  </figure>
+</section>
+
+<section class="wrap stack">
+  <p>
+    <code>extra_trees</code> pide <strong>1.3 GB de memoria</strong> — no entra en ningún plan
+    gratuito ni en un servidor pequeño — y tarda trece veces más por petición. XGBoost ocupa
+    2.4 MB, cabe en cualquier lado y responde en 2.3 milisegundos.
+  </p>
+  <p class="note">
+    Renunciar a 0.023 de RMSE que no se puede demostrar, a cambio de un modelo 293 veces más
+    pequeño, no es una concesión. Es la decisión correcta, y es la que se toma en producción todos
+    los días.
+  </p>
+</section>
+
+<!-- ══ RESULTADOS ════════════════════════════════════════════════════════ -->
+<section class="wide stack">
+  <span class="eyebrow">Resultados</span>
+  <h2>Tabla completa</h2>
+  <figure>
+    <div class="fig-body scroll-x" id="tblAll"></div>
+    <figcaption>
+      Nueve modelos, todos con búsqueda aleatoria de hiperparámetros sobre el modelo
+      <em>y</em> el preprocesamiento. Cada combinación probada quedó registrada en MLflow como
+      ejecución anidada: 137 candidatos en total.
+    </figcaption>
+  </figure>
+</section>
+
+<footer>
+  <div class="wrap stack">
+    <span class="eyebrow">Detalles</span>
+    <dl class="kv">
+      <dt>Datos</dt><dd>California Housing, 20,640 distritos del censo de 1990. CSV original del repositorio del libro.</dd>
+      <dt>Partición</dt><dd>80/20 estratificada por categoría de ingreso. Una partición aleatoria simple subrepresentaba el estrato más pobre en 9.4%.</dd>
+      <dt>Preprocesamiento</dt><dd>Imputación por mediana, estandarización, codificación one-hot y similitud a centros geográficos — todo dentro del <code>Pipeline</code>.</dd>
+      <dt>Seguimiento</dt><dd>MLflow. 180 ejecuciones, 137 de ellas candidatos anidados de las búsquedas.</dd>
+      <dt>Código</dt><dd><a href="https://github.com/inter097/ml-handson-california-housing">github.com/inter097/ml-handson-california-housing</a></dd>
+    </dl>
+    <p style="color:var(--muted);font-size:.85rem;margin-top:1rem">
+      Las predicciones mostradas se calcularon una vez con el modelo entrenado y viajan embebidas
+      en esta página. Los filtros y estadísticas se computan en el navegador.
+    </p>
+  </div>
+</footer>
+
+<script id="payload" type="application/json">__DATA__</script>
+<script>
+(() => {
+  "use strict";
+  const DATA = JSON.parse(document.getElementById("payload").textContent);
+  const ROWS = DATA.rows, OCEAN = DATA.ocean;
+  const I = { lat:0, lon:1, real:2, pred:3, ocean:4, inc:5 };
+
+  const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  const usd = v => "USD " + Math.round(v * 100000).toLocaleString("en-US");
+  const f3 = v => v.toFixed(3);
+
+  /* ── Modelos (medidos, no estimados) ────────────────────────────────── */
+  const MODELS = [
+    { name:"extra_trees",       rmse:0.4063, lo:0.3844, hi:0.4271, r2:0.8767, mb:703.4, ram:1294, ms:28.85 },
+    { name:"random_forest",     rmse:0.4235, lo:0.4015, hi:0.4443, r2:0.8660, mb:199.3, ram:null, ms:null  },
+    { name:"xgboost",           rmse:0.4291, lo:0.4071, hi:0.4500, r2:0.8625, mb:2.4,   ram:91,   ms:2.25  },
+    { name:"gradient_boosting", rmse:0.4514, lo:0.4292, hi:0.4726, r2:0.8478, mb:7.3,   ram:null, ms:null  }
+  ];
+  const ALL = [
+    { name:"extra_trees", cv:0.4085, rmse:0.4063, r2:0.8767 },
+    { name:"random_forest", cv:0.4179, rmse:0.4235, r2:0.8660 },
+    { name:"xgboost", cv:0.4230, rmse:0.4291, r2:0.8625 },
+    { name:"gradient_boosting", cv:0.4475, rmse:0.4514, r2:0.8478 },
+    { name:"mlp", cv:0.5007, rmse:0.4967, r2:0.8157 },
+    { name:"svr", cv:null, rmse:0.5091, r2:0.8064 },
+    { name:"decision_tree", cv:0.5454, rmse:0.5517, r2:0.7726 },
+    { name:"ridge", cv:0.6051, rmse:0.6282, r2:0.7052 },
+    { name:"linear_regression", cv:null, rmse:0.6855, r2:0.6489 }
+  ];
+  const NEEDLE = [
+    { k:"Similitud geográfica (K-means)", v:-0.0356, m:"random_forest" },
+    { k:"Similitud geográfica (K-means)", v:-0.0176, m:"xgboost" },
+    { k:"Ajuste de hiperparámetros",      v:-0.0284, m:"xgboost" },
+    { k:"Proximidad al océano",           v:-0.0111, m:"random_forest" },
+    { k:"Proximidad al océano",           v:+0.0039, m:"xgboost" }
+  ];
+
+  /* ── Estado ─────────────────────────────────────────────────────────── */
+  const state = { ocean:new Set(), inc:new Set(), mode:"error" };
+
+  /* ── Filtros ────────────────────────────────────────────────────────── */
+  function chip(label, on, fn) {
+    const b = document.createElement("button");
+    b.className = "chip"; b.type = "button"; b.textContent = label;
+    b.setAttribute("aria-pressed", on ? "true" : "false");
+    b.addEventListener("click", () => fn(b));
+    return b;
+  }
+  const elOcean = document.getElementById("fOcean");
+  OCEAN.forEach((o, i) => elOcean.appendChild(chip(o, false, b => {
+    state.ocean.has(i) ? state.ocean.delete(i) : state.ocean.add(i);
+    b.setAttribute("aria-pressed", state.ocean.has(i) ? "true" : "false");
+    render();
+  })));
+  const elInc = document.getElementById("fInc");
+  ["1 · más bajo","2","3","4","5 · más alto"].forEach((lab, i) => elInc.appendChild(chip(lab, false, b => {
+    const c = i + 1;
+    state.inc.has(c) ? state.inc.delete(c) : state.inc.add(c);
+    b.setAttribute("aria-pressed", state.inc.has(c) ? "true" : "false");
+    render();
+  })));
+  const elMode = document.getElementById("fMode");
+  const MODES = [["error","Error"],["real","Precio real"],["pred","Precio predicho"]];
+  MODES.forEach(([k, lab], i) => elMode.appendChild(chip(lab, i === 0, b => {
+    state.mode = k;
+    [...elMode.children].forEach(c => c.setAttribute("aria-pressed", c === b ? "true" : "false"));
+    render();
+  })));
+
+  const visible = () => ROWS.filter(r =>
+    (state.ocean.size === 0 || state.ocean.has(r[I.ocean])) &&
+    (state.inc.size === 0 || state.inc.has(r[I.inc])));
+
+  /* ── Escalas de color ───────────────────────────────────────────────── */
+  const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
+  const hex2rgb = h => [1,3,5].map(i => parseInt(h.slice(i, i + 2), 16));
+  const rgb = c => `rgb(${c[0]},${c[1]},${c[2]})`;
+
+  function colorFor(r, ext) {
+    if (state.mode === "error") {
+      const e = r[I.pred] - r[I.real];
+      const t = Math.max(-1, Math.min(1, e / 1.0));
+      const mid = hex2rgb(css("--mid"));
+      return t < 0 ? rgb(mix(mid, hex2rgb(css("--cool")), -t))
+                   : rgb(mix(mid, hex2rgb(css("--warm")), t));
+    }
+    const v = state.mode === "real" ? r[I.real] : r[I.pred];
+    const t = Math.max(0, Math.min(1, (v - ext[0]) / (ext[1] - ext[0])));
+    return rgb(mix(hex2rgb(css("--mid")), hex2rgb(css("--cool")), 0.18 + t * 0.82));
+  }
+
+  /* ── Mapa ───────────────────────────────────────────────────────────── */
+  const cv = document.getElementById("map"), ctx = cv.getContext("2d");
+  const BX = [-124.4, -114.2], BY = [32.4, 42.1];
+  const PAD = 26;
+  const px = lon => PAD + (lon - BX[0]) / (BX[1] - BX[0]) * (cv.width - PAD * 2);
+  const py = lat => cv.height - PAD - (lat - BY[0]) / (BY[1] - BY[0]) * (cv.height - PAD * 2);
+
+  function drawMap(rows) {
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    const ext = [0.15, 5.0];
+    ctx.globalAlpha = 0.62;
+    for (const r of rows) {
+      ctx.fillStyle = colorFor(r, ext);
+      ctx.beginPath();
+      ctx.arc(px(r[I.lon]), py(r[I.lat]), 3.1, 0, 6.2832);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  /* ── Tooltip ────────────────────────────────────────────────────────── */
+  const tip = document.getElementById("tip");
+  let shown = [];
+  function nearest(mx, my) {
+    let best = null, bd = 1e9;
+    for (const r of shown) {
+      const dx = px(r[I.lon]) - mx, dy = py(r[I.lat]) - my;
+      const d = dx * dx + dy * dy;
+      if (d < bd) { bd = d; best = r; }
+    }
+    return bd < 900 ? best : null;
+  }
+  cv.addEventListener("pointermove", ev => {
+    const b = cv.getBoundingClientRect(), s = cv.width / b.width;
+    const r = nearest((ev.clientX - b.left) * s, (ev.clientY - b.top) * s);
+    if (!r) { tip.dataset.on = "0"; return; }
+    const err = r[I.pred] - r[I.real];
+    tip.innerHTML =
+      `<div class="head">${OCEAN[r[I.ocean]]} · ${r[I.lat].toFixed(2)}, ${r[I.lon].toFixed(2)}</div>` +
+      `<dl><dt>Real</dt><dd>${usd(r[I.real])}</dd>` +
+      `<dt>Predicho</dt><dd>${usd(r[I.pred])}</dd>` +
+      `<dt>Error</dt><dd style="color:${err < 0 ? "var(--cool)" : "var(--warm)"}">${err > 0 ? "+" : ""}${usd(err)}</dd></dl>`;
+    tip.dataset.on = "1";
+    const lx = px(r[I.lon]) / s, ly = py(r[I.lat]) / s;
+    tip.style.left = Math.min(Math.max(lx + 14, 4), b.width - 190) + "px";
+    tip.style.top = Math.max(ly - 52, 4) + "px";
+  });
+  cv.addEventListener("pointerleave", () => tip.dataset.on = "0");
+
+  /* ── Métricas vivas ─────────────────────────────────────────────────── */
+  function liveStats(rows) {
+    const n = rows.length;
+    if (!n) return { n:0 };
+    let se = 0, ae = 0, bias = 0;
+    for (const r of rows) { const e = r[I.pred] - r[I.real]; se += e * e; ae += Math.abs(e); bias += e; }
+    return { n, rmse:Math.sqrt(se / n), mae:ae / n, bias:bias / n };
+  }
+  function drawLive(rows) {
+    const s = liveStats(rows);
+    const el = document.getElementById("live");
+    if (!s.n) { el.innerHTML = `<div><span class="k">Sin datos</span><span class="v">—</span></div>`; return; }
+    el.innerHTML = [
+      ["Distritos", s.n.toLocaleString("es-MX")],
+      ["RMSE", f3(s.rmse)],
+      ["Error medio abs.", usd(s.mae)],
+      ["Sesgo", (s.bias > 0 ? "+" : "") + usd(s.bias)]
+    ].map(([k, v]) => `<div><span class="k">${k}</span><span class="v">${v}</span></div>`).join("");
+  }
+
+  /* ── Leyenda ────────────────────────────────────────────────────────── */
+  function drawLegend() {
+    const el = document.getElementById("legend");
+    if (state.mode === "error") {
+      el.innerHTML =
+        `<span class="ramp"><span style="font-family:var(--mono);font-size:.72rem">subestima</span>` +
+        `<i style="background:linear-gradient(90deg,${css("--cool")},${css("--mid")},${css("--warm")})"></i>` +
+        `<span style="font-family:var(--mono);font-size:.72rem">sobreestima</span></span>` +
+        `<span style="color:var(--muted);font-size:.76rem">gris = sin error</span>`;
+    } else {
+      el.innerHTML =
+        `<span class="ramp"><span style="font-family:var(--mono);font-size:.72rem">USD 15k</span>` +
+        `<i style="background:linear-gradient(90deg,${css("--mid")},${css("--cool")})"></i>` +
+        `<span style="font-family:var(--mono);font-size:.72rem">USD 500k</span></span>`;
+    }
+  }
+
+  /* ── Tabla del mapa ─────────────────────────────────────────────────── */
+  function drawMapTable(rows) {
+    const top = [...rows].sort((a, b) =>
+      Math.abs(b[I.pred] - b[I.real]) - Math.abs(a[I.pred] - a[I.real])).slice(0, 12);
+    document.getElementById("tblMap").innerHTML =
+      `<table><caption class="eyebrow" style="text-align:left;padding-bottom:.5rem">Los 12 errores mayores del subconjunto</caption>` +
+      `<thead><tr><th>Zona</th><th>Lat</th><th>Lon</th><th>Real</th><th>Predicho</th><th>Error</th></tr></thead><tbody>` +
+      top.map(r => `<tr><td>${OCEAN[r[I.ocean]]}</td><td>${r[I.lat].toFixed(2)}</td><td>${r[I.lon].toFixed(2)}</td>` +
+        `<td>${usd(r[I.real])}</td><td>${usd(r[I.pred])}</td><td>${(r[I.pred] - r[I.real] > 0 ? "+" : "") + usd(r[I.pred] - r[I.real])}</td></tr>`).join("") +
+      `</tbody></table>`;
+  }
+
+  /* ── Chart: intervalos de confianza ─────────────────────────────────── */
+  function drawCI() {
+    const W = 720, H = 236, L = 152, R = 92, T = 26, B = 34;
+    const x0 = 0.375, x1 = 0.485;
+    const X = v => L + (v - x0) / (x1 - x0) * (W - L - R);
+    const rowH = (H - T - B) / MODELS.length;
+    const best = MODELS[0];
+    let s = "";
+    for (let t = x0; t <= x1 + 1e-9; t += 0.02) {
+      s += `<line class="grid" x1="${X(t).toFixed(1)}" y1="${T}" x2="${X(t).toFixed(1)}" y2="${H - B}"/>` +
+           `<text x="${X(t).toFixed(1)}" y="${H - B + 15}" text-anchor="middle">${t.toFixed(2)}</text>`;
+    }
+    s += `<rect x="${X(best.lo)}" y="${T}" width="${X(best.hi) - X(best.lo)}" height="${H - T - B}"
+            fill="var(--accent)" opacity=".07"/>`;
+    MODELS.forEach((m, i) => {
+      const y = T + rowH * i + rowH / 2;
+      const win = i === 0;
+      const col = win ? "var(--accent)" : "var(--muted)";
+      s += `<text class="lbl" x="${L - 12}" y="${y + 4}" text-anchor="end">${m.name}</text>` +
+           `<line class="band" x1="${X(m.lo)}" y1="${y}" x2="${X(m.hi)}" y2="${y}" stroke="${col}" opacity="${win ? .9 : .55}"/>` +
+           `<line class="whisk" x1="${X(m.lo)}" y1="${y - 5}" x2="${X(m.lo)}" y2="${y + 5}" stroke="${col}"/>` +
+           `<line class="whisk" x1="${X(m.hi)}" y1="${y - 5}" x2="${X(m.hi)}" y2="${y + 5}" stroke="${col}"/>` +
+           `<circle class="halo" cx="${X(m.rmse)}" cy="${y}"/>` +
+           `<circle class="dot" cx="${X(m.rmse)}" cy="${y}" fill="${col}"/>` +
+           `<text class="val" x="${W - R + 12}" y="${y + 4}">${f3(m.rmse)}</text>`;
+    });
+    s += `<text x="${X(best.hi)}" y="${T - 9}" text-anchor="middle" fill="var(--accent)">límite del mejor</text>`;
+    s += `<text x="${L}" y="${H - 4}" fill="var(--muted)">RMSE — menor es mejor</text>`;
+    document.getElementById("ci").innerHTML = s;
+
+    document.getElementById("tblCi").innerHTML =
+      `<table><thead><tr><th>Modelo</th><th>RMSE</th><th>IC 95% inferior</th><th>IC 95% superior</th><th>¿Distinguible?</th></tr></thead><tbody>` +
+      MODELS.map((m, i) => {
+        const ov = !(m.lo > best.hi || m.hi < best.lo);
+        return `<tr data-hi="${i === 0 ? 1 : 0}"><td>${m.name}</td><td>${f3(m.rmse)}</td><td>${f3(m.lo)}</td><td>${f3(m.hi)}</td>` +
+               `<td>${i === 0 ? "—" : (ov ? "No, se traslapan" : "Sí, es peor")}</td></tr>`;
+      }).join("") + `</tbody></table>`;
+  }
+
+  /* ── Chart: qué movió la aguja ──────────────────────────────────────── */
+  function drawNeedle() {
+    const W = 720, H = 250, L = 232, R = 78, T = 20, B = 36;
+    const lo = -0.040, hi = 0.010;
+    const X = v => L + (v - lo) / (hi - lo) * (W - L - R);
+    const rowH = (H - T - B) / NEEDLE.length;
+    let s = "";
+    for (let t = -0.04; t <= 0.0101; t += 0.01) {
+      s += `<line class="grid" x1="${X(t).toFixed(1)}" y1="${T}" x2="${X(t).toFixed(1)}" y2="${H - B}"/>` +
+           `<text x="${X(t).toFixed(1)}" y="${H - B + 15}" text-anchor="middle">${t > 0 ? "+" : ""}${t.toFixed(3)}</text>`;
+    }
+    s += `<line class="axis" x1="${X(0)}" y1="${T}" x2="${X(0)}" y2="${H - B}"/>`;
+    NEEDLE.forEach((d, i) => {
+      const y = T + rowH * i + rowH / 2, h = 11;
+      const gain = d.v < 0;
+      const col = gain ? "var(--cool)" : "var(--warm)";
+      const xa = Math.min(X(0), X(d.v)), w = Math.abs(X(d.v) - X(0));
+      // Los valores van en columna fija a la derecha: puestos junto a la barra
+      // chocaban con la etiqueta de categoría cuando la barra llegaba al margen.
+      s += `<text class="lbl" x="${L - 12}" y="${y - 1}" text-anchor="end">${d.k}</text>` +
+           `<text x="${L - 12}" y="${y + 12}" text-anchor="end">${d.m}</text>` +
+           `<rect x="${xa}" y="${y - h / 2}" width="${Math.max(w, 2)}" height="${h}" fill="${col}" opacity=".8" rx="2"/>` +
+           `<text class="val" x="${W - R + 14}" y="${y + 4}">${d.v > 0 ? "+" : ""}${d.v.toFixed(4)}</text>`;
+    });
+    s += `<text x="${L}" y="${H - 4}" fill="var(--muted)">cambio en RMSE — izquierda es mejora</text>`;
+    document.getElementById("needle").innerHTML = s;
+
+    document.getElementById("tblNeedle").innerHTML =
+      `<table><thead><tr><th>Decisión</th><th>Modelo</th><th>Δ RMSE</th><th>Efecto</th></tr></thead><tbody>` +
+      NEEDLE.map(d => `<tr><td>${d.k}</td><td>${d.m}</td><td>${d.v > 0 ? "+" : ""}${d.v.toFixed(4)}</td>` +
+        `<td>${d.v < 0 ? "Mejora" : "Empeora"}</td></tr>`).join("") + `</tbody></table>`;
+  }
+
+  /* ── Tablas estáticas ───────────────────────────────────────────────── */
+  function drawCost() {
+    const maxMb = Math.max(...MODELS.map(m => m.mb));
+    document.getElementById("tblCost").innerHTML =
+      `<table><thead><tr><th>Modelo</th><th>RMSE</th><th>Artefacto</th><th>Memoria</th><th>Latencia</th></tr></thead><tbody>` +
+      MODELS.map(m => `<tr data-hi="${m.name === "xgboost" ? 1 : 0}"><td>${m.name}</td><td>${f3(m.rmse)}</td>` +
+        `<td><span class="barcell"><i style="width:${Math.max(3, m.mb / maxMb * 90)}px"></i>${m.mb} MB</span></td>` +
+        `<td>${m.ram ? m.ram.toLocaleString("en-US") + " MB" : "—"}</td>` +
+        `<td>${m.ms ? m.ms.toFixed(2) + " ms" : "—"}</td></tr>`).join("") + `</tbody></table>`;
+  }
+  function drawAll() {
+    document.getElementById("tblAll").innerHTML =
+      `<table><thead><tr><th>Modelo</th><th>RMSE (validación)</th><th>RMSE (prueba)</th><th>R²</th></tr></thead><tbody>` +
+      ALL.map((m, i) => `<tr data-hi="${i === 0 ? 1 : 0}"><td>${m.name}</td><td>${m.cv ? f3(m.cv) : "—"}</td>` +
+        `<td>${f3(m.rmse)}</td><td>${f3(m.r2)}</td></tr>`).join("") + `</tbody></table>`;
+  }
+
+  /* ── Toggles de tabla ───────────────────────────────────────────────── */
+  [["tblMapBtn","tblMap"],["tblCiBtn","tblCi"],["tblNeedleBtn","tblNeedle"]].forEach(([b, t]) => {
+    const btn = document.getElementById(b), tbl = document.getElementById(t);
+    btn.addEventListener("click", () => {
+      const on = btn.getAttribute("aria-pressed") === "true";
+      btn.setAttribute("aria-pressed", on ? "false" : "true");
+      btn.textContent = on ? "Ver tabla" : "Ocultar tabla";
+      tbl.hidden = on;
+    });
+  });
+
+  /* ── Tema ───────────────────────────────────────────────────────────── */
+  document.getElementById("themeBtn").addEventListener("click", () => {
+    const cur = document.documentElement.getAttribute("data-theme");
+    const dark = cur ? cur === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    document.documentElement.setAttribute("data-theme", dark ? "light" : "dark");
+    render(); drawCI(); drawNeedle();
+  });
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { render(); drawCI(); drawNeedle(); });
+
+  /* ── Render ─────────────────────────────────────────────────────────── */
+  function render() {
+    shown = visible();
+    drawMap(shown); drawLive(shown); drawLegend(); drawMapTable(shown);
+  }
+  render(); drawCI(); drawNeedle(); drawCost(); drawAll();
+})();
+</script>

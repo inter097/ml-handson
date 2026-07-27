@@ -1,4 +1,4 @@
-.PHONY: all setup data features train-all tune-all analysis evaluate predict ui clean help
+.PHONY: all setup data features train-all tune-all analysis evaluate predict site site-serve ui clean help
 
 PYTHON = venv/bin/python
 PIP    = venv/bin/pip
@@ -75,6 +75,16 @@ evaluate:
 predict:
 	$(PYTHON) src/predict.py --run-id $(RUN_ID) $(if $(INPUT),--input $(INPUT),--demo)
 
+# ── Caso de estudio estático ─────────────────────────────────────────────────
+# Uso: make site RUN_ID=<id>   → genera site/index.html autocontenido
+#      make site-serve         → lo sirve en http://localhost:8000
+
+site:
+	$(PYTHON) src/build_site.py --run-id $(RUN_ID)
+
+site-serve:
+	$(PYTHON) -m http.server 8000 -d site
+
 # ── MLflow UI ────────────────────────────────────────────────────────────────
 
 ui:
@@ -100,5 +110,7 @@ help:
 	@echo "  make ui             Abrir MLflow UI en http://localhost:5000"
 	@echo "  make evaluate RUN_ID=<id>  Evaluar el mejor run y guardar reporte"
 	@echo "  make predict RUN_ID=<id>   Predecir (--demo o INPUT=archivo.csv)"
+	@echo "  make site RUN_ID=<id>      Generar el caso de estudio estático"
+	@echo "  make site-serve            Servir site/ en http://localhost:8000"
 	@echo "  make clean          Borrar datos y runs locales"
 	@echo ""

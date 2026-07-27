@@ -27,6 +27,7 @@ y tracking automático de experimentos con MLflow.
 ├── data/              # gitignored — generado con `make data`
 │   ├── raw/
 │   └── processed/
+├── site/              # Caso de estudio estático — generado con `make site`
 ├── reports/           # Sí va en git — generado con `make evaluate`
 ├── mlruns/            # gitignored — gestionado por MLflow
 ├── Makefile           # Pipeline completo
@@ -366,6 +367,45 @@ se extendió a 60.
 - Tunear SVR sobre una submuestra (aquí quedó fuera por costo)
 - Un transformer que seleccione las features más importantes
 - Reemplazar `RandomizedSearchCV` por búsqueda bayesiana
+
+---
+
+## Caso de estudio web (`site/`)
+
+Una página estática que cuenta el proceso y deja explorar las predicciones sobre un
+mapa de California.
+
+```bash
+make site RUN_ID=<id del modelo>   # genera site/index.html
+make site-serve                    # http://localhost:8000
+```
+
+`site/template.html` es la página; `src/build_site.py` inyecta las predicciones y
+produce `site/index.html` — **un solo archivo de ~170 KB, sin dependencias externas**.
+
+**Por qué las predicciones van precalculadas y no vía API:** el artefacto de XGBoost
+pesa 2.4 MB, pero sus dependencias (`numpy`, `scipy`, `scikit-learn`, `pandas`) suman
+**262 MB**, por encima del límite de 250 MB de los runtimes serverless. Precalcular las
+4,128 predicciones del test set cuesta 127 KB y elimina el backend por completo. Los
+filtros y las métricas sí se computan en vivo, en el navegador.
+
+### Desplegarlo
+
+Es HTML estático sin build, así que sirve en cualquier lado:
+
+| Destino | Cómo |
+|---|---|
+| Vercel | Importar el repo, *Output Directory* → `site`, sin build command |
+| GitHub Pages | Settings → Pages → rama `main`, carpeta `/site` |
+| VPS con nginx | `root /var/www/houses;` y copiar `site/index.html` |
+| Cualquier CDN | Subir `site/index.html` tal cual |
+
+Para un subdominio propio (`houses.eliuth.dev`), apunta un registro `CNAME` al
+proveedor y regístralo en su panel de dominios.
+
+**Regenerar tras reentrenar:** `make site RUN_ID=<nuevo id>` y commitear
+`site/index.html`. El HTML lleva las predicciones dentro, así que si cambia el modelo
+hay que regenerarlo o la página mostrará las viejas.
 
 ---
 
