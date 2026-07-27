@@ -4,20 +4,15 @@ import Base from "../layouts/Base.astro";
 
 <Base
   title="El panorama del machine learning — capítulo 1"
-  description="El capítulo sin código: qué puede salir mal y por qué. Con la evidencia que los capítulos siguientes acabaron aportando."
+  description="Qué es el aprendizaje automático, cuándo conviene usarlo, cómo se clasifican los sistemas y de qué formas fracasan."
 >
   <header class="wrap hero">
     <span class="eyebrow">Capítulo 1 · Panorama</span>
-    <h1>El capítulo sin código,<br />y el que más se nota después</h1>
+    <h1>Cuándo conviene que la máquina<br />descubra las reglas</h1>
     <p class="lede">
-      El primer capítulo no entrena nada. Define el vocabulario y, sobre todo, enumera
-      <strong>qué puede salir mal</strong>. Trabajándolo en su momento parece una lista
-      de advertencias abstractas; al terminar los dos capítulos siguientes, resulta que
-      cada una tenía un número detrás.
-    </p>
-    <p class="lede-2">
-      Esta página va al revés que las otras: en vez de resumir el capítulo, empareja cada
-      advertencia con lo que este proyecto midió después.
+      El primer capítulo no entrena nada. Responde una pregunta anterior: <strong>¿en qué
+      casos vale la pena aprender de los datos en lugar de escribir las reglas a
+      mano?</strong> Y, sobre todo, enumera las formas en que ese intento fracasa.
     </p>
   </header>
 
@@ -30,26 +25,139 @@ import Base from "../layouts/Base.astro";
     </svg>
   </div>
 
-  <!-- ══ LO BREVE ══════════════════════════════════════════════════════ -->
+  <!-- ══ QUÉ ES ════════════════════════════════════════════════════════ -->
   <section class="wrap stack">
-    <span class="eyebrow">Lo que basta con ubicar</span>
-    <h2>El vocabulario, en dos tablas</h2>
+    <span class="eyebrow">Definiciones</span>
+    <h2>Dos formas de decir lo mismo</h2>
     <p>
-      La primera mitad del capítulo es taxonomía. Es útil para saber de qué habla la
-      gente, pero no es donde está el jugo — así que va comprimida.
+      La versión divulgativa es de <strong>Arthur Samuel</strong>, 1959: el campo de
+      estudio que da a las computadoras la capacidad de aprender sin ser programadas
+      explícitamente.
+    </p>
+    <p>
+      La versión de ingeniería es de <strong>Tom Mitchell</strong>, 1997, y es la que
+      sirve para trabajar, porque obliga a nombrar tres cosas antes de empezar:
+    </p>
+    <div class="tep">
+      <div><span class="letra">T</span><span class="etq">Tarea</span><p>Qué debe hacer el sistema. Marcar correos como spam.</p></div>
+      <div><span class="letra">E</span><span class="etq">Experiencia</span><p>De qué aprende. Correos ya etiquetados por alguien.</p></div>
+      <div><span class="letra">P</span><span class="etq">Desempeño</span><p>Cómo se mide si mejora. La proporción de aciertos, por ejemplo.</p></div>
+    </div>
+    <p class="note">
+      Un sistema aprende si su desempeño en la tarea mejora con la experiencia. La
+      utilidad de esta definición es que obliga a decidir <strong>P antes de
+      empezar</strong> — y elegir mal esa medida es una de las formas más comunes de
+      construir algo inútil sin enterarse.
+    </p>
+    <p>
+      Descargarse toda la Wikipedia no es aprendizaje automático, aunque el sistema
+      quede con muchísimos más datos. No mejora en ninguna tarea.
+    </p>
+  </section>
+
+  <!-- ══ POR QUÉ ═══════════════════════════════════════════════════════ -->
+  <section class="wrap stack">
+    <span class="eyebrow">El argumento central</span>
+    <h2>El filtro de spam, escrito de dos maneras</h2>
+    <p>
+      Es el ejemplo que el capítulo usa como columna vertebral, y conviene seguirlo
+      entero porque cada paso responde a una objeción distinta.
+    </p>
+  </section>
+
+  <section class="wide stack">
+    <div class="dos-vias">
+      <div class="via">
+        <span class="via-etq">A mano</span>
+        <ol>
+          <li>Miras muchos correos basura y notas patrones: «4U», «tarjeta de crédito», «gratis», «increíble».</li>
+          <li>Escribes una regla de detección para cada patrón.</li>
+          <li>Pruebas, encuentras fallos, añades más reglas.</li>
+          <li>Repites hasta que sea suficientemente bueno.</li>
+        </ol>
+        <p class="via-fin">
+          Acabas con una <strong>lista larga de reglas enredadas</strong> que solo tú
+          entiendes y que nadie se atreve a tocar.
+        </p>
+      </div>
+      <div class="via destacada">
+        <span class="via-etq">Aprendiendo</span>
+        <ol>
+          <li>Le das correos ya clasificados como basura o legítimos.</li>
+          <li>El sistema detecta solo qué palabras y combinaciones aparecen sospechosamente seguido en unos y no en otros.</li>
+          <li>Lo pruebas contra correos que no vio.</li>
+        </ol>
+        <p class="via-fin">
+          El programa queda <strong>más corto, más fácil de mantener y probablemente más
+          certero</strong>.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap stack">
+    <p>
+      Hasta aquí es una cuestión de comodidad. La diferencia de fondo aparece
+      <strong>cuando el mundo cambia</strong>.
+    </p>
+    <p class="note">
+      Los spammers notan que sus correos con «4U» ya no llegan, y empiezan a escribir
+      «For U». Con reglas a mano, alguien tiene que darse cuenta y añadir una regla
+      nueva — y otra cuando cambien otra vez, y otra, para siempre. Un sistema que
+      aprende <strong>nota solo</strong> que esa palabra se volvió frecuente en la
+      basura, sin que nadie intervenga.
+    </p>
+    <p>
+      Y hay un tercer uso, menos obvio: <strong>inspeccionar lo que el sistema
+      aprendió</strong>. Un filtro entrenado puede revelar qué combinaciones de palabras
+      predicen mejor el spam, algunas que nadie sospechaba. Aplicar aprendizaje
+      automático para encontrar patrones que no se veían tiene nombre propio: minería de
+      datos.
     </p>
   </section>
 
   <section class="wide stack">
     <figure>
-      <div class="fig-head"><span class="fig-title">Cómo aprende un sistema</span></div>
+      <div class="fig-head"><span class="fig-title">Los cuatro casos donde el aprendizaje automático gana</span></div>
       <div class="fig-body">
         <table class="prose">
           <tbody>
-            <tr><td>Supervisado</td><td>Los datos traen la respuesta. Es lo de este proyecto: precios de casas y etiquetas de dígitos.</td></tr>
-            <tr><td>No supervisado</td><td>No hay respuesta; el modelo busca estructura. Agrupar clientes, detectar anomalías.</td></tr>
-            <tr><td>Autosupervisado</td><td>La respuesta se fabrica del propio dato — tapar parte de una imagen y pedir que la reconstruya. Es la base de los modelos de lenguaje actuales.</td></tr>
-            <tr><td>Por refuerzo</td><td>Un agente actúa, recibe premio o castigo, ajusta. Juegos y robótica.</td></tr>
+            <tr><td>Reglas interminables</td><td>Problemas que a mano requieren listas largas de reglas y ajustes. Un modelo suele quedar más simple y funcionar mejor.</td></tr>
+            <tr><td>Sin solución conocida</td><td>Problemas complejos donde el enfoque tradicional directamente no existe. Reconocer voz, por ejemplo.</td></tr>
+            <tr><td>Entornos que cambian</td><td>Un sistema que aprende puede reentrenarse con los datos nuevos.</td></tr>
+            <tr><td>Demasiados datos</td><td>Encontrar estructura en volúmenes que ninguna persona puede revisar.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption>
+        La lista sirve de filtro en dos direcciones: si tu problema no cae en ninguno de
+        estos casos, probablemente unas cuantas reglas escritas a mano sean la respuesta
+        correcta.
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- ══ TIPOS ═════════════════════════════════════════════════════════ -->
+  <section class="wrap stack">
+    <span class="eyebrow">Vocabulario</span>
+    <h2>Tres ejes para clasificar cualquier sistema</h2>
+    <p>
+      No son categorías excluyentes: un sistema real se ubica en los tres a la vez. Un
+      filtro de spam típico es supervisado, por lotes y basado en modelo.
+    </p>
+  </section>
+
+  <section class="wide stack">
+    <figure>
+      <div class="fig-head"><span class="fig-title">1 · Cuánta supervisión recibe</span></div>
+      <div class="fig-body">
+        <table class="prose">
+          <tbody>
+            <tr><td>Supervisado</td><td>Los datos traen la respuesta. Dos sabores: <strong>clasificación</strong> (¿spam o no?) y <strong>regresión</strong> (¿cuánto vale este coche?).</td></tr>
+            <tr><td>No supervisado</td><td>No hay respuestas. Agrupar visitantes de un sitio por comportamiento, detectar transacciones anómalas, reducir dimensiones para poder graficar.</td></tr>
+            <tr><td>Autosupervisado</td><td>La respuesta se fabrica del propio dato: tapar parte de una imagen y pedir que la reconstruya. Sin etiquetas humanas y sin dejar de ser supervisado.</td></tr>
+            <tr><td>Semisupervisado</td><td>Pocas etiquetas y muchos datos sin etiquetar. El álbum de fotos que agrupa caras solo y luego te pide un nombre por grupo.</td></tr>
+            <tr><td>Por refuerzo</td><td>Un agente observa, actúa, recibe premio o castigo, y ajusta su estrategia. Juegos y robótica.</td></tr>
           </tbody>
         </table>
       </div>
@@ -58,295 +166,335 @@ import Base from "../layouts/Base.astro";
 
   <section class="wide stack">
     <figure>
-      <div class="fig-head"><span class="fig-title">Dos ejes más</span></div>
+      <div class="fig-head"><span class="fig-title">2 · Si aprende sobre la marcha</span></div>
       <div class="fig-body">
         <table class="prose">
           <tbody>
-            <tr><td>Por lotes / en línea</td><td>Reentrenar de cero cada tanto, o ir actualizando con cada dato que llega. Este proyecto es por lotes: se entrena, se evalúa, se despliega.</td></tr>
-            <tr><td>Por instancia / por modelo</td><td>Memorizar los ejemplos y comparar contra ellos, o resumirlos en parámetros. El k-vecinos que clasifica dígitos es lo primero: no entrena, guarda las 60,000 imágenes y compara cada dígito nuevo contra todas.</td></tr>
+            <tr><td>Por lotes</td><td>Se entrena una vez con todos los datos, se despliega, y ya no aprende más. Para actualizarlo hay que reentrenar de cero.</td></tr>
+            <tr><td>En línea</td><td>Se alimenta de datos según llegan, de uno en uno o en grupos pequeños. Útil cuando el flujo es continuo o cuando los datos no caben en memoria.</td></tr>
           </tbody>
         </table>
       </div>
       <figcaption>
-        Esa última distinción parece académica hasta que hay que desplegar. Un modelo que
-        memoriza carga con todos sus datos a producción — y cuando ampliamos el
-        entrenamiento a 300,000 imágenes, el modelo “creció” otro tanto sin haber
-        aprendido un solo parámetro nuevo.
+        El sistema por lotes tiene un problema con nombre: <strong>el modelo se
+        pudre</strong>. El mundo cambia y el modelo se queda con la foto del día que se
+        entrenó, degradándose lento. En línea evita eso, pero introduce otro riesgo — si
+        entran datos malos, el desempeño cae en vivo y hay que vigilarlo.
       </figcaption>
     </figure>
   </section>
 
-  <!-- ══ LO IMPORTANTE ═════════════════════════════════════════════════ -->
+  <section class="wide stack">
+    <figure>
+      <div class="fig-head"><span class="fig-title">3 · Cómo generaliza a casos nuevos</span></div>
+      <div class="fig-body">
+        <table class="prose">
+          <tbody>
+            <tr><td>Por instancia</td><td>Memoriza los ejemplos y, ante un caso nuevo, busca los más parecidos y decide según ellos. Necesita una medida de similitud.</td></tr>
+            <tr><td>Por modelo</td><td>Resume los ejemplos en un modelo con parámetros, y usa ese modelo para predecir. Los ejemplos ya no hacen falta después.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption>
+        Parece una distinción académica hasta que hay que desplegar: un sistema que
+        memoriza carga con todos sus datos a producción, y responde más lento cuanto más
+        ha visto.
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- ══ DESAFÍOS ══════════════════════════════════════════════════════ -->
   <section class="wrap stack">
     <span class="eyebrow">Donde está el capítulo</span>
-    <h2>Cuatro advertencias que resultaron ciertas, y una que falta</h2>
+    <h2>Las dos cosas que pueden salir mal</h2>
     <p>
-      La segunda mitad enumera las formas en que un proyecto de machine learning fracasa.
-      Leídas antes de empezar suenan a sentido común. Cada una nos costó una corrección —
-      y al final apareció una quinta que el libro no lista.
+      Géron las plantea como una elección doble: hay que elegir un algoritmo y hay que
+      entrenarlo con datos. Así que lo que puede salir mal es <strong>datos malos</strong>
+      o <strong>algoritmo malo</strong>. Cuatro formas de lo primero y dos de lo segundo.
     </p>
   </section>
 
   <section class="wrap">
     <div class="finding">
       <div class="finding-head">
-        <h3>1 · Datos no representativos</h3>
-        <span class="evidence" data-tone="gain">0.70 → 0.81</span>
+        <h3>Datos insuficientes</h3>
+        <span class="evidence">la parte aburrida</span>
       </div>
       <p>
-        La advertencia del libro: si los datos con los que entrenas no se parecen a
-        aquellos sobre los que vas a predecir, el modelo aprende un mundo que no existe.
-        Géron lo ilustra con una encuesta de 1936 que predijo mal unas elecciones por
-        entrevistar solo a gente con teléfono.
-      </p>
-      <p>
-        Suena a error de otra época. Nos pasó dos veces.
+        A un niño le señalas una manzana un par de veces y ya reconoce manzanas de
+        cualquier color y forma. Un sistema de aprendizaje automático necesita miles de
+        ejemplos para problemas sencillos, y millones para cosas como imágenes o voz.
       </p>
       <p class="note">
-        <strong>En el Titanic</strong> el archivo venía ordenado por clase de pasaje. Al
-        partirlo en pliegues sin barajar, el primero quedó 100% de primera clase y los
-        dos últimos 100% de tercera: el modelo se entrenaba con un perfil de pasajero y
-        se evaluaba con otro. La exactitud subió de <strong>0.70 a 0.81</strong> con solo
-        barajar. Once puntos que no venían del modelo.
-      </p>
-      <p class="note">
-        <strong>En California Housing</strong>, una partición aleatoria simple dejaba el
-        estrato de ingresos más bajo <strong>subrepresentado en 9.4%</strong> en el
-        conjunto de prueba. No cambia el error del modelo — cambia si ese error significa
-        algo.
+        Un trabajo de <strong>Banko y Brill (2001)</strong> mostró algo incómodo para
+        quien disfruta eligiendo algoritmos: en un problema de desambiguación de lenguaje,
+        algoritmos muy distintos <strong>rindieron casi igual</strong> en cuanto se les
+        dio suficientes datos. La conclusión que se popularizó es que conviene reconsiderar
+        el reparto entre invertir tiempo en el algoritmo o en conseguir mejores datos.
       </p>
       <p>
-        Lo insidioso es que ninguno de los dos casos produce un mensaje de error. El
-        código corre, la métrica sale, y es incorrecta.
+        Con matiz, eso sí: los conjuntos pequeños y medianos siguen siendo la norma, y
+        conseguir más datos no siempre es barato ni posible.
       </p>
     </div>
 
     <div class="finding">
       <div class="finding-head">
-        <h3>2 · Sobreajuste</h3>
-        <span class="evidence" data-tone="none">correlación 0.99 → 0.85</span>
+        <h3>Datos no representativos</h3>
+        <span class="evidence" data-tone="none">2.3 millones se equivocaron; 50 mil acertaron</span>
       </div>
       <p>
-        El concepto central del capítulo: un modelo puede aprenderse los datos de
-        entrenamiento en vez de aprender el patrón. Rinde espléndido donde ya sabe la
+        Para generalizar bien, los datos de entrenamiento tienen que parecerse a los
+        casos sobre los que vas a predecir. Suena obvio y se incumple todo el tiempo, por
+        dos motivos distintos que conviene no confundir.
+      </p>
+      <p>
+        Si la muestra es pequeña, aparece <strong>ruido de muestreo</strong>: datos poco
+        representativos por pura casualidad. Pero incluso una muestra enorme puede fallar
+        si el método de recolección está torcido — eso es <strong>sesgo de
+        muestreo</strong>, y es el peligroso.
+      </p>
+      <p>
+        El ejemplo que usa el capítulo es la encuesta del <em>Literary Digest</em> en las
+        elecciones estadounidenses de 1936. Enviaron diez millones de cuestionarios y
+        recibieron unos 2.3 millones de respuestas — una muestra descomunal para la época.
+      </p>
+      <div class="marcador">
+        <div><span class="etq">La encuesta predijo</span><span class="num warm">57%</span><span class="pie">para Landon</span></div>
+        <div><span class="etq">El resultado real</span><span class="num cool">62%</span><span class="pie">para Roosevelt</span></div>
+      </div>
+      <p class="note">
+        Fallaron por casi veinte puntos. Las listas de contacto salían de directorios
+        telefónicos, suscriptores de revistas y socios de clubes — es decir, gente
+        acomodada, que se inclinaba por Landon. Y encima respondieron sobre todo quienes
+        tenían ganas de opinar, que también sesga.
+      </p>
+      <p>
+        La moraleja llega por comparación: ese mismo año <strong>Gallup acertó con unas
+        50,000 encuestas</strong>, cuarenta veces menos. <strong>Un muestreo torcido no se
+        arregla agrandando la muestra.</strong>
+      </p>
+    </div>
+
+    <div class="finding">
+      <div class="finding-head">
+        <h3>Datos de mala calidad</h3>
+        <span class="evidence">lo que ocupa el 80% del tiempo</span>
+      </div>
+      <p>
+        Errores, valores atípicos y ruido, casi siempre porque la medición fue mala. Si
+        los datos están sucios, al sistema le costará ver los patrones y rendirá peor.
+      </p>
+      <p>
+        Las decisiones son concretas: descartar los atípicos evidentes o corregirlos a
+        mano; y con los valores faltantes, elegir entre ignorar el atributo, ignorar esas
+        filas, rellenarlos con algún valor, o entrenar dos modelos y comparar.
+      </p>
+      <p class="note">
+        No es glamoroso y es la mayor parte del trabajo. El capítulo lo dice sin
+        adornos.
+      </p>
+    </div>
+
+    <div class="finding">
+      <div class="finding-head">
+        <h3>Variables irrelevantes</h3>
+        <span class="evidence">basura entra, basura sale</span>
+      </div>
+      <p>
+        Un sistema solo aprenderá si los datos contienen suficientes variables
+        <em>relevantes</em> y no demasiadas irrelevantes. Preparar un buen conjunto de
+        variables es lo que se llama <strong>ingeniería de características</strong>, y son
+        tres cosas:
+      </p>
+      <table class="prose suelta">
+        <tbody>
+          <tr><td>Selección</td><td>Quedarse con las variables más útiles de las que ya hay.</td></tr>
+          <tr><td>Extracción</td><td>Combinar varias existentes en una más informativa.</td></tr>
+          <tr><td>Creación</td><td>Conseguir datos nuevos que aporten información que no estaba.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="finding">
+      <div class="finding-head">
+        <h3>Sobreajuste — el algoritmo malo, versión 1</h3>
+        <span class="evidence" data-tone="none">funciona hasta que sale</span>
+      </div>
+      <p>
+        El concepto central del capítulo. Un modelo puede aprenderse los datos de
+        entrenamiento en vez de aprender el patrón: rinde espléndido donde ya sabe la
         respuesta y se derrumba en cuanto ve algo nuevo.
       </p>
       <p>
-        Todo el mundo lo entiende en abstracto. El problema es reconocerlo cuando aparece
-        disfrazado de buena noticia.
+        La analogía que usa Géron es humana. Te roban el taxi en un país extranjero y
+        concluyes que ahí todos los taxistas son ladrones. Generalizar de más es algo que
+        las personas hacemos constantemente, y las máquinas también.
       </p>
       <p class="note">
-        Construimos una variable que preguntaba <em>“¿cuánto cuestan las casas
-        vecinas?”</em>. Su correlación con el precio dio <strong>0.993</strong> — casi
-        perfecta. Ahí estaba el problema: era demasiado buena. El modelo que la calculaba
-        se había entrenado con las mismas casas sobre las que predecía, así que
-        <strong>cada casa se veía a sí misma entre sus vecinas</strong>. Estaba copiando
-        la respuesta.
+        Ocurre cuando el modelo es <strong>demasiado complejo para la cantidad y el ruido
+        de los datos</strong>. Un modelo con muchos grados de libertad puede encontrar
+        patrones que no existen — puede llegar a «descubrir» que los países cuyo nombre
+        contiene una letra concreta son más felices, si le das suficientes atributos
+        arbitrarios y pocos ejemplos.
       </p>
-      <p>
-        Calculándola bien —cada fila puntuada por un modelo que nunca la vio— la
-        correlación cae a <strong>0.845</strong>. Ese es su valor real, y sigue siendo
-        una variable útil. Pero sin ese ajuste habría lucido magnífica en el entrenamiento
-        y habría fallado en producción, que es exactamente la definición del sobreajuste.
-      </p>
-      <p class="note">
-        La otra mitad del par —<strong>el subajuste</strong>— también apareció, y es más
-        difícil de ver porque no engaña a nadie: simplemente no mejora. En el análisis de
-        errores del capítulo 3, el modelo confundía 4 con 9 no por falta de datos sino
-        porque <strong>un modelo lineal no puede representar «tiene un lazo cerrado
-        arriba»</strong>. Ningún ajuste de hiperparámetros arregla eso; hace falta otro
-        tipo de modelo.
-      </p>
+      <p>Las salidas son tres:</p>
+      <table class="prose suelta">
+        <tbody>
+          <tr><td>Simplificar</td><td>Elegir un modelo con menos parámetros, o reducir el número de variables.</td></tr>
+          <tr><td>Regularizar</td><td>Restringir el modelo para que tenga menos libertad de contorsionarse. Cuánto restringir se controla con un <strong>hiperparámetro</strong>: un ajuste del algoritmo, no del modelo, que se fija antes de entrenar.</td></tr>
+          <tr><td>Más datos</td><td>Conseguir más ejemplos, o limpiar mejor los que hay.</td></tr>
+        </tbody>
+      </table>
     </div>
 
     <div class="finding">
       <div class="finding-head">
-        <h3>3 · No hay almuerzo gratis</h3>
-        <span class="evidence" data-tone="none">3 modelos empatados</span>
+        <h3>Subajuste — el algoritmo malo, versión 2</h3>
+        <span class="evidence">no engaña a nadie</span>
       </div>
       <p>
-        El teorema dice que, sin suposiciones sobre los datos, ningún modelo es mejor que
-        otro a priori. La consecuencia práctica: no puedes razonar cuál va a ganar,
-        tienes que probarlos.
+        Lo contrario, y más fácil de detectar porque no promete nada: el modelo es
+        demasiado simple para la estructura que hay en los datos. Predecir el bienestar de
+        un país solo con su riqueza queda corto porque la realidad es más complicada que
+        una línea.
       </p>
       <p>
-        <strong>En los dígitos</strong> el resultado fue casi cómico. Compitieron un
-        modelo lineal, un bosque de 100 árboles, una máquina de vectores de soporte —y
-        ganó <strong>k-vecinos</strong>, que es el algoritmo más tonto de todos: no
-        aprende nada, guarda las imágenes y compara.
-      </p>
-      <div class="marcador">
-        <div><span class="etq">k-vecinos</span><span class="num cool">0.9763</span><span class="pie">memoriza y compara</span></div>
-        <div><span class="etq">Bosque aleatorio</span><span class="num">0.9646</span><span class="pie">100 árboles</span></div>
-        <div><span class="etq">Modelo lineal</span><span class="num">0.9097</span><span class="pie">10 clasificadores</span></div>
-      </div>
-      <p>
-        Para píxeles de dígitos centrados, «parecerse a los que ya vi» resulta ser una
-        estrategia excelente. Para predecir precios de vivienda sería malísima. El mismo
-        algoritmo, dos problemas, resultados opuestos — que es literalmente lo que dice
-        el teorema.
-      </p>
-      <p>
-        <strong>En los precios</strong> el giro fue otro, y más incómodo. Tras nueve
-        modelos y 137 combinaciones de hiperparámetros, los tres primeros quedaron con
-        errores de 0.4063, 0.4235 y 0.4291 — un orden claro en la tabla.
+        Se arregla al revés: un modelo con más parámetros, mejores variables, o aflojar la
+        regularización.
       </p>
       <p class="note">
-        Pero calculando el intervalo de confianza de cada uno,
-        <strong>los tres se traslapan</strong>. Ese orden es ruido del muestreo: con otro
-        conjunto de prueba podría invertirse. No solo no se puede saber de antemano cuál
-        gana — a veces tampoco se puede saber después.
-      </p>
-    </div>
-
-    <div class="finding">
-      <div class="finding-head">
-        <h3>4 · Los datos importan más que el algoritmo</h3>
-        <span class="evidence" data-tone="gain">−0.036 contra −0.028</span>
-      </div>
-      <p>
-        El capítulo cita el trabajo de Banko y Brill: algoritmos muy distintos convergen
-        en rendimiento cuando se les da suficiente información. La moraleja es incómoda
-        para quien disfruta afinando — normalmente rinde más conseguir mejores datos que
-        mejores parámetros.
-      </p>
-      <p>
-        Medido aquí, sobre el mismo conjunto y con ablaciones controladas:
-      </p>
-      <div class="marcador">
-        <div>
-          <span class="etq">Una variable nueva bien construida</span>
-          <span class="num cool">−0.0356</span>
-          <span class="pie">similitud geográfica</span>
-        </div>
-        <div>
-          <span class="etq">Toda la búsqueda de hiperparámetros</span>
-          <span class="num">−0.0284</span>
-          <span class="pie">137 combinaciones</span>
-        </div>
-      </div>
-      <p class="note">
-        Una sola variable bien pensada rindió más que las 137 combinaciones de
-        hiperparámetros juntas.
-      </p>
-      <p>
-        <strong>En los dígitos la demostración es aún más limpia</strong>, porque ni
-        siquiera hubo variable nueva. Cada imagen se replicó desplazada un píxel arriba,
-        abajo, izquierda y derecha — el mismo dígito, cinco veces, en posiciones
-        ligeramente distintas. El conjunto pasó de 60,000 a 300,000 imágenes.
-      </p>
-      <div class="marcador">
-        <div><span class="etq">Antes</span><span class="num">0.9714</span><span class="pie">60,000 imágenes</span></div>
-        <div><span class="etq">Después</span><span class="num cool">0.9763</span><span class="pie">300,000 imágenes</span></div>
-      </div>
-      <p>
-        <strong>Sin tocar el modelo ni un solo hiperparámetro.</strong> Solo enseñándole
-        que un 7 corrido un píxel sigue siendo un 7 — algo obvio para una persona, y que
-        un modelo que compara píxel contra píxel no tenía forma de saber.
-      </p>
-      <p class="note">
-        La contracara: más datos no siempre es la respuesta. En los precios añadimos una
-        variable que parecía obviamente útil —si el distrito está frente al mar— y
-        <strong>no mejoró nada</strong>, porque las coordenadas ya contenían esa
-        información. Lo que importa no es la cantidad de datos sino cuánta información
-        <em>nueva</em> aportan.
-      </p>
-    </div>
-
-    <div class="finding">
-      <div class="finding-head">
-        <h3>La que el capítulo no lista</h3>
-        <span class="evidence" data-tone="none">91% sin aprender nada</span>
-      </div>
-      <p>
-        Las cuatro anteriores están en el libro. Esta la añade el proyecto, y resultó ser
-        la más peligrosa de todas: <strong>medir con la métrica equivocada</strong>.
-      </p>
-      <p>
-        En el capítulo 3 la primera tarea es detectar un solo dígito: <em>¿esta imagen es
-        un 5?</em>. Solo el 9% de las imágenes lo son. Así que un modelo que responda «no»
-        a absolutamente todo acierta el 91% de las veces sin haber mirado un píxel.
-      </p>
-      <div class="marcador">
-        <div><span class="etq">Clasificador real</span><span class="num">0.9696</span><span class="pie">aprendió algo</span></div>
-        <div><span class="etq">Responder «no» a todo</span><span class="num warm">0.9096</span><span class="pie">no miró nada</span></div>
-      </div>
-      <p>
-        Seis puntos separan un modelo que funciona de uno que no existe. Y un 91% en un
-        informe se ve muy bien.
-      </p>
-      <p class="note">
-        Esto no es una curiosidad de los dígitos. <strong>Las clases raras son la norma
-        en los problemas que importan</strong>: el fraude, la enfermedad, la falla del
-        equipo, el candidato que sí encaja. En todos ellos la exactitud regala el 90% de
-        entrada, y quien reporte solo esa cifra estará reportando el desequilibrio de
-        sus datos, no el mérito de su modelo.
-      </p>
-      <p>
-        La salida es cambiar de métrica — precisión, exhaustividad, y decidir cuál pesa
-        más según lo que cueste cada tipo de error. Pero eso ya no es una decisión
-        técnica, y ahí termina lo que el capítulo 1 puede decir.
+        Entre los dos hay un equilibrio, y encontrarlo es de lo que trata buena parte del
+        resto del libro.
       </p>
     </div>
   </section>
 
-  <!-- ══ VALIDACIÓN ════════════════════════════════════════════════════ -->
+  <!-- ══ VALIDAR ═══════════════════════════════════════════════════════ -->
   <section class="wrap stack">
-    <span class="eyebrow">La parte que cierra el capítulo</span>
-    <h2>Por qué hacen falta tres conjuntos y no dos</h2>
+    <span class="eyebrow">La parte que cierra</span>
+    <h2>Cómo saber si funciona antes de que sea tarde</h2>
     <p>
-      Todo el mundo sabe separar entrenamiento y prueba. Lo que el capítulo insiste, y
-      cuesta interiorizar, es que <strong>el conjunto de prueba se gasta</strong>.
+      La única forma de saber si un modelo generaliza es probarlo con casos que no vio.
+      Se puede ponerlo en producción y mirar qué pasa, pero si es malo los usuarios se
+      quejarán — no es la mejor idea.
     </p>
     <p>
-      Si eliges hiperparámetros mirando el resultado en la prueba, ya no mide
-      generalización: mide qué tan bien ajustaste a esas casas concretas. El número deja
-      de significar lo que crees.
+      De ahí la práctica básica: partir los datos en <strong>entrenamiento</strong> y
+      <strong>prueba</strong>. El error sobre los casos nuevos se llama <em>error de
+      generalización</em>, y estimarlo con el conjunto de prueba dice cómo se comportará
+      el modelo con datos que nunca ha visto.
     </p>
     <p class="note">
-      Por eso en este proyecto la búsqueda de hiperparámetros se hace con
-      <strong>validación cruzada dentro del entrenamiento</strong>, y el conjunto de
-      prueba se toca una sola vez, al final. En el capítulo 3 se tocó exactamente una vez:
-      para comprobar si el k-vecinos superaba el 97% que pedía el ejercicio.
-    </p>
-    <p>
-      Hay una señal que delata cuándo esto se está haciendo bien. Antes de meter el
-      preprocesamiento dentro del pipeline, la validación cruzada reportaba un error
-      <em>menor</em> que el del conjunto de prueba — imposible si fuera honesta.
-      Corregido, reporta uno ligeramente mayor, que es lo que debe pasar. Ese cambio de
-      signo fue la confirmación de que la fuga se había cerrado.
+      Si el error de entrenamiento es bajo pero el de generalización alto, el modelo está
+      sobreajustado. Ese contraste es el diagnóstico.
     </p>
   </section>
 
   <section class="wrap stack">
-    <h2>Qué se lleva uno de aquí</h2>
+    <h3 class="sub">El problema que aparece justo después</h3>
     <p>
-      El capítulo 1 no enseña a construir nada, y por eso es tentador pasarlo rápido. Su
-      valor es que da nombre a los errores <strong>antes</strong> de cometerlos — así que
-      cuando aparecen, se reconocen.
+      Supongamos que dudas entre dos modelos. Entrenas los dos, comparas en el conjunto
+      de prueba, eliges el mejor. Ahora quieres ajustar la regularización: pruebas cien
+      valores distintos y te quedas con el que mejor sale en la prueba.
+    </p>
+    <p>
+      El modelo rinde estupendamente. Y en producción rinde mucho peor. ¿Por qué?
     </p>
     <p class="note">
-      Los cuatro que se documentan en este proyecto no se detectaron por intuición. Se
-      detectaron porque el número no cuadraba y hubo que ir a buscar por qué. Esa es la
-      regla que acabó ordenando todo el repositorio: <strong>si algo se afirma, se
-      mide</strong> — incluida la explicación de por qué falló.
+      Porque mediste cien veces sobre el mismo conjunto y elegiste el que mejor le
+      quedaba <strong>a ese conjunto en concreto</strong>. El número dejó de estimar
+      generalización y pasó a medir cuánto ajustaste a esas casas. <strong>El conjunto de
+      prueba se gasta cuando se usa para decidir.</strong>
+    </p>
+    <p>
+      La solución habitual es apartar una tercera porción — el conjunto de
+      <strong>validación</strong>: se entrenan varios candidatos sobre el resto, se
+      comparan en validación, se elige uno, se reentrena con todo lo que no es prueba, y
+      solo entonces se mide una vez en prueba.
+    </p>
+    <p>
+      Si el conjunto de validación es muy pequeño, la comparación es ruidosa; si es muy
+      grande, se entrena con muy poco. La salida es la <strong>validación
+      cruzada</strong>: partir en varios pliegues y promediar, a costa de multiplicar el
+      tiempo de entrenamiento.
+    </p>
+  </section>
+
+  <section class="wrap stack">
+    <h3 class="sub">Cuando entrenamiento y realidad no coinciden</h3>
+    <p>
+      Hay un caso más sutil. Imagina una aplicación que reconoce flores desde el móvil.
+      Consigues millones de fotos de flores descargadas de internet, pero solo unos miles
+      tomadas con la propia aplicación — que es lo que el sistema verá de verdad.
+    </p>
+    <p class="note">
+      Lo importante: <strong>validación y prueba deben ser lo más representativos posible
+      de lo que se espera en producción</strong>, así que ambos tienen que salir de las
+      fotos tomadas con la aplicación, no de las descargadas.
+    </p>
+    <p>
+      Y si el modelo va mal, queda la duda de si es sobreajuste o si simplemente las
+      fotos de internet no se parecen a las reales. Andrew Ng propone apartar otra
+      porción de las de internet —el conjunto <em>train-dev</em>— para distinguir los dos
+      casos: si rinde bien ahí pero mal en validación, el problema es la diferencia entre
+      los datos, no el sobreajuste.
+    </p>
+  </section>
+
+  <section class="wrap stack">
+    <h3 class="sub">Por qué hay que probar en vez de razonar</h3>
+    <p>
+      El capítulo cierra con el teorema de <strong>«no hay almuerzo gratis»</strong>
+      (Wolpert, 1996): si no se hace ninguna suposición sobre los datos, no hay razón para
+      preferir un modelo sobre otro. Ninguno es mejor a priori.
+    </p>
+    <p>
+      Para algunos conjuntos de datos el mejor modelo es una línea recta; para otros, una
+      red neuronal. <strong>No hay forma de saberlo de antemano sin probar.</strong> Y como
+      evaluarlo todo es imposible, en la práctica se hacen suposiciones razonables sobre
+      los datos y se evalúa un puñado de candidatos.
+    </p>
+    <p class="note">
+      Ese es el argumento que justifica todo lo demás: el método del libro no es elegir
+      bien el algoritmo, es <strong>montar un procedimiento que permita comparar varios
+      sin engañarse</strong>. De eso trata el capítulo siguiente.
     </p>
   </section>
 
   <style>
     .hero { padding-top: clamp(2.5rem, 7vw, 4.5rem); display: flex; flex-direction: column; gap: 1.2rem; }
     .hero .lede { font-size: 1.18rem; color: var(--ink-2); max-width: 58ch; }
-    .hero .lede-2 { font-size: 1.02rem; color: var(--muted); max-width: 58ch; }
+    h3.sub { font-size: 1.25rem; margin-top: .4rem; }
 
-    .marcador {
-      display: grid; gap: 1px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-      background: var(--hairline); border: 1px solid var(--hairline);
-      border-radius: 6px; overflow: hidden; margin-block: .4rem;
-    }
+    /* Tarea / Experiencia / Desempeño */
+    .tep { display: grid; gap: 1px; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      background: var(--hairline); border: 1px solid var(--hairline); border-radius: 6px; overflow: hidden; }
+    .tep > div { background: var(--surface); padding: 1.1rem 1.25rem; display: flex; flex-direction: column; gap: .3rem; }
+    .tep .letra { font-family: var(--serif); font-size: 2.1rem; line-height: 1; color: var(--accent); font-weight: 600; }
+    .tep .etq { font-family: var(--mono); font-size: .66rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+    .tep p { font-size: .92rem; color: var(--ink-2); }
+
+    /* Las dos formas de escribir el filtro */
+    .dos-vias { display: grid; gap: 1.1rem; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+    .via { background: var(--surface); border: 1px solid var(--hairline); border-radius: 10px;
+      padding: 1.5rem 1.6rem 1.4rem; display: flex; flex-direction: column; gap: .9rem; box-shadow: var(--shadow); }
+    .via.destacada { border-color: var(--rule); }
+    .via-etq { font-family: var(--mono); font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+    .via.destacada .via-etq { color: var(--accent-ink); }
+    .via ol { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: .5rem; font-size: .95rem; color: var(--ink-2); }
+    .via ol::marker, .via li::marker { font-family: var(--mono); font-size: .8rem; color: var(--muted); }
+    .via-fin { font-size: .95rem; padding-top: .3rem; border-top: 1px solid var(--hairline); }
+
+    table.suelta { margin-top: .3rem; }
+
+    .marcador { display: grid; gap: 1px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      background: var(--hairline); border: 1px solid var(--hairline); border-radius: 6px; overflow: hidden; margin-block: .4rem; }
     .marcador > div { background: var(--surface); padding: 1.1rem 1.25rem; display: flex; flex-direction: column; gap: .25rem; }
     .marcador .etq { font-family: var(--mono); font-size: .66rem; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
-    .marcador .num { font-size: 1.85rem; font-weight: 600; letter-spacing: -.02em; line-height: 1; font-variant-numeric: tabular-nums; }
+    .marcador .num { font-size: 1.85rem; font-weight: 600; letter-spacing: -.02em; line-height: 1; }
     .marcador .num.cool { color: var(--cool); }
+    .marcador .num.warm { color: var(--warm); }
     .marcador .pie { font-family: var(--mono); font-size: .7rem; color: var(--muted); }
   </style>
 </Base>
