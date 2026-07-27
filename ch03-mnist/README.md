@@ -168,8 +168,6 @@ capturan forma.
 
 ---
 
----
-
 ## Multietiqueta: varias respuestas a la vez
 
 ```bash
