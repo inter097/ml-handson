@@ -44,6 +44,19 @@ from xgboost import XGBRegressor
 
 from preprocessing import SKOPS_TRUSTED, build_pipeline, load_data
 
+# Hiperparámetros del PREPROCESAMIENTO, no del modelo.
+# Esto solo es posible porque el preprocesamiento vive dentro del Pipeline:
+# la búsqueda puede decidir cómo imputar y cuántos clusters geográficos usar,
+# reajustando ambos en cada fold. Es el ejercicio de Géron §2 de "explorar
+# opciones de preparación con la búsqueda de hiperparámetros".
+PREP_PARAMS: dict = {
+    "prep__num__imputer__strategy": ["median", "mean"],
+    # Rango extendido hasta 60: con tope en 30 la búsqueda elegía justo 30, y
+    # tocar el borde del espacio significa que el óptimo puede estar más allá.
+    "prep__geo__n_clusters": [5, 10, 15, 20, 30, 45, 60],
+    "prep__geo__gamma": [0.1, 0.3, 1.0, 3.0],
+}
+
 SEARCH_SPACES: dict = {
     "ridge": {
         "model": Ridge(),
@@ -140,7 +153,7 @@ def _log_all_candidates(search: RandomizedSearchCV) -> None:
             })
 
 
-def tune(model_name: str, n_iter: int = 20) -> None:
+def tune(model_name: str, n_iter: int = 20, tune_prep: bool = True) -> None:
     if model_name not in SEARCH_SPACES:
         raise ValueError(f"Modelo no soportado para tuning: {model_name}. Opciones: {list(SEARCH_SPACES)}")
 
@@ -150,6 +163,15 @@ def tune(model_name: str, n_iter: int = 20) -> None:
     # El preprocesamiento se reajusta en cada fold; los params van al paso "model"
     pipeline = build_pipeline(config["model"], X_train)
     param_dist = {f"model__{k}": v for k, v in config["params"].items()}
+
+    if tune_prep:
+        # Solo se añaden los que el Pipeline realmente tiene: sin la columna
+        # ocean_proximity o sin lat/long, esas ramas no existen.
+        available = pipeline.named_steps["prep"].get_params()
+        param_dist.update({
+            k: v for k, v in PREP_PARAMS.items()
+            if k.removeprefix("prep__") in available
+        })
 
     mlflow.set_experiment("california-housing")
     cv = KFold(n_splits=5, shuffle=True, random_state=42)
@@ -187,6 +209,7 @@ def tune(model_name: str, n_iter: int = 20) -> None:
             "cv_folds": 5,
             "n_features_in": X_train.shape[1],
             "has_ocean_proximity": "ocean_proximity" in X_train.columns,
+            "tune_prep": tune_prep,
             **best_params,
         })
         mlflow.log_metrics({"rmse": rmse, "mae": mae, "r2": r2, "cv_rmse": cv_rmse})
@@ -203,5 +226,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", required=True, choices=list(SEARCH_SPACES.keys()))
     parser.add_argument("--n-iter", type=int, default=20)
+    parser.add_argument(
+        "--no-tune-prep", action="store_true",
+        help="Buscar solo hiperparámetros del modelo, dejando fijo el preprocesamiento",
+    )
     args = parser.parse_args()
-    tune(args.model, args.n_iter)
+    tune(args.model, args.n_iter, tune_prep=not args.no_tune_prep)

@@ -20,10 +20,33 @@ import mlflow
 import mlflow.sklearn
 import numpy as np
 import pandas as pd
+from scipy import stats
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
 PROCESSED_DIR = Path("data/processed")
 REPORTS_DIR = Path("reports")
+CONFIDENCE = 0.95
+
+
+def rmse_confidence_interval(y_true, preds, confidence: float = CONFIDENCE) -> tuple:
+    """Intervalo de confianza del RMSE (Géron §2 "Evaluate on the Test Set").
+
+    El RMSE del test set sale de una muestra concreta de casas; con otra
+    muestra habría dado distinto. El intervalo acota cuánto puede moverse.
+
+    Se calcula sobre los errores CUADRADOS (no sobre el RMSE directo) porque
+    el RMSE es una raíz de una media: se saca el intervalo de esa media y al
+    final se le aplica la raíz a los dos extremos.
+    """
+    squared_errors = (y_true - preds) ** 2
+    n = len(squared_errors)
+    low, high = stats.t.interval(
+        confidence,
+        df=n - 1,
+        loc=squared_errors.mean(),
+        scale=stats.sem(squared_errors),
+    )
+    return float(np.sqrt(low)), float(np.sqrt(high))
 
 
 def evaluate(run_id: str) -> None:
@@ -59,6 +82,7 @@ def evaluate(run_id: str) -> None:
     rmse = float(np.sqrt(mean_squared_error(y_test, preds)))
     mae = float(mean_absolute_error(y_test, preds))
     r2 = float(r2_score(y_test, preds))
+    ci_low, ci_high = rmse_confidence_interval(y_test, preds)
 
     # ── Nombre del modelo ────────────────────────────────────────────────────
     # El artefacto puede cargarse via pyfunc (envuelto en _Wrapper) y perder su
@@ -80,8 +104,16 @@ def evaluate(run_id: str) -> None:
 | RMSE    | {rmse:.4f} |
 | MAE     | {mae:.4f} |
 | R²      | {r2:.4f} |
+| IC {CONFIDENCE:.0%} del RMSE | [{ci_low:.4f}, {ci_high:.4f}] |
 
 > RMSE en unidades originales: USD {rmse * 100_000:,.0f} promedio de error por casa.
+> Con {CONFIDENCE:.0%} de confianza, el error real está entre USD {ci_low * 100_000:,.0f}
+> y USD {ci_high * 100_000:,.0f}.
+
+**Cómo leer el intervalo:** otro modelo solo es mejor de verdad si su RMSE queda
+fuera de este rango. Si dos modelos tienen intervalos que se traslapan, la
+diferencia entre ellos cabe dentro del ruido del muestreo y no se puede afirmar
+que uno gane.
 
 ![Residuos](evaluation.png)
 """
@@ -106,7 +138,7 @@ def evaluate(run_id: str) -> None:
     plt.close()
 
     print(f"\n=== {model_name} ===")
-    print(f"  RMSE : {rmse:.4f}")
+    print(f"  RMSE : {rmse:.4f}  (IC {CONFIDENCE:.0%}: [{ci_low:.4f}, {ci_high:.4f}])")
     print(f"  MAE  : {mae:.4f}")
     print(f"  R²   : {r2:.4f}")
     print(f"\nReporte guardado en reports/")

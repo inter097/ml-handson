@@ -1,4 +1,4 @@
-.PHONY: all setup data features train-all tune-all analysis ui clean help
+.PHONY: all setup data features train-all tune-all analysis evaluate predict ui clean help
 
 PYTHON = venv/bin/python
 PIP    = venv/bin/pip
@@ -68,6 +68,13 @@ analysis:
 evaluate:
 	$(PYTHON) src/evaluate.py --run-id $(RUN_ID)
 
+# ── Inferencia ───────────────────────────────────────────────────────────────
+# Uso: make predict RUN_ID=<id>            → demo con 5 filas del test set
+#      make predict RUN_ID=<id> INPUT=x.csv → predice sobre un CSV crudo
+
+predict:
+	$(PYTHON) src/predict.py --run-id $(RUN_ID) $(if $(INPUT),--input $(INPUT),--demo)
+
 # ── MLflow UI ────────────────────────────────────────────────────────────────
 
 ui:
@@ -92,5 +99,6 @@ help:
 	@echo "  make analysis       Importancia de features + curvas de aprendizaje → reports/"
 	@echo "  make ui             Abrir MLflow UI en http://localhost:5000"
 	@echo "  make evaluate RUN_ID=<id>  Evaluar el mejor run y guardar reporte"
+	@echo "  make predict RUN_ID=<id>   Predecir (--demo o INPUT=archivo.csv)"
 	@echo "  make clean          Borrar datos y runs locales"
 	@echo ""
