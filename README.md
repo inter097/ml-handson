@@ -14,7 +14,7 @@ poder comparar resultados entre capítulos desde una sola interfaz.
 | # | Carpeta | Tema | Estado |
 |---|---|---|---|
 | 2 | [`ch02-california-housing`](ch02-california-housing/) | Proyecto de punta a punta — regresión | ✅ Completo · [caso de estudio](https://houses.eliuth.dev) |
-| 3 | — | Clasificación — métricas que no engañan | Pendiente |
+| 3 | [`ch03-mnist`](ch03-mnist/) | Clasificación — métricas que no engañan | 🔨 En curso |
 
 Los capítulos 1 y 4 en adelante se irán agregando con la misma estructura.
 

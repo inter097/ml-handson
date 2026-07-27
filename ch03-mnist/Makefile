@@ -1,0 +1,57 @@
+.PHONY: all setup data features baseline metrics ui clean help
+
+# El entorno y el registro de experimentos viven en la raíz del repo y se
+# comparten entre capítulos. ROOT se resuelve desde la ruta de este Makefile.
+ROOT   := $(abspath $(dir $(lastword $(MAKEFILE_LIST)))..)
+PYTHON = $(ROOT)/venv/bin/python
+
+# MLflow 3 usa una base sqlite relativa al directorio actual. Sin esto, cada
+# capítulo crearía la suya y no se podrían comparar experimentos entre sí.
+export MLFLOW_TRACKING_URI := sqlite:///$(ROOT)/mlflow.db
+
+# ── Pipeline ────────────────────────────────────────────────────────────────
+
+all: data features baseline
+	@echo "✓ Pipeline completo."
+
+data:
+	$(PYTHON) src/data.py
+
+features:
+	$(PYTHON) src/features.py
+
+# ── El detector binario y la trampa de la exactitud ─────────────────────────
+# Uso: make baseline           → detecta el dígito 5
+#      make baseline DIGIT=8   → cualquier otro
+
+baseline:
+	$(PYTHON) src/baseline.py --digit $(or $(DIGIT),5)
+
+# ── Umbral, precisión/exhaustividad y ROC ───────────────────────────────────
+# Uso: make metrics                → objetivo 90% de precisión
+#      make metrics PRECISION=0.99 → más exigente
+
+metrics:
+	$(PYTHON) src/metrics.py --digit $(or $(DIGIT),5) --target-precision $(or $(PRECISION),0.90)
+
+# ── MLflow UI ───────────────────────────────────────────────────────────────
+
+ui:
+	$(ROOT)/venv/bin/mlflow ui
+
+# ── Limpieza ────────────────────────────────────────────────────────────────
+
+clean:
+	rm -rf data/raw data/processed
+
+help:
+	@echo ""
+	@echo "  make data            Descargar MNIST desde OpenML"
+	@echo "  make features        Partición canónica 60k/10k"
+	@echo "  make baseline        Detector binario + la trampa de la exactitud"
+	@echo "  make baseline DIGIT=8  Detectar otro dígito"
+	@echo "  make metrics         Umbral, curvas PR y ROC → reports/"
+	@echo "  make metrics PRECISION=0.99  Objetivo de precisión distinto"
+	@echo "  make ui              Abrir MLflow UI"
+	@echo "  make clean           Borrar datos locales"
+	@echo ""
