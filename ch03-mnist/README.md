@@ -16,6 +16,8 @@ make errors      # matriz de confusión y qué confunde con qué
 make multioutput # multietiqueta y quitar ruido de imágenes
 make titanic     # ejercicio 3 — supervivencia
 make spam        # ejercicio 4 — filtro de spam
+make knn         # ejercicio 1 — k-vecinos afinado (>97%)
+make augment     # ejercicio 2 — aumentar datos desplazando imágenes
 ```
 
 ---
@@ -279,10 +281,85 @@ Ajustando el umbral para 99% de precisión:
 
 ---
 
-## Pendiente del capítulo
+## Ejercicio 1 — k-vecinos afinado
 
-Los dos ejercicios caros: k-vecinos afinado hasta ~97% y aumentar los datos desplazando
-las imágenes un píxel en cada dirección.
+```bash
+make knn
+```
+
+k-vecinos no entrena: memoriza. Ajustar es guardar las 60,000 imágenes; el trabajo
+ocurre al predecir. Búsqueda sobre `n_neighbors` y `weights`:
+
+| | |
+|---|---|
+| Mejores parámetros | `n_neighbors=4, weights=distance` |
+| Validación cruzada | 0.9704 |
+| **Conjunto de prueba** | **0.9714** ✓ supera el 97% |
+
+### ⚠️ Este script congeló una máquina de 16 GB
+
+La primera versión pedía `n_jobs=-1` en los dos niveles a la vez:
+
+```python
+GridSearchCV(KNeighborsClassifier(n_jobs=-1), ..., n_jobs=-1)   # ✗
+```
+
+`GridSearchCV` paraleliza con **procesos**: cada uno recibe su copia del conjunto de
+entrenamiento, y sklearn lo convierte a float64 — 376 MB por copia. Con 10 núcleos son
+3.8 GB solo en datos, y encima cada proceso pedía otros diez hilos.
+
+Tres correcciones, cada una medida sobre 20,000 imágenes:
+
+| Cambio | Por qué |
+|---|---|
+| `n_jobs=1` en la búsqueda, `-1` en el modelo | k-vecinos paraleliza con **hilos** sobre memoria compartida: una sola copia |
+| `working_memory` a 128 MB | El culpable oculto: por defecto son **1024 MB por hilo** para bloques de distancias |
+| `float32` | Los píxeles van de 0 a 255; no necesitan float64 |
+
+**Pico de memoria: 3.00 GB → 0.49 GB.** Y más rápido: 25.7s → 17.0s.
+
+El error de método fue peor que el bug: la estimación de costo se midió con un
+`KNeighborsClassifier` suelto y después se escribió el script con la versión anidada,
+sin volver a medir.
+
+## Ejercicio 2 — aumentar los datos
+
+```bash
+make augment                    # completo
+python src/augment.py --check   # solo proyecta la memoria, no corre
+```
+
+Un 7 desplazado un píxel sigue siendo un 7 — pero para k-vecinos, que compara píxel
+contra píxel, es una imagen distinta. Añadiendo las cuatro versiones desplazadas, el
+conjunto pasa de 60,000 a **300,000** imágenes.
+
+| | Exactitud |
+|---|---|
+| Sin aumentar | 0.9714 |
+| Con aumento | **0.9763** |
+
+Casi medio punto sin tocar el modelo ni los hiperparámetros. En visión por computadora
+el aumento de datos suele rendir más que afinar.
+
+Tras el incidente anterior, este script **proyecta el pico antes de reservar memoria** y
+aborta si no cabe con holgura:
+
+```
+[augment] RAM total 16 GB · límite que me impongo 7.2 GB
+  datos en float32        0.88 GB
+  bloques de distancias   1.25 GB
+  pico estimado           2.66 GB
+[augment] ✓ cabe con holgura
+```
+
+Pico real medido en la corrida completa: **1.81 GB**. La proyección sobreestima ~2×,
+que es el lado correcto para equivocarse.
+
+---
+
+## Capítulo completo
+
+Las cuatro secciones del cuerpo y los cuatro ejercicios.
 
 ## Estructura
 
@@ -297,6 +374,8 @@ las imágenes un píxel en cada dirección.
 | `src/multioutput.py` | Multietiqueta y quitar ruido de imágenes |
 | `src/titanic.py` | Ejercicio 3 — supervivencia, datos tabulares mixtos |
 | `src/spam.py` | Ejercicio 4 — filtro de spam sobre correos reales |
+| `src/knn.py` | Ejercicio 1 — k-vecinos afinado |
+| `src/augment.py` | Ejercicio 2 — aumento por desplazamiento, con guardas de memoria |
 
 **Por qué no se baraja la partición:** las 10,000 imágenes de prueba de MNIST son las
 mismas desde 1998 y todos los resultados publicados las usan. Además vienen de
