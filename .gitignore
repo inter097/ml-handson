@@ -1,6 +1,8 @@
-# Datos (nunca en git — usar make data para reproducir)
+# Datos (nunca en git — usar `make data` de cada capítulo para reproducirlos).
+# Sin barra inicial, así aplica en cualquier capítulo: ch02-*/data/raw, etc.
 data/raw/
 data/processed/
+data/
 
 # MLflow — los runs viven aquí localmente, no en git
 mlruns/
@@ -28,7 +30,9 @@ venv/
 .DS_Store
 Thumbs.db
 
-# Reports generados (sí se commitean manualmente)
-# reports/*.png → excepción: sí queremos comparar visualmente
+# Reports generados sí se commitean: queremos comparar las gráficas entre
+# versiones, y pesan poco.
+
+# Vercel
 .vercel
 .env*
