@@ -11,6 +11,8 @@ make data        # descarga MNIST desde OpenML (14 MB)
 make features    # partición canónica 60k/10k
 make baseline    # detector binario + la trampa de la exactitud
 make metrics     # umbral, curvas PR y ROC → reports/
+make multiclass  # los 10 dígitos: OvR vs OvO
+make errors      # matriz de confusión y qué confunde con qué
 ```
 
 ---
@@ -95,8 +97,6 @@ proporción de falsos positivos, y con 54,000 negativos contra 5,400 positivos e
 denominador es tan grande que la curva se ve optimista. Para clases desbalanceadas, la
 curva de precisión contra exhaustividad cuenta la verdad más incómoda — y por eso
 Géron recomienda preferirla en ese caso.
-
----
 
 ---
 
