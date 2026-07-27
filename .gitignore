@@ -5,6 +5,9 @@ data/processed/
 # MLflow — los runs viven aquí localmente, no en git
 mlruns/
 mlartifacts/
+# La DB es el backend de tracking: contiene los runs, así que aplica la misma
+# regla. Trackearla metía un diff binario de 2 MB en cada entrenamiento.
+mlflow.db
 
 # Python
 __pycache__/
