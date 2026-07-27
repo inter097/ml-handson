@@ -98,10 +98,77 @@ Géron recomienda preferirla en ese caso.
 
 ---
 
+---
+
+## Multiclase: quién monta qué por debajo
+
+```bash
+make multiclass
+```
+
+Muchos algoritmos son binarios de nacimiento. Para diez clases, scikit-learn los
+envuelve — y elige la estrategia según el algoritmo:
+
+| Modelo | n | Exactitud | Estrategia |
+|---|---|---|---|
+| Lineal (SGD) | 60,000 | 0.9097 | Uno contra todos — 10 clasificadores |
+| Bosque aleatorio | 60,000 | **0.9646** | Nativamente multiclase |
+| SVC | 10,000 | 0.9552 | Uno contra uno — 45 clasificadores |
+
+**Por qué SVC usa 45 en vez de 10:** uno contra uno entrena un clasificador por cada
+par de dígitos, y cada uno solo ve las imágenes de sus dos clases — unas 12,000 en vez
+de 60,000. Para algoritmos que escalan mal con el tamaño sale ganando, aunque monte
+cuatro veces más modelos.
+
+⚠️ No confundir estrategias multiclase con ensambles: los 100 `estimators_` de un
+bosque son sus árboles, no un clasificador por clase.
+
+**Cuánto pesa escalar**, en el modelo lineal sobre 10,000 imágenes:
+
+| | Exactitud |
+|---|---|
+| Píxeles crudos (0–255) | 0.8462 |
+| Escalados a 0–1 | **0.8815** |
+
+Tres puntos y medio por una división. En modelos lineales el escalado no es cosmético.
+
+---
+
+## Análisis de errores: qué arreglar, no cuánto fallas
+
+```bash
+make errors
+```
+
+![Matriz de confusión](reports/confusion.png)
+
+La matriz cruda es inútil: la diagonal se lleva todo el color y los errores quedan
+invisibles. Normalizada por fila y con la diagonal en cero, aparece el patrón.
+
+| Confusión | Tasa |
+|---|---|
+| 4 → 9 | 5.14% |
+| 7 → 9 | 5.02% |
+| 3 → 2 | 4.48% |
+| 3 → 5 | 4.34% |
+| 8 → 5 | 3.69% |
+
+![El 4 y el 9](reports/peor_par.png)
+
+**Y aquí está el valor real del ejercicio.** Mirando las imágenes que confundió: los 4
+mal clasificados tienen la parte superior **cerrada**, y los 9 mal clasificados la
+tienen **abierta**. El modelo no está siendo tonto — esos dígitos son genuinamente
+ambiguos incluso para una persona.
+
+Eso cambia qué se hace después. No es "entrena más": es que un modelo lineal ve píxeles
+sueltos y no puede representar «tiene un lazo cerrado arriba», que es la diferencia
+entre un 4 y un 9. La solución sale del capítulo 14 — redes convolucionales, que sí
+capturan forma.
+
+---
+
 ## Pendiente del capítulo
 
-- Clasificación multiclase — de «¿es un 5?» a «¿cuál de los diez?»
-- Análisis de errores con la matriz de confusión: qué dígitos se confunden entre sí
 - Clasificación multietiqueta y multisalida
 - Ejercicios: k-vecinos afinado hasta ~97%, aumentar datos desplazando las imágenes,
   el Titanic, y un filtro de spam
@@ -114,6 +181,8 @@ Géron recomienda preferirla en ese caso.
 | `src/features.py` | Partición canónica 60k/10k, sin barajar |
 | `src/baseline.py` | Detector binario, modelo tonto, matriz de confusión |
 | `src/metrics.py` | Umbral, curvas PR y ROC |
+| `src/multiclass.py` | Los 10 dígitos: OvR vs OvO, efecto del escalado |
+| `src/errors.py` | Matriz de confusión 10×10 y montaje del peor par |
 
 **Por qué no se baraja la partición:** las 10,000 imágenes de prueba de MNIST son las
 mismas desde 1998 y todos los resultados publicados las usan. Además vienen de

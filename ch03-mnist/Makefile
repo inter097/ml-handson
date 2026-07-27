@@ -34,6 +34,14 @@ baseline:
 metrics:
 	$(PYTHON) src/metrics.py --digit $(or $(DIGIT),5) --target-precision $(or $(PRECISION),0.90)
 
+# ── Multiclase y análisis de errores ────────────────────────────────────────
+
+multiclass:
+	$(PYTHON) src/multiclass.py $(if $(MODELS),--models $(MODELS),)
+
+errors:
+	$(PYTHON) src/errors.py
+
 # ── MLflow UI ───────────────────────────────────────────────────────────────
 
 ui:
@@ -52,6 +60,8 @@ help:
 	@echo "  make baseline DIGIT=8  Detectar otro dígito"
 	@echo "  make metrics         Umbral, curvas PR y ROC → reports/"
 	@echo "  make metrics PRECISION=0.99  Objetivo de precisión distinto"
+	@echo "  make multiclass      Los 10 dígitos: OvR vs OvO + efecto del escalado"
+	@echo "  make errors          Matriz de confusión 10x10 y qué confunde con qué"
 	@echo "  make ui              Abrir MLflow UI"
 	@echo "  make clean           Borrar datos locales"
 	@echo ""
