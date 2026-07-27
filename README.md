@@ -16,10 +16,13 @@ y tracking automático de experimentos con MLflow.
 ```
 .
 ├── src/
-│   ├── data.py        # Fase 1 — Descarga del dataset
-│   ├── features.py    # Fase 2 — Limpieza y feature engineering
-│   ├── train.py       # Fase 3 — Entrenamiento + logging MLflow
-│   └── evaluate.py    # Fase 4 — Evaluación final del mejor modelo
+│   ├── data.py           # Fase 1 — Descarga del dataset
+│   ├── features.py       # Fase 2 — Feature engineering + split
+│   ├── preprocessing.py  # ColumnTransformer compartido (imputar/escalar/one-hot)
+│   ├── train.py          # Fase 3a — Entrenamiento baseline + logging MLflow
+│   ├── tune.py           # Fase 3b — RandomizedSearchCV
+│   ├── analysis.py       # Importancia de features + curvas de aprendizaje
+│   └── evaluate.py       # Fase 4 — Evaluación final del mejor modelo
 ├── notebooks/
 │   └── 01_eda.ipynb   # Exploración visual (no forma parte del pipeline)
 ├── data/              # gitignored — generado con `make data`
@@ -82,23 +85,59 @@ Corre `make data` antes de abrir el notebook.
 ### Fase 1 — Obtener datos (`src/data.py`)
 *Géron §2: "Get the Data"*
 
-Descarga el dataset de scikit-learn y lo persiste en Parquet.
-El dataset tiene 20,640 filas y 9 columnas (8 features + target `MedHouseVal`).
+Descarga el CSV original del libro desde `ageron/data` y lo persiste en Parquet.
+20,640 filas y 10 columnas (9 features + target `MedHouseVal`).
+
+**Por qué el CSV del libro y no `fetch_california_housing`:** la versión de sklearn
+viene recortada — descarta la columna categórica `ocean_proximity` e imputa en
+silencio los 207 faltantes de `total_bedrooms`. El libro enseña justamente a tratar
+esas dos cosas, así que se usa el CSV crudo. Las columnas se renombran al estilo
+sklearn y el target se divide entre 100,000 para mantener la escala de las métricas.
+
+⚠️ **Ojo al comparar runs viejos:** el CSV del libro trae las filas en distinto orden
+que sklearn, así que con la misma semilla el split cae en casas distintas. Las métricas
+de runs anteriores a este cambio **no son comparables** con las de ahora. En MLflow
+distínguelos por el param `has_ocean_proximity`.
 
 ### Fase 2 — Features (`src/features.py`)
 *Géron §2: "Prepare the Data for ML Algorithms"*
 
 - **Feature engineering**: ratios derivados (`rooms_per_household`, `bedrooms_ratio`, `population_per_household`)
-- **Split train/test**: 80/20 estratificado, semilla fija para reproducibilidad
-- **Escalado**: `StandardScaler` ajustado **solo en train** para evitar data leakage
+- **Split train/test**: 80/20, semilla fija para reproducibilidad
+- **Sin transformar**: los splits se guardan crudos, incluidos los NaN y la columna
+  categórica. Todo el preprocesamiento vive en `src/preprocessing.py`, dentro del
+  `Pipeline` de cada modelo
+
+**Por qué el preprocesamiento no va en esta fase:** si se escalara/imputara aquí, esos
+pasos verían el train set completo antes de la validación cruzada, y cada fold de
+validación quedaría contaminado con estadísticas calculadas sobre él mismo — el
+`cv_rmse` saldría optimista. Dentro del `Pipeline`, sklearn los reajusta en cada fold.
+
+Beneficio extra: el artefacto guardado en MLflow contiene preprocesamiento + modelo.
+Quien lo cargue le pasa datos crudos directamente, sin replicar nada.
+
+### `src/preprocessing.py` — el `ColumnTransformer`
+
+Un solo módulo define las transformaciones y lo reutilizan `train.py`, `tune.py` y
+`analysis.py`, así no hay tres copias que se desincronicen:
+
+| Rama | Columnas | Pasos |
+|---|---|---|
+| `num` | las 11 numéricas | `SimpleImputer(median)` → `StandardScaler` |
+| `cat` | `ocean_proximity` | `OneHotEncoder(handle_unknown="ignore")` |
+
+`handle_unknown="ignore"` importa: la categoría `ISLAND` tiene **5 filas en todo el
+dataset** y puede no aparecer en algún fold de la CV. Sin eso, revienta.
 
 ### Fase 3a — Entrenamiento baseline (`src/train.py`)
 *Géron §2: "Select and Train a Model"*
 
+Cada modelo se envuelve en `Pipeline([("scaler", StandardScaler()), ("model", estimador)])`.
+
 Cada ejecución crea un run en MLflow con:
 - parámetros del modelo
 - métricas: RMSE, MAE, R²
-- artefacto del modelo serializado (descargable desde la UI)
+- artefacto del **Pipeline completo** serializado (descargable desde la UI)
 
 Modelos disponibles: `linear_regression`, `random_forest`, `gradient_boosting`
 
@@ -128,7 +167,16 @@ make tune-random_forest N_ITER=50  # más exhaustivo
 make tune-all                      # random_forest + gradient_boosting
 ```
 
-Cada combinación probada aparece como un run en MLflow. Compara el `cv_rmse` (estimado real de generalización via cross-validation) vs el RMSE del baseline.
+Cada combinación probada se guarda como **run anidado** dentro del run padre
+`<modelo>_tuned`, con su `cv_rmse`, `cv_rmse_std` y `rank`. En la UI expande el run
+padre para ver las N combinaciones y entender qué hiperparámetro movió la aguja.
+
+Compara el `cv_rmse` (estimado real de generalización via cross-validation) vs el
+RMSE del baseline.
+
+**Nota sobre `svr`:** quedó fuera de `make tune-all`. SVR con kernel RBF escala O(n²)
+y sobre 16,512 filas una búsqueda tarda >20 min sin acercarse a xgboost. Sigue
+disponible con `make tune-svr`, idealmente sobre una submuestra como sugiere Géron.
 
 ### Fase 4 — Evaluación final (`src/evaluate.py`)
 *Géron §2: "Evaluate Your System on the Test Set"*

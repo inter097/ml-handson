@@ -2,10 +2,15 @@
 Fase 3 — Entrenamiento y tracking de experimentos
 Referencia: Géron cap. 2 "Select and Train a Model"
 
+Cada modelo se envuelve en un sklearn Pipeline (imputación + escalado +
+one-hot + estimador, ver src/preprocessing.py) para que el preprocesamiento
+viaje dentro del artefacto serializado: quien cargue el modelo le pasa datos
+crudos y el Pipeline los transforma solo.
+
 Cada ejecución crea un run en MLflow con:
   - parámetros del modelo
   - métricas (RMSE, MAE, R²)
-  - el artefacto del modelo serializado
+  - el artefacto del Pipeline completo serializado
 
 Uso:
     python src/train.py --model linear_regression
@@ -14,12 +19,10 @@ Uso:
     # o: make train-all
 """
 import argparse
-from pathlib import Path
 
 import mlflow
 import mlflow.sklearn
 import numpy as np
-import pandas as pd
 from sklearn.ensemble import (
     ExtraTreesRegressor,
     GradientBoostingRegressor,
@@ -32,14 +35,7 @@ from sklearn.svm import SVR
 from sklearn.tree import DecisionTreeRegressor
 from xgboost import XGBRegressor
 
-PROCESSED_DIR = Path("data/processed")
-
-# Tipos necesarios para serializar XGBoost y MLP via MLflow/skops
-SKOPS_TRUSTED = [
-    "xgboost.core.Booster",
-    "xgboost.sklearn.XGBRegressor",
-    "sklearn.neural_network._stochastic_optimizers.AdamOptimizer",
-]
+from preprocessing import SKOPS_TRUSTED, build_pipeline, load_data
 
 MODELS: dict = {
     "linear_regression": LinearRegression(),
@@ -54,35 +50,34 @@ MODELS: dict = {
 }
 
 
-def load_data() -> tuple:
-    X_train = pd.read_parquet(PROCESSED_DIR / "X_train.parquet").values
-    X_test = pd.read_parquet(PROCESSED_DIR / "X_test.parquet").values
-    y_train = pd.read_parquet(PROCESSED_DIR / "y_train.parquet").values.ravel()
-    y_test = pd.read_parquet(PROCESSED_DIR / "y_test.parquet").values.ravel()
-    return X_train, X_test, y_train, y_test
-
-
 def train(model_name: str) -> None:
     if model_name not in MODELS:
         raise ValueError(f"Modelo desconocido: {model_name}. Opciones: {list(MODELS)}")
 
     X_train, X_test, y_train, y_test = load_data()
-    model = MODELS[model_name]
+    estimator = MODELS[model_name]
+    pipeline = build_pipeline(estimator, X_train)
 
     mlflow.set_experiment("california-housing")
 
     with mlflow.start_run(run_name=model_name):
-        mlflow.log_params({"model_type": model_name, **model.get_params()})
+        mlflow.log_params({
+            "model_type": model_name,
+            # Distingue corridas con y sin ocean_proximity al comparar en la UI
+            "n_features_in": X_train.shape[1],
+            "has_ocean_proximity": "ocean_proximity" in X_train.columns,
+            **estimator.get_params(),
+        })
 
-        model.fit(X_train, y_train)
-        preds = model.predict(X_test)
+        pipeline.fit(X_train, y_train)
+        preds = pipeline.predict(X_test)
 
         rmse = float(np.sqrt(mean_squared_error(y_test, preds)))
         mae = float(mean_absolute_error(y_test, preds))
         r2 = float(r2_score(y_test, preds))
 
         mlflow.log_metrics({"rmse": rmse, "mae": mae, "r2": r2})
-        mlflow.sklearn.log_model(model, artifact_path="model", skops_trusted_types=SKOPS_TRUSTED)
+        mlflow.sklearn.log_model(pipeline, artifact_path="model", skops_trusted_types=SKOPS_TRUSTED)
 
         run_id = mlflow.active_run().info.run_id
         print(f"[{model_name:20s}] RMSE={rmse:.4f} | MAE={mae:.4f} | R²={r2:.4f} | run_id={run_id}")

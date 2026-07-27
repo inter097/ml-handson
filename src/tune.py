@@ -3,13 +3,21 @@ Fase 3b — Búsqueda de hiperparámetros
 Referencia: Géron cap. 2 "Fine-Tune Your Model"
 
 RandomizedSearchCV explora el espacio de hiperparámetros con CV=5 para
-evitar sobreajuste en la evaluación. Cada combinación probada se loggea
-como un run separado en MLflow para comparar todo en la UI.
+evitar sobreajuste en la evaluación.
+
+Cada combinación probada se loggea como un run anidado en MLflow (no solo
+la ganadora), así que en la UI puedes abrir el run padre y ver las N
+combinaciones con su cv_rmse para entender qué movió la aguja y qué no.
 
 Por qué RandomizedSearchCV y no GridSearchCV:
   - Grid busca exhaustivamente: con 5 params × 5 valores = 3125 combinaciones
   - Randomized samplea n_iter combinaciones aleatorias: igual de efectivo
     en práctica pero mucho más rápido (Bergstra & Bengio, 2012)
+
+Por qué el modelo va dentro de un Pipeline:
+  el preprocesamiento (imputación, escalado, one-hot) se reajusta dentro de
+  cada fold de la CV. Si se aplicara antes de la búsqueda, habría visto los
+  folds de validación y el cv_rmse saldría optimista — leakage entre folds.
 
 Uso:
     python src/tune.py --model xgboost --n-iter 30
@@ -17,12 +25,10 @@ Uso:
     # o: make tune-all
 """
 import argparse
-from pathlib import Path
 
 import mlflow
 import mlflow.sklearn
 import numpy as np
-import pandas as pd
 from sklearn.ensemble import (
     ExtraTreesRegressor,
     GradientBoostingRegressor,
@@ -36,13 +42,7 @@ from sklearn.svm import SVR
 from sklearn.tree import DecisionTreeRegressor
 from xgboost import XGBRegressor
 
-PROCESSED_DIR = Path("data/processed")
-
-SKOPS_TRUSTED = [
-    "xgboost.core.Booster",
-    "xgboost.sklearn.XGBRegressor",
-    "sklearn.neural_network._stochastic_optimizers.AdamOptimizer",
-]
+from preprocessing import SKOPS_TRUSTED, build_pipeline, load_data
 
 SEARCH_SPACES: dict = {
     "ridge": {
@@ -122,12 +122,22 @@ SEARCH_SPACES: dict = {
 }
 
 
-def load_data() -> tuple:
-    X_train = pd.read_parquet(PROCESSED_DIR / "X_train.parquet").values
-    X_test = pd.read_parquet(PROCESSED_DIR / "X_test.parquet").values
-    y_train = pd.read_parquet(PROCESSED_DIR / "y_train.parquet").values.ravel()
-    y_test = pd.read_parquet(PROCESSED_DIR / "y_test.parquet").values.ravel()
-    return X_train, X_test, y_train, y_test
+def _log_all_candidates(search: RandomizedSearchCV) -> None:
+    """Guarda cada combinación probada como run anidado del run activo.
+
+    RandomizedSearchCV deja todo en cv_results_ y luego lo tira; sin esto
+    solo sobreviviría la ganadora y se perdería el resto de la búsqueda.
+    """
+    results = search.cv_results_
+    for i in range(len(results["params"])):
+        params = {k.removeprefix("model__"): v for k, v in results["params"][i].items()}
+        with mlflow.start_run(run_name=f"candidato_{i:02d}", nested=True):
+            mlflow.log_params(params)
+            mlflow.log_metrics({
+                "cv_rmse": float(-results["mean_test_score"][i]),
+                "cv_rmse_std": float(results["std_test_score"][i]),
+                "rank": int(results["rank_test_score"][i]),
+            })
 
 
 def tune(model_name: str, n_iter: int = 20) -> None:
@@ -137,12 +147,16 @@ def tune(model_name: str, n_iter: int = 20) -> None:
     X_train, X_test, y_train, y_test = load_data()
     config = SEARCH_SPACES[model_name]
 
+    # El preprocesamiento se reajusta en cada fold; los params van al paso "model"
+    pipeline = build_pipeline(config["model"], X_train)
+    param_dist = {f"model__{k}": v for k, v in config["params"].items()}
+
     mlflow.set_experiment("california-housing")
     cv = KFold(n_splits=5, shuffle=True, random_state=42)
 
     search = RandomizedSearchCV(
-        estimator=config["model"],
-        param_distributions=config["params"],
+        estimator=pipeline,
+        param_distributions=param_dist,
         n_iter=n_iter,
         scoring="neg_root_mean_squared_error",
         cv=cv,
@@ -163,14 +177,26 @@ def tune(model_name: str, n_iter: int = 20) -> None:
     r2 = float(r2_score(y_test, preds))
     cv_rmse = float(-search.best_score_)
 
+    # Quitar el prefijo "model__" para que la UI muestre nombres limpios
+    best_params = {k.removeprefix("model__"): v for k, v in search.best_params_.items()}
+
     with mlflow.start_run(run_name=f"{model_name}_tuned"):
-        mlflow.log_params({"model_type": f"{model_name}_tuned", "n_iter": n_iter, "cv_folds": 5, **search.best_params_})
+        mlflow.log_params({
+            "model_type": f"{model_name}_tuned",
+            "n_iter": n_iter,
+            "cv_folds": 5,
+            "n_features_in": X_train.shape[1],
+            "has_ocean_proximity": "ocean_proximity" in X_train.columns,
+            **best_params,
+        })
         mlflow.log_metrics({"rmse": rmse, "mae": mae, "r2": r2, "cv_rmse": cv_rmse})
         mlflow.sklearn.log_model(best_model, artifact_path="model", skops_trusted_types=SKOPS_TRUSTED)
         run_id = mlflow.active_run().info.run_id
+        _log_all_candidates(search)
 
     print(f"[{model_name}_tuned] CV={cv_rmse:.4f} | Test RMSE={rmse:.4f} | R²={r2:.4f} | run_id={run_id}")
-    print(f"  Mejores params: {search.best_params_}")
+    print(f"  Mejores params: {best_params}")
+    print(f"  {len(search.cv_results_['params'])} candidatos guardados como runs anidados")
 
 
 if __name__ == "__main__":

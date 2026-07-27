@@ -37,7 +37,8 @@ from sklearn.svm import SVR
 from sklearn.tree import DecisionTreeRegressor
 from xgboost import XGBRegressor
 
-PROCESSED_DIR = Path("data/processed")
+from preprocessing import build_pipeline, feature_names, load_data
+
 REPORTS_DIR = Path("reports")
 
 # Modelos para análisis (subconjunto representativo para no tardar horas)
@@ -63,18 +64,9 @@ MODELS_FOR_CURVES: dict = {
 }
 
 
-def load_data() -> tuple:
-    X_train = pd.read_parquet(PROCESSED_DIR / "X_train.parquet")
-    X_test = pd.read_parquet(PROCESSED_DIR / "X_test.parquet")
-    y_train = pd.read_parquet(PROCESSED_DIR / "y_train.parquet").values.ravel()
-    y_test = pd.read_parquet(PROCESSED_DIR / "y_test.parquet").values.ravel()
-    feature_names = list(X_train.columns)
-    return X_train.values, X_test.values, y_train, y_test, feature_names
-
-
 def plot_feature_importance() -> None:
     print("\n[analysis] Calculando importancia de features...")
-    X_train, X_test, y_train, y_test, feature_names = load_data()
+    X_train, X_test, y_train, y_test = load_data()
 
     n_models = len(MODELS_FOR_ANALYSIS)
     n_cols = 3
@@ -82,25 +74,33 @@ def plot_feature_importance() -> None:
     fig, axes = plt.subplots(n_rows, n_cols, figsize=(18, n_rows * 4))
     axes = axes.flatten()
 
-    for idx, (name, model) in enumerate(MODELS_FOR_ANALYSIS.items()):
+    for idx, (name, estimator) in enumerate(MODELS_FOR_ANALYSIS.items()):
         print(f"  [{idx+1}/{n_models}] {name}...", end=" ", flush=True)
-        model.fit(X_train, y_train)
+        pipeline = build_pipeline(estimator, X_train)
+        pipeline.fit(X_train, y_train)
+        fitted = pipeline.named_steps["model"]
+        # Tras el one-hot hay más columnas que en X_train: ocean_proximity
+        # se expandió en una por categoría.
+        names = feature_names(pipeline)
 
-        if hasattr(model, "feature_importances_"):
-            importances = model.feature_importances_
-        elif hasattr(model, "coef_"):
-            importances = np.abs(model.coef_)
+        if hasattr(fitted, "feature_importances_"):
+            importances = fitted.feature_importances_
+        elif hasattr(fitted, "coef_"):
+            importances = np.abs(fitted.coef_)
         else:
-            # Permutation importance para SVR y MLP
+            # Permutation importance para SVR y MLP (sobre el Pipeline completo).
+            # Permuta las columnas de ENTRADA, así que devuelve una importancia
+            # por columna cruda — ocean_proximity cuenta como una sola.
             result = permutation_importance(
-                model, X_test, y_test, n_repeats=5, random_state=42, n_jobs=-1
+                pipeline, X_test, y_test, n_repeats=5, random_state=42, n_jobs=-1
             )
             importances = result.importances_mean
+            names = list(X_test.columns)
 
         order = np.argsort(importances)
         ax = axes[idx]
         bars = ax.barh(
-            [feature_names[i] for i in order],
+            [names[i] for i in order],
             importances[order],
             color=plt.cm.viridis(importances[order] / importances.max()),
         )
@@ -123,7 +123,7 @@ def plot_feature_importance() -> None:
 
 def plot_learning_curves() -> None:
     print("\n[analysis] Calculando curvas de aprendizaje (puede tardar ~2 min)...")
-    X_train, _, y_train, _, _ = load_data()
+    X_train, _, y_train, _ = load_data()
 
     cv = KFold(n_splits=5, shuffle=True, random_state=42)
     train_sizes = np.linspace(0.1, 1.0, 8)
@@ -131,10 +131,10 @@ def plot_learning_curves() -> None:
     n_models = len(MODELS_FOR_CURVES)
     fig, axes = plt.subplots(1, n_models, figsize=(5 * n_models, 5), sharey=False)
 
-    for ax, (name, model) in zip(axes, MODELS_FOR_CURVES.items()):
+    for ax, (name, estimator) in zip(axes, MODELS_FOR_CURVES.items()):
         print(f"  {name}...", end=" ", flush=True)
         sizes, train_scores, val_scores = learning_curve(
-            model, X_train, y_train,
+            build_pipeline(estimator, X_train), X_train, y_train,
             train_sizes=train_sizes,
             cv=cv,
             scoring="neg_root_mean_squared_error",

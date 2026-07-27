@@ -16,6 +16,7 @@ import argparse
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import mlflow
 import mlflow.sklearn
 import numpy as np
 import pandas as pd
@@ -47,7 +48,9 @@ def evaluate(run_id: str) -> None:
         else:
             model = joblib.load(model_file)
 
-    X_test = pd.read_parquet(PROCESSED_DIR / "X_test.parquet").values
+    # DataFrame, no array: el Pipeline necesita los nombres de columna para
+    # separar las numéricas de ocean_proximity.
+    X_test = pd.read_parquet(PROCESSED_DIR / "X_test.parquet")
     y_test = pd.read_parquet(PROCESSED_DIR / "y_test.parquet").values.ravel()
 
     preds = model.predict(X_test)
@@ -57,8 +60,17 @@ def evaluate(run_id: str) -> None:
     mae = float(mean_absolute_error(y_test, preds))
     r2 = float(r2_score(y_test, preds))
 
+    # ── Nombre del modelo ────────────────────────────────────────────────────
+    # El artefacto puede cargarse via pyfunc (envuelto en _Wrapper) y perder su
+    # tipo real, así que se toma de los params del run.
+    run = mlflow.get_run(run_id)
+    model_name = (
+        run.data.params.get("model_type")
+        or run.info.run_name
+        or type(model).__name__
+    )
+
     # ── Reporte en markdown ──────────────────────────────────────────────────
-    model_name = type(model).__name__
     report = f"""# Evaluación Final — {model_name}
 
 **run_id:** `{run_id}`

@@ -51,8 +51,11 @@ tune-all:
 	$(PYTHON) src/tune.py --model extra_trees --n-iter $(or $(N_ITER),20)
 	$(PYTHON) src/tune.py --model gradient_boosting --n-iter $(or $(N_ITER),20)
 	$(PYTHON) src/tune.py --model xgboost --n-iter $(or $(N_ITER),30)
-	$(PYTHON) src/tune.py --model svr --n-iter $(or $(N_ITER),15)
 	$(PYTHON) src/tune.py --model mlp --n-iter $(or $(N_ITER),15)
+# svr queda fuera a propósito: SVR con kernel RBF escala O(n²) y sobre 16,512
+# filas una búsqueda de 15 combinaciones × 5 folds tarda >20 min sin llegar a
+# competir (baseline 0.54 vs 0.44 de xgboost). Corre `make tune-svr` si lo
+# quieres, idealmente sobre una submuestra como sugiere Géron.
 
 # ── Análisis: importancia de features + curvas de aprendizaje ────────────────
 

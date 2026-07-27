@@ -2,46 +2,68 @@
 Fase 1 — Obtener datos
 Referencia: Géron cap. 2 "Get the Data"
 
-Descarga el dataset California Housing de scikit-learn y lo guarda en
+Descarga el CSV original del libro (ageron/data) y lo guarda en
 data/raw/housing.parquet para que el resto del pipeline lo consuma.
 
-Fallback: si el entorno no tiene acceso a internet, genera un dataset
-sintético con la misma estructura para que el pipeline pueda correr.
-En tu máquina local siempre usará el dataset real.
+Por qué el CSV del libro y no `fetch_california_housing` de scikit-learn:
+sklearn entrega una versión recortada — descarta la columna categórica
+`ocean_proximity` e imputa silenciosamente los 207 valores faltantes de
+`total_bedrooms`. El libro enseña justamente a tratar esas dos cosas
+(OneHotEncoder e imputación), así que necesitamos el CSV crudo.
+
+Las columnas se renombran al estilo de sklearn (MedInc, HouseAge, ...) y el
+target se divide entre 100,000 para que las métricas sean comparables con
+las corridas anteriores del proyecto.
 """
+import io
+import tarfile
+import urllib.request
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 
 RAW_DIR = Path("data/raw")
-COLUMNS = ["MedInc", "HouseAge", "AveRooms", "AveBedrms",
-           "Population", "AveOccup", "Latitude", "Longitude", "MedHouseVal"]
+BOOK_URL = "https://github.com/ageron/data/raw/main/housing.tgz"
 
 
-def _synthetic_fallback(n: int = 20_640, seed: int = 42) -> pd.DataFrame:
-    """Genera datos con la misma estructura y correlaciones aproximadas."""
-    rng = np.random.default_rng(seed)
-    med_inc = np.abs(rng.normal(3.8, 1.9, n))
-    house_age = rng.uniform(1, 52, n)
-    ave_rooms = np.abs(rng.normal(5.4, 2.5, n))
-    ave_bedrms = np.clip(ave_rooms / rng.uniform(4, 7, n), 0.5, 3.0)
-    population = np.abs(rng.normal(1425, 1132, n))
-    ave_occup = np.abs(rng.normal(3.1, 10, n)).clip(1, 20)
-    lat = rng.uniform(32.5, 42.0, n)
-    lon = rng.uniform(-124.4, -114.3, n)
-    # Target correlacionado con ingresos, latitud y habitaciones
-    target = (
-        0.45 * med_inc
-        + 0.01 * house_age
-        + 0.05 * ave_rooms
-        - 0.003 * population / ave_occup
-        + rng.normal(0, 0.5, n)
-    ).clip(0.15, 5.0)
+def _load_book_csv() -> pd.DataFrame:
+    """Descarga housing.tgz del repo del libro y extrae housing.csv."""
+    csv_cache = RAW_DIR / "housing_book.csv"
+
+    if csv_cache.exists():
+        print(f"[data] usando CSV cacheado: {csv_cache}")
+        return pd.read_csv(csv_cache)
+
+    print(f"[data] descargando {BOOK_URL} ...")
+    with urllib.request.urlopen(BOOK_URL, timeout=60) as resp:
+        payload = resp.read()
+
+    with tarfile.open(fileobj=io.BytesIO(payload), mode="r:gz") as tar:
+        member = next(m for m in tar.getmembers() if m.name.endswith("housing.csv"))
+        df = pd.read_csv(tar.extractfile(member))
+
+    csv_cache.parent.mkdir(parents=True, exist_ok=True)
+    df.to_csv(csv_cache, index=False)
+    return df
+
+
+def _to_sklearn_schema(book: pd.DataFrame) -> pd.DataFrame:
+    """Convierte los conteos crudos del CSV a los promedios que usa sklearn.
+
+    Se conserva `ocean_proximity`, que sklearn descarta, y los NaN de
+    `total_bedrooms` se dejan intactos — los imputa el Pipeline del modelo.
+    """
     return pd.DataFrame({
-        "MedInc": med_inc, "HouseAge": house_age, "AveRooms": ave_rooms,
-        "AveBedrms": ave_bedrms, "Population": population, "AveOccup": ave_occup,
-        "Latitude": lat, "Longitude": lon, "MedHouseVal": target,
+        "MedInc": book["median_income"],
+        "HouseAge": book["housing_median_age"],
+        "AveRooms": book["total_rooms"] / book["households"],
+        "AveBedrms": book["total_bedrooms"] / book["households"],
+        "Population": book["population"],
+        "AveOccup": book["population"] / book["households"],
+        "Latitude": book["latitude"],
+        "Longitude": book["longitude"],
+        "ocean_proximity": book["ocean_proximity"],
+        "MedHouseVal": book["median_house_value"] / 100_000,
     })
 
 
@@ -50,18 +72,25 @@ def download() -> None:
     out = RAW_DIR / "housing.parquet"
 
     try:
+        df = _to_sklearn_schema(_load_book_csv())
+        source = "California Housing — CSV del libro (con ocean_proximity)"
+    except Exception as exc:
+        # Fallback a sklearn: son los mismos datos pero SIN ocean_proximity.
+        # Se avisa fuerte porque cambia qué features ve el modelo.
+        print(f"[data] ⚠ No se pudo obtener el CSV del libro ({exc})")
+        print("[data] ⚠ Usando fetch_california_housing — SIN ocean_proximity")
         from sklearn.datasets import fetch_california_housing
-        housing = fetch_california_housing(as_frame=True)
-        df: pd.DataFrame = housing.frame
-        source = "California Housing (real)"
-    except Exception:
-        print("[data] Sin acceso a internet — usando dataset sintético")
-        df = _synthetic_fallback()
-        source = "sintético (misma estructura)"
+        df = fetch_california_housing(as_frame=True).frame
+        source = "California Housing vía sklearn (sin ocean_proximity)"
 
     df.to_parquet(out, index=False)
+
+    n_missing = int(df.isna().sum().sum())
     print(f"[data] {source}: {len(df):,} filas → {out}")
     print(f"[data] columnas: {list(df.columns)}")
+    print(f"[data] valores faltantes: {n_missing} (los imputa el Pipeline)")
+    if "ocean_proximity" in df.columns:
+        print(f"[data] ocean_proximity: {df['ocean_proximity'].value_counts().to_dict()}")
 
 
 if __name__ == "__main__":
