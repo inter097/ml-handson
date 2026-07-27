@@ -1,6 +1,4 @@
-# ml-desde-cero
-
-> ⚠️ **Pendiente:** Renombrar este repo en GitHub → Settings → General → "Repository name" → `ml-desde-cero`
+# ml-handson-california-housing
 
 Pipeline de Machine Learning completo sobre el dataset **California Housing**, guiado por el libro
 *Hands-On Machine Learning with Scikit-Learn, Keras & TensorFlow* — Aurélien Géron (cap. 2).
@@ -41,8 +39,8 @@ y tracking automático de experimentos con MLflow.
 ## Setup (una sola vez)
 
 ```bash
-git clone https://github.com/inter097/mi-musica.git ml-desde-cero
-cd ml-desde-cero
+git clone https://github.com/inter097/ml-handson-california-housing.git
+cd ml-handson-california-housing
 make setup
 source venv/bin/activate   # Mac/Linux
 ```
