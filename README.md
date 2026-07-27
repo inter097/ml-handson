@@ -13,10 +13,15 @@ poder comparar resultados entre capítulos desde una sola interfaz.
 
 | # | Carpeta | Tema | Estado |
 |---|---|---|---|
-| 2 | [`ch02-california-housing`](ch02-california-housing/) | Proyecto de punta a punta — regresión | ✅ Completo · [caso de estudio](https://houses.eliuth.dev) |
-| 3 | [`ch03-mnist`](ch03-mnist/) | Clasificación — métricas que no engañan | ✅ Completo |
+| 1 | — | El panorama del ML — sin código | ✅ [Página](https://ml.eliuth.dev/ch01) |
+| 2 | [`ch02-california-housing`](ch02-california-housing/) | Proyecto de punta a punta — regresión | ✅ Completo · [caso de estudio](https://ml.eliuth.dev/ch02) |
+| 3 | [`ch03-mnist`](ch03-mnist/) | Clasificación — métricas que no engañan | ✅ [Página](https://ml.eliuth.dev/ch03) |
 
-Los capítulos 1 y 4 en adelante se irán agregando con la misma estructura.
+**Sitio:** https://ml.eliuth.dev
+
+El capítulo 1 no tiene carpeta porque no tiene código — su página recoge las
+advertencias del capítulo emparejadas con lo que los capítulos siguientes midieron.
+Del 4 en adelante se irán agregando con la misma estructura.
 
 ---
 
