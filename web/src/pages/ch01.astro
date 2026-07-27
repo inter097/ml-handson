@@ -10,9 +10,10 @@ import Base from "../layouts/Base.astro";
     <span class="eyebrow">Capítulo 1 · Panorama</span>
     <h1>Cuándo conviene que la máquina<br />descubra las reglas</h1>
     <p class="lede">
-      El primer capítulo no entrena nada. Responde una pregunta anterior: <strong>¿en qué
-      casos vale la pena aprender de los datos en lugar de escribir las reglas a
-      mano?</strong> Y enumera las formas en que ese intento fracasa.
+      Casi todo el capítulo es conceptual: responde <strong>en qué casos vale la pena
+      aprender de los datos en lugar de escribir las reglas a mano</strong>, y enumera
+      las formas en que ese intento fracasa. Pero trae un dataset —27 países— y con él
+      enseña lo más concreto que se puede mostrar sin montar un proyecto.
     </p>
   </header>
 
@@ -148,6 +149,48 @@ import Base from "../layouts/Base.astro";
         </table>
       </div>
     </figure>
+  </section>
+
+  <!-- ══ EL DATASET ════════════════════════════════════════════════════ -->
+  <section class="wrap stack">
+    <span class="eyebrow">El único código del capítulo</span>
+    <h2>Los dos estilos, sobre los mismos 27 países</h2>
+    <p>
+      El dataset cruza el PIB per cápita de 27 países con su satisfacción declarada con
+      la vida. Se ajustan los dos modelos y se les pide una predicción para
+      <strong>Chipre</strong>, que no está en los datos.
+    </p>
+  </section>
+
+  <section class="wide stack">
+    <figure>
+      <div class="fig-body">
+        <img src="/img/ch01/lifesat.png" alt="Dispersión de PIB per cápita contra satisfacción con la vida, con una recta de regresión y la escalera del k-vecinos superpuestas" loading="lazy" width="1350" height="780" />
+      </div>
+      <figcaption>
+        Una línea suave contra una escalera. La escalera salta cada vez que el vecindario
+        de los tres países más cercanos cambia de composición.
+      </figcaption>
+    </figure>
+  </section>
+
+  <section class="wrap stack">
+    <div class="marcador">
+      <div><span class="etq">Por modelo</span><span class="num warm">6.30</span><span class="pie">guarda 2 números</span></div>
+      <div><span class="etq">Por instancia</span><span class="num cool">6.33</span><span class="pie">guarda 27 países</span></div>
+    </div>
+    <p>
+      Respuestas casi idénticas por caminos opuestos. La recta <strong>resume</strong> los
+      datos y después los descarta; el k-vecinos <strong>no resume nada</strong>, se queda
+      con todo y busca los más parecidos cuando le preguntas. En producción eso se nota:
+      el segundo carga con sus datos a cuestas y responde más lento cuanto más ha visto.
+    </p>
+    <p class="note">
+      El mismo ejemplo enseña el <strong>subajuste</strong> de propina. La recta explica
+      el 73% de la variación, y el 27% restante no es ruido de medición: es que la
+      felicidad de un país no es una función de su riqueza. Hay países ricos por debajo de
+      la recta y modestos por encima, y ninguna recta puede capturarlos a la vez.
+    </p>
   </section>
 
   <!-- ══ DESAFÍOS ══════════════════════════════════════════════════════ -->
