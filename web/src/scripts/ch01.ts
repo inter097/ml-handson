@@ -206,6 +206,16 @@ svg.addEventListener("pointerdown", (ev) => {
 svg.addEventListener("pointermove", (ev) => arrastrando && desdeEvento(ev as PointerEvent));
 svg.addEventListener("pointerup", () => (arrastrando = false));
 
+// Los dos coeficientes son el modelo entero y no cambian con la pregunta, así
+// que se escriben una sola vez. Salen del JSON, no del marcado: si el dataset
+// cambiara, un valor escrito a mano quedaría mintiendo.
+// `toExponential` escribe el exponente sin rellenar (6.78e-5); Python lo rellena
+// a dos cifras. Se iguala para que las dos páginas muestren el mismo número.
+const exp = (v: number) => v.toExponential(2).replace(/e([+-])(\d)$/, "e$10$2");
+
+document.getElementById("coef")!.innerHTML =
+  `pendiente = ${exp(pendiente)}<br>intersección = ${interseccion.toFixed(2)}`;
+
 document.getElementById("aChipre")!.addEventListener("click", () => {
   pibActual = D.nuevo.pib;
   slider.value = String(Math.round(pibActual));
