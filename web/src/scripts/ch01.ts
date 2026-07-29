@@ -64,6 +64,11 @@ slider.value = String(Math.round(pibActual));
 
 /* ── Dibujo ────────────────────────────────────────────────────────────── */
 
+// `toExponential` escribe el exponente sin rellenar (6.78e-5); Python lo rellena
+// a dos cifras. Se iguala para que las dos páginas muestren el mismo número.
+const exp = (v: number) => v.toExponential(2).replace(/e([+-])(\d)$/, "e$10$2");
+
+
 const el = (tag: string, attrs: Record<string, string | number>, texto?: string) => {
   const n = document.createElementNS("http://www.w3.org/2000/svg", tag);
   for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, String(v));
@@ -166,6 +171,17 @@ function dibujar() {
   document.getElementById("vVecinos")!.textContent = vVecinos.toFixed(2);
   document.getElementById("vPib")!.textContent =
     "USD " + Math.round(pibActual).toLocaleString("es-MX");
+
+  // Las dos cuentas, sin el resultado: está en el número de encima. Además así
+  // no se contradicen, porque la fórmula lleva la pendiente redondeada y el
+  // número sale de la exacta.
+  const pib = Math.round(pibActual).toLocaleString("es-MX");
+  document.getElementById("fLineal")!.textContent =
+    `${exp(pendiente)} × ${pib} + ${interseccion.toFixed(2)}`;
+
+  const sats = vecinos.map((i) => D.paises[i].satisfaccion.toFixed(1));
+  document.getElementById("fVecinos")!.textContent =
+    `(${sats.join(" + ")}) ÷ ${D.k}`;
   // Quiénes son los vecinos ahora mismo
   document.getElementById("vecinos")!.innerHTML = vecinos
     .map((i) => {
@@ -209,10 +225,6 @@ svg.addEventListener("pointerup", () => (arrastrando = false));
 // Los dos coeficientes son el modelo entero y no cambian con la pregunta, así
 // que se escriben una sola vez. Salen del JSON, no del marcado: si el dataset
 // cambiara, un valor escrito a mano quedaría mintiendo.
-// `toExponential` escribe el exponente sin rellenar (6.78e-5); Python lo rellena
-// a dos cifras. Se iguala para que las dos páginas muestren el mismo número.
-const exp = (v: number) => v.toExponential(2).replace(/e([+-])(\d)$/, "e$10$2");
-
 document.getElementById("coef")!.innerHTML =
   `pendiente = ${exp(pendiente)}<br>intersección = ${interseccion.toFixed(2)}`;
 

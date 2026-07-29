@@ -44,7 +44,7 @@ import Base from "../../../layouts/Base.astro";
 
         <div class="m-pred">
           <span class="m-num" id="vLineal">—</span>
-          <span class="m-pie">satisfacción predicha</span>
+          <code class="m-formula" id="fLineal">—</code>
         </div>
 
         <span class="m-etq">Lo que guarda · 2 números</span>
@@ -59,7 +59,7 @@ import Base from "../../../layouts/Base.astro";
 
         <div class="m-pred">
           <span class="m-num" id="vVecinos">—</span>
-          <span class="m-pie">promedio de los tres marcados</span>
+          <code class="m-formula" id="fVecinos">—</code>
         </div>
 
         <span class="m-etq">Los tres que promedia ahora</span>
@@ -138,14 +138,19 @@ import Base from "../../../layouts/Base.astro";
     .modelo.warm .m-num { color: var(--warm); }
     .modelo.cool .m-num { color: var(--cool); }
     .m-pie { font-family: var(--mono); font-size: .68rem; color: var(--muted); }
+    /* La cuenta que produce el número de arriba. Sin el resultado: ya está ahí. */
+    .m-formula { margin-top: .5rem; }
 
     .m-etq { font-family: var(--mono); font-size: .64rem; letter-spacing: .1em;
       text-transform: uppercase; color: var(--muted); margin-top: .55rem; }
     .m-nota { font-size: .86rem; color: var(--ink-2); }
 
-    .modelo code { display: block; font-size: .8rem; line-height: 1.7; color: var(--warm);
+    /* Cada tarjeta tiñe su código con su propio color, no con uno fijo. */
+    .modelo code { display: block; font-size: .8rem; line-height: 1.7;
       background: var(--surface-2); border: 1px solid var(--hairline);
       border-radius: 6px; padding: .6rem .8rem; }
+    .modelo.warm code { color: var(--warm); }
+    .modelo.cool code { color: var(--cool); }
 
     /* Los hijos de .vecinos y .almacen los inyecta el script, así que nacen sin
        el atributo de ámbito de Astro. Por eso van con :global. */
