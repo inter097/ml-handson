@@ -1,14 +1,18 @@
-# Datos (nunca en git — usar `make data` de cada capítulo para reproducirlos).
-# Sin barra inicial, así aplica en cualquier capítulo: ch02-*/data/raw, etc.
+# Datos de los capítulos. Nunca en git: se reproducen con el `make data` de cada
+# capítulo. Sin barra inicial, así aplica en cualquiera: ch02-*/data/raw, etc.
 data/raw/
 data/processed/
 data/
 
-# Excepción: los datos del sitio sí van en git. Son las predicciones ya
-# calculadas que consume la página, y sin ellas Vercel construiría un sitio
-# sin mapa — no hay Python en el build.
-!web/public/data/
-!web/public/data/*.json
+# Excepción: todo lo que hay bajo web/ sí va en git, aunque se llame data/.
+#
+#   web/public/data/   las predicciones ya calculadas que consume la página
+#   web/src/data/      código, no datos: las partes de cada capítulo
+#
+# Sin esto Vercel construye sin ellos y falla, porque en el build no hay Python
+# que los regenere. Ya pasó dos veces.
+!web/**/data/
+!web/**/data/**
 
 # MLflow — los runs viven aquí localmente, no en git
 mlruns/
