@@ -501,7 +501,7 @@ Es HTML estático sin build, así que sirve en cualquier lado:
 
 El dominio `houses.eliuth.dev` apunta a Vercel con un registro **A** a `76.76.21.21`
 en Cloudflare, en modo *DNS only* — con el proxy activo Vercel no puede validar el
-dominio ni emitir el certificado. Detalle en [`AGENTS.md`](AGENTS.md).
+dominio ni emitir el certificado. Detalle en [`CLAUDE.md`](../CLAUDE.md).
 
 **Regenerar tras reentrenar:** `make site RUN_ID=<nuevo id>` y commitear
 `site/index.html`. El HTML lleva las predicciones dentro, así que si cambia el modelo

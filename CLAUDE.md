@@ -1,10 +1,17 @@
 # Convenciones del proyecto
 
-Cuaderno de trabajo del libro *Hands-On Machine Learning* (Géron, 3ª ed.), un capítulo
-por carpeta, publicado en **https://ml.eliuth.dev**.
+Cuaderno de trabajo del libro *Hands-On Machine Learning with Scikit-Learn, Keras &
+TensorFlow* (Géron, 3ª ed.), un capítulo por carpeta, publicado en
+**https://ml.eliuth.dev**.
 
-Las convenciones de código, MLflow y despliegue están en [`AGENTS.md`](AGENTS.md).
-Este archivo cubre **cómo se escribe y cómo se organiza el sitio**.
+`AGENTS.md` es un enlace a este mismo archivo: las reglas viven en un solo sitio para
+que no se desincronicen.
+
+Consultar la documentación oficial antes de escribir código:
+[scikit-learn](https://scikit-learn.org/stable/) ·
+[MLflow](https://mlflow.org/docs/latest/) ·
+[pandas](https://pandas.pydata.org/docs/) ·
+[Astro](https://docs.astro.build/)
 
 ---
 
@@ -17,6 +24,39 @@ Ninguna era cierta.
 
 Antes de escribir una cifra o una causa en una página, ejecutar la medición. Si no se
 puede medir, no se escribe.
+
+---
+
+## Estructura del repositorio
+
+Cada capítulo vive en `chNN-<tema>/` y es autónomo: su `Makefile`, su `src/`, sus
+reportes. **Un capítulo nunca importa código de otro.** Si algo se repite, se copia.
+Duplicar es más barato que acoplar capítulos que enseñan cosas distintas.
+
+Lo que sí se comparte vive en la raíz:
+
+| Recurso | Ruta | Nota |
+|---|---|---|
+| Entorno Python | `venv/` | Uno solo. A partir del cap. 10 (TensorFlow) quizá haya que separar |
+| Experimentos | `mlflow.db` | Un experimento de MLflow por capítulo |
+| Sitio | `web/` | Astro, una carpeta por capítulo dentro de `src/pages/` |
+
+**MLflow 3 usa una base SQLite relativa al directorio de trabajo.** Sin fijarla, cada
+capítulo crearía la suya y no se podrían comparar experimentos. Los `Makefile` exportan
+`MLFLOW_TRACKING_URI` apuntando a la raíz. No quitar esa línea.
+
+---
+
+## Convenciones de código
+
+- El preprocesamiento va **dentro** del `Pipeline` de sklearn, nunca antes de la
+  partición. Aplicado antes, la validación cruzada se contamina y el error sale
+  optimista.
+- Los datasets se regeneran con `make data` y no se commitean. Los reportes de
+  `reports/` sí: sirven para comparar entre versiones.
+- Cuidado con el paralelismo anidado. Un `GridSearchCV(n_jobs=-1)` sobre un estimador
+  que ya lleva `n_jobs=-1` copia los datos por cada proceso y agota la memoria. Ya pasó
+  una vez y hubo que reiniciar la máquina.
 
 ---
 
@@ -152,6 +192,36 @@ Cosas que costaron encontrar y no hay que volver a tropezar:
   página entera en horizontal en móvil.
 - Los datos los genera Python en `web/public/data/chNN.json`. `.gitignore` bloquea
   `data/`, así que hay una excepción explícita para `web/public/data/`.
+
+---
+
+## Despliegue
+
+El sitio se redespliega solo en cada push a `main`. `vercel.json` está en la raíz, con
+`outputDirectory` apuntando a `web/dist`.
+
+El `package.json` de la raíz es un delegador que solo existe para que Vercel detecte
+Node en vez de Python. Sin él el despliegue falla con «No python entrypoint found», y
+`vercel.json` necesita `"framework": null` por el mismo motivo.
+
+Cómo quedó armado el dominio, por si hay que replicarlo:
+
+1. **Vercel**: `vercel domains add <sub>.eliuth.dev <proyecto>`
+2. **Cloudflare**, que es donde vive el DNS de `eliuth.dev`. Vercel pide un registro
+   **A** a `76.76.21.21` en modo **DNS only** (`proxied: false`). Con el proxy activo
+   Vercel no valida el dominio y no emite el certificado.
+
+Hacen falta los dos pasos: solo el registro DNS no basta.
+
+**Credenciales.** Nunca pegarlas en un chat, quedan en la transcripción.
+
+- Vercel: `vercel login`, OAuth por navegador, la sesión queda en la máquina.
+- Cloudflare: token con permiso *Zone · DNS · Edit*, en `~/.config/cf/token` con
+  permisos `600`. Basta la API REST con `curl`. Leerlo siempre por sustitución de
+  comandos (`$(cat ...)`), nunca imprimirlo.
+
+Los tokens de cuenta (prefijo `cfat_`) **no** se validan en `/user/tokens/verify` sino
+en `/accounts/<account_id>/tokens/verify`.
 
 ---
 
