@@ -27,6 +27,17 @@ puede medir, no se escribe.
 
 ---
 
+## Cómo se avanza por el libro
+
+Un capítulo por carpeta, en orden. **Los ejercicios de fin de capítulo se dejan todos
+para cuando el libro esté terminado**, no se hacen según van saliendo: rompen el avance
+y son 19 capítulos.
+
+La excepción es el capítulo 3, cuyos cuatro ejercicios se completaron antes de tomar esa
+decisión.
+
+Estado al 2026-07-29: capítulos 1, 2 y 3 terminados y publicados. Sigue el 4.
+
 ## Estructura del repositorio
 
 Cada capítulo vive en `chNN-<tema>/` y es autónomo: su `Makefile`, su `src/`, sus
@@ -57,6 +68,12 @@ capítulo crearía la suya y no se podrían comparar experimentos. Los `Makefile
 - Cuidado con el paralelismo anidado. Un `GridSearchCV(n_jobs=-1)` sobre un estimador
   que ya lleva `n_jobs=-1` copia los datos por cada proceso y agota la memoria. Ya pasó
   una vez y hubo que reiniciar la máquina.
+
+**La máquina de desarrollo tiene 16 GB y no hay margen.** Un trabajo que en otro equipo
+solo iría lento, aquí tumba el sistema. Antes de lanzar un entrenamiento pesado hay que
+**proyectar el pico de memoria y decirlo**, no medirlo con una versión reducida y
+ejecutar después otra distinta. Los scripts que pueden crecer llevan `--check`, que
+proyecta sin reservar y aborta si el pico estimado supera el 45% de la RAM.
 
 ---
 
