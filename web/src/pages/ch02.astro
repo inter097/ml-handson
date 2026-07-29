@@ -3,14 +3,14 @@ import Base from "../layouts/Base.astro";
 ---
 
 <Base
-  title="California Housing — Caso de estudio de ML"
+  title="California Housing · caso de estudio de ML"
   description="Pipeline de machine learning sobre California Housing: qué mejoró el modelo, qué no, y qué no se puede afirmar."
 >
   <header class="wrap hero">
     <span class="eyebrow">Capítulo 2 · Proyecto de punta a punta</span>
     <h1>Lo que el modelo aprendió,<br />y lo que no se puede afirmar</h1>
     <p class="lede">
-      Un pipeline completo sobre <strong>California Housing</strong> — 20,640 viviendas,
+      Un pipeline completo sobre <strong>California Housing</strong>: 20,640 viviendas,
       nueve modelos, 180 experimentos registrados. El resultado interesante no fue el
       error más bajo, sino descubrir cuáles de las mejoras eran reales y cuáles solo lo
       parecían.
@@ -37,8 +37,8 @@ import Base from "../layouts/Base.astro";
     <span class="eyebrow">El encargo</span>
     <h2>Predecir el precio medio de una vivienda por distrito</h2>
     <p>
-      El dataset trae ocho variables por distrito censal de California — ingreso medio,
-      antigüedad, habitaciones, población, coordenadas — y el precio medio de la
+      El dataset trae ocho variables por distrito censal de California (ingreso medio,
+      antigüedad, habitaciones, población, coordenadas) y el precio medio de la
       vivienda. Es el problema con el que arranca el libro, y su virtud es que todas las
       trampas del oficio caben en él.
     </p>
@@ -58,7 +58,7 @@ import Base from "../layouts/Base.astro";
             <tr><td>Enmarcar el problema</td><td>Regresión supervisada. La métrica es el error en dólares, no la exactitud.</td></tr>
             <tr><td>Obtener los datos</td><td>20,640 distritos del censo. Apartar el 20% <em>antes</em> de mirarlos.</td></tr>
             <tr><td>Explorar</td><td>Mapas y correlaciones. El ingreso medio manda; la geografía pesa.</td></tr>
-            <tr><td>Preparar</td><td>Rellenar huecos, escalar, codificar categorías — todo dentro del pipeline.</td></tr>
+            <tr><td>Preparar</td><td>Rellenar huecos, escalar, codificar categorías, todo dentro del pipeline.</td></tr>
             <tr><td>Entrenar</td><td>Nueve modelos con parámetros por defecto, para saber desde dónde se parte.</td></tr>
             <tr><td>Afinar</td><td>Búsqueda aleatoria sobre modelo y preparación. 137 combinaciones.</td></tr>
             <tr><td>Presentar</td><td>Esta página.</td></tr>
@@ -77,7 +77,7 @@ import Base from "../layouts/Base.astro";
   <section class="wrap stack">
     <p>
       Seguir ese orden es la mitad del capítulo. La otra mitad es lo que se aprende al
-      hacerlo — y ahí lo interesante fueron las veces que el resultado contradijo lo que
+      hacerlo. Ahí lo interesante fueron las veces que el resultado contradijo lo que
       parecía obvio.
     </p>
   </section>
@@ -87,7 +87,7 @@ import Base from "../layouts/Base.astro";
     <span class="eyebrow">Explorador</span>
     <h2>Dónde se equivoca el modelo</h2>
     <p style="max-width:var(--measure)">
-      Cada punto es uno de los 4,128 distritos del conjunto de prueba — casas que el
+      Cada punto es uno de los 4,128 distritos del conjunto de prueba: casas que el
       modelo nunca vio al entrenar. El color indica si <strong>subestimó</strong> o
       <strong>sobreestimó</strong> el precio. Filtra y las métricas de abajo se
       recalculan sobre el subconjunto.
@@ -125,8 +125,8 @@ import Base from "../layouts/Base.astro";
 
       <figcaption>
         Predicciones reales del modelo XGBoost sobre el conjunto de prueba, calculadas
-        una sola vez y servidas como JSON. Los filtros y las métricas se computan en tu
-        navegador — no hay servidor detrás.
+        una sola vez y servidas como JSON. Los filtros y las métricas se computan en el
+        navegador. No hay servidor detrás.
       </figcaption>
     </figure>
   </section>
@@ -146,19 +146,19 @@ import Base from "../layouts/Base.astro";
       <p>
         El dataset incluye una variable categórica que dice si el distrito está tierra
         adentro, cerca de la bahía o frente al mar. Al añadirla, XGBoost la reportó como
-        su variable <strong>número uno</strong> por importancia — 0.61 contra 0.14 del
+        su variable <strong>número uno</strong> por importancia, 0.61 contra 0.14 del
         ingreso medio, que era el favorito hasta entonces. Parecía la mejora grande del
         proyecto.
       </p>
       <p>
-        Midiendo con una ablación — mismo conjunto, misma semilla, única diferencia la
-        columna — resultó que mejora seis de siete modelos por márgenes mínimos, y que a
+        Midiendo con una ablación (mismo conjunto, misma semilla, única diferencia la
+        columna) resultó que mejora seis de siete modelos por márgenes mínimos, y que a
         XGBoost <strong>lo empeora</strong>.
       </p>
       <p class="note">
         La explicación: latitud y longitud ya estaban ahí. “Cerca del mar” era deducible
         de las coordenadas, solo que costaba varios cortes. Al recibirlo servido, el
-        modelo lo usa de inmediato y reordena su ranking de importancia — pero la
+        modelo lo usa de inmediato y reordena su ranking de importancia, pero la
         información no era nueva. <strong>Importancia alta no significa mejora
         predictiva</strong> cuando hay redundancia.
       </p>
@@ -177,7 +177,7 @@ import Base from "../layouts/Base.astro";
         <strong>similitud a cada centro</strong>.
       </p>
       <p>
-        Fue el cambio que más rindió de todo el proyecto — más que cualquier ajuste de
+        Fue el cambio que más rindió de todo el proyecto, más que cualquier ajuste de
         hiperparámetros. Y reordenó por completo la tabla: los métodos que promedian
         árboles independientes, que eran los más penalizados por tener que aproximar la
         geografía a mano, pasaron a ganarle a los de boosting.
@@ -197,14 +197,14 @@ import Base from "../layouts/Base.astro";
       </p>
       <p>
         En la primera versión su correlación con el precio era de <strong>0.993</strong>.
-        Una variable casi perfecta — y ahí estaba el problema: <strong>era demasiado
+        Una variable casi perfecta, y ahí estaba el problema: <strong>era demasiado
         buena</strong>.
       </p>
       <p class="note">
         El k-vecinos se había entrenado con las mismas casas sobre las que después
         predecía, así que <strong>cada casa aparecía entre sus propios vecinos</strong>.
         Estaba copiando la respuesta. Calculando la predicción de cada fila con un modelo
-        que nunca la vio, la correlación cae a <strong>0.845</strong> — ese es su valor
+        que nunca la vio, la correlación cae a <strong>0.845</strong>. Ese es su valor
         real.
       </p>
       <p>
@@ -230,7 +230,7 @@ import Base from "../layouts/Base.astro";
         Cambio en RMSE al añadir cada elemento, medido con ablación sobre el mismo
         conjunto. Hacia la izquierda es mejor. La selección de variables aparece del lado
         malo: descarta la mitad de las columnas y cuesta precisión. La partición
-        estratificada no aparece porque no mueve el error — hace que el número sea
+        estratificada no aparece porque no mueve el error. Hace que el número sea
         confiable, que es otra cosa.
       </figcaption>
     </figure>
@@ -247,7 +247,7 @@ import Base from "../layouts/Base.astro";
     </p>
     <p>
       El RMSE sale de una muestra concreta de 4,128 casas. Con otras 4,128 habría dado
-      distinto. El intervalo de confianza acota cuánto puede moverse — y cuando dos
+      distinto. El intervalo de confianza acota cuánto puede moverse, y cuando dos
       intervalos se traslapan, <strong>la diferencia cabe dentro del ruido del
       muestreo</strong>.
     </p>
@@ -295,8 +295,8 @@ import Base from "../layouts/Base.astro";
 
   <section class="wrap stack">
     <p>
-      <code>extra_trees</code> pide <strong>1.3 GB de memoria</strong> — no entra en
-      ningún plan gratuito ni en un servidor pequeño — y tarda trece veces más por
+      <code>extra_trees</code> pide <strong>1.3 GB de memoria</strong>, que no entra en
+      ningún plan gratuito ni en un servidor pequeño, y tarda trece veces más por
       petición. XGBoost ocupa 2.4 MB, cabe en cualquier lado y responde en 2.3
       milisegundos.
     </p>
@@ -325,7 +325,7 @@ import Base from "../layouts/Base.astro";
     <dl class="kv">
       <dt>Datos</dt><dd>California Housing, 20,640 distritos del censo de 1990. CSV original del repositorio del libro.</dd>
       <dt>Partición</dt><dd>80/20 estratificada por categoría de ingreso. Una partición aleatoria simple subrepresentaba el estrato más pobre en 9.4%.</dd>
-      <dt>Preprocesamiento</dt><dd>Imputación por mediana, estandarización, codificación one-hot y similitud a centros geográficos — todo dentro del <code>Pipeline</code>.</dd>
+      <dt>Preprocesamiento</dt><dd>Imputación por mediana, estandarización, codificación one-hot y similitud a centros geográficos, todo dentro del <code>Pipeline</code>.</dd>
       <dt>Seguimiento</dt><dd>MLflow. 180 ejecuciones, 137 de ellas candidatos anidados de las búsquedas.</dd>
     </dl>
   </section>

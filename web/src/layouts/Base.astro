@@ -1,14 +1,32 @@
 ---
 import "../styles/global.css";
+import { CAPITULOS, tieneNavegacion } from "../data/capitulos";
 
 interface Props {
   title: string;
   description: string;
   /** Se oculta en la portada, donde no hay a dónde volver. */
   back?: boolean;
+  /** A dónde vuelve. Por defecto al índice; las subpáginas suben un nivel. */
+  backHref?: string;
+  backLabel?: string;
+  /** Clave en CAPITULOS. Pinta la barra con las partes del capítulo. */
+  capitulo?: string;
 }
 
-const { title, description, back = true } = Astro.props;
+const {
+  title,
+  description,
+  back = true,
+  backHref = "/",
+  backLabel = "Todos los capítulos",
+  capitulo,
+} = Astro.props;
+
+// La barra se pinta igual en todas las partes del capítulo; lo único que
+// cambia es cuál va marcada.
+const partes = capitulo && tieneNavegacion(capitulo) ? CAPITULOS[capitulo] : [];
+const aqui = Astro.url.pathname.replace(/\/$/, "") || "/";
 ---
 
 <!doctype html>
@@ -25,7 +43,20 @@ const { title, description, back = true } = Astro.props;
 
     {back && (
       <div class="wrap topnav">
-        <a href="/">← Todos los capítulos</a>
+        <a href={backHref}>← {backLabel}</a>
+      </div>
+    )}
+
+    {partes.length > 0 && (
+      <div class="wrap">
+        <nav class="capnav" aria-label="Partes del capítulo">
+          {partes.map((p) => (
+            <a href={p.href} aria-current={p.href === aqui ? "page" : undefined}>
+              <span class="cn-nombre">{p.nombre}</span>
+              {p.pie && <span class="cn-pie">{p.pie}</span>}
+            </a>
+          ))}
+        </nav>
       </div>
     )}
 
@@ -55,6 +86,28 @@ const { title, description, back = true } = Astro.props;
         color: var(--muted); text-decoration: none;
       }
       .topnav a:hover { color: var(--accent-ink); text-decoration: underline; }
+
+      /* Barra de partes del capítulo. Se desliza en horizontal si no caben,
+         en vez de apilarse: el orden de lectura es parte de la información. */
+      .capnav {
+        margin-top: .9rem; display: flex; gap: 1px; overflow-x: auto;
+        background: var(--hairline); border: 1px solid var(--hairline);
+        border-radius: 8px; scrollbar-width: none;
+      }
+      .capnav::-webkit-scrollbar { display: none; }
+      .capnav a {
+        flex: 1 0 auto; background: var(--surface); text-decoration: none;
+        padding: .55rem .95rem; display: flex; flex-direction: column; gap: .1rem;
+        color: var(--ink-2); transition: background .15s;
+      }
+      .capnav a:hover { background: var(--surface-2); }
+      .capnav a[aria-current="page"] { background: var(--surface-2); box-shadow: inset 2px 0 0 var(--accent); }
+      .cn-nombre { font-size: .88rem; white-space: nowrap; }
+      .capnav a[aria-current="page"] .cn-nombre { color: var(--accent-ink); font-weight: 600; }
+      .cn-pie {
+        font-family: var(--mono); font-size: .6rem; letter-spacing: .1em;
+        text-transform: uppercase; color: var(--muted); white-space: nowrap;
+      }
       footer { border-top: 1px solid var(--hairline); padding-block: 2.5rem 4rem; margin-top: 2rem; }
     </style>
 

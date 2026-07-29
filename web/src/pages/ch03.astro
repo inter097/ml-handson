@@ -3,7 +3,7 @@ import Base from "../layouts/Base.astro";
 ---
 
 <Base
-  title="MNIST — Clasificación y las métricas que engañan"
+  title="MNIST · clasificación y las métricas que engañan"
   description="Un modelo que no miró un solo píxel acertó el 91% de las veces. Por qué la exactitud casi nunca es la métrica."
 >
   <header class="wrap hero">
@@ -11,7 +11,7 @@ import Base from "../layouts/Base.astro";
     <h1>Un modelo que no aprendió nada<br />y aun así acertó el 91%</h1>
     <p class="lede">
       70,000 dígitos escritos a mano. El objetivo del capítulo <strong>no es
-      clasificarlos</strong> — es aprender a medir un clasificador, que resulta bastante
+      clasificarlos</strong>. Es aprender a medir un clasificador, que resulta bastante
       más resbaladizo que medir una regresión.
     </p>
 
@@ -72,7 +72,7 @@ import Base from "../layouts/Base.astro";
           <tbody>
             <tr><td>Precisión</td><td>De lo que llamó 5, ¿cuánto era 5?</td><td style="text-align:right">0.809</td></tr>
             <tr><td>Exhaustividad</td><td>De todos los 5 que había, ¿cuántos encontró?</td><td style="text-align:right">0.868</td></tr>
-            <tr><td>F1</td><td>Media armónica — penaliza el desequilibrio entre ambas</td><td style="text-align:right">0.838</td></tr>
+            <tr><td>F1</td><td>Media armónica, que penaliza el desequilibrio entre ambas</td><td style="text-align:right">0.838</td></tr>
           </tbody>
         </table>
       </div>
@@ -90,7 +90,7 @@ import Base from "../layouts/Base.astro";
     <h2>Precisión y exhaustividad se mueven en direcciones opuestas</h2>
     <p>
       Un clasificador no responde sí o no: calcula una puntuación y la compara contra un
-      umbral. Subirlo lo vuelve más exigente — se equivoca menos cuando dice “sí”, pero
+      umbral. Subirlo lo vuelve más exigente: se equivoca menos cuando dice “sí”, pero
       se le escapan más.
     </p>
   </section>
@@ -112,8 +112,8 @@ import Base from "../layouts/Base.astro";
   <section class="wrap stack">
     <p class="note">
       <strong>Dónde pararse en esa curva no es una decisión técnica.</strong> Un filtro
-      de spam quiere precisión — mandar un correo importante a la basura es peor que
-      dejar pasar publicidad. Un detector de tumores quiere exhaustividad — revisar de
+      de spam quiere precisión, porque mandar un correo importante a la basura es peor que
+      dejar pasar publicidad. Un detector de tumores quiere exhaustividad, porque revisar de
       más es un susto, pasar uno por alto es otra cosa. Mismo modelo, distinto punto de
       operación, según lo que cueste equivocarse.
     </p>
@@ -181,13 +181,13 @@ import Base from "../layouts/Base.astro";
 
   <section class="wrap stack">
     <p>
-      El modelo no está siendo tonto — esos dígitos son genuinamente ambiguos incluso
+      El modelo no está siendo tonto. Esos dígitos son genuinamente ambiguos incluso
       para una persona. Y eso cambia qué se hace después.
     </p>
     <p class="note">
       No es “entrena más”: un modelo lineal ve píxeles sueltos y <strong>no puede
       representar «tiene un lazo cerrado arriba»</strong>, que es justamente la
-      diferencia entre un 4 y un 9. La solución no está en este capítulo, está en el 14 —
+      diferencia entre un 4 y un 9. La solución no está en este capítulo, está en el 14:
       redes convolucionales, que sí capturan forma.
     </p>
   </section>
@@ -209,7 +209,7 @@ import Base from "../layouts/Base.astro";
   <section class="wrap stack">
     <p>
       Este ejercicio deja clara una frontera borrosa: quitar ruido de una imagen suena a
-      regresión, no a clasificación. La distinción no siempre es nítida — las categorías
+      regresión, no a clasificación. La distinción no siempre es nítida: las categorías
       del libro son herramientas, no compartimentos.
     </p>
   </section>
@@ -236,7 +236,7 @@ import Base from "../layouts/Base.astro";
       <p class="note">
         Lo insidioso es que la partición estratificada <strong>no lo detecta</strong>:
         equilibra la supervivencia, no la clase. Basta barajar para pasar de 0.70 a 0.81.
-        Es la lección del capítulo anterior —la partición importa— reapareciendo con otra
+        Es la lección del capítulo anterior, que la partición importa, reapareciendo con otra
         cara.
       </p>
     </div>
@@ -253,7 +253,7 @@ import Base from "../layouts/Base.astro";
       </p>
       <p>
         Pero optimizar <em>solo</em> precisión lleva a otro sitio. La regresión logística
-        alcanza precisión perfecta —cero legítimos perdidos— a cambio de dejar pasar
+        alcanza precisión perfecta, cero legítimos perdidos, a cambio de dejar pasar
         <strong>84 spam</strong>. El SVM lineal pierde 2 legítimos y solo deja pasar 28.
         Cuál conviene depende de cuánto duele cada error, y ninguna métrica sola lo
         responde.
@@ -268,7 +268,7 @@ import Base from "../layouts/Base.astro";
       <p>
         El ejercicio pide superar el 97% de exactitud. Se logra con k-vecinos afinado
         (0.9714) y sube a <strong>0.9763</strong> replicando cada imagen desplazada un
-        píxel en las cuatro direcciones — el conjunto pasa de 60,000 a 300,000.
+        píxel en las cuatro direcciones: el conjunto pasa de 60,000 a 300,000.
       </p>
       <p>
         Pero la primera versión del script <strong>agotó la memoria de una máquina de 16
@@ -280,7 +280,7 @@ import Base from "../layouts/Base.astro";
         El culpable oculto fue un valor por defecto: scikit-learn reserva hasta
         <strong>1 GB por hilo</strong> para los bloques de distancias. Con diez núcleos,
         diez gigas. Bajarlo a 128 MB y usar precisión simple llevó el pico de 3.00 GB a
-        0.49 GB — y encima quedó más rápido.
+        0.49 GB, y encima quedó más rápido.
       </p>
       <p>
         El error de método fue peor que el bug: la estimación de costo se midió con una
@@ -293,7 +293,7 @@ import Base from "../layouts/Base.astro";
     <span class="eyebrow">Detalles</span>
     <dl class="kv">
       <dt>Datos</dt><dd>MNIST, 70,000 dígitos de 28×28. Partición canónica 60k/10k, sin barajar.</dd>
-      <dt>Por qué no se baraja</dt><dd>Las 10,000 imágenes de prueba son las mismas desde 1998 y todos los resultados publicados las usan. Además vienen de personas distintas a las del entrenamiento — empleados del censo contra estudiantes.</dd>
+      <dt>Por qué no se baraja</dt><dd>Las 10,000 imágenes de prueba son las mismas desde 1998 y todos los resultados publicados las usan. Además vienen de personas distintas a las del entrenamiento: empleados del censo contra estudiantes.</dd>
       <dt>Ejercicios</dt><dd>Los cuatro: k-vecinos afinado, aumento de datos, Titanic y filtro de spam.</dd>
       <dt>Seguimiento</dt><dd>MLflow, mismo registro que el capítulo 2.</dd>
     </dl>

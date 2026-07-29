@@ -1,0 +1,274 @@
+---
+import Base from "../../../layouts/Base.astro";
+---
+
+<Base
+  title="lifesat · los dos estilos de generalización"
+  description="27 países, PIB per cápita contra satisfacción con la vida. Una recta y un k-vecinos predicen para Chipre por caminos opuestos."
+  capitulo="ch01"
+>
+  <header class="wrap hero">
+    <span class="eyebrow">Capítulo 1 · Práctica</span>
+    <h1>Los dos estilos de generalización,<br />sobre los mismos 27 países</h1>
+    <p class="lede">
+      El dataset más pequeño del libro. No sirve para construir nada y no pretende
+      hacerlo: existe para volver tangible <strong>una única distinción</strong>: que hay
+      dos maneras de responder por un caso que nunca se vio.
+    </p>
+    <div class="byline">
+      <span>27 filas · 2 columnas · scikit-learn</span>
+      <span><a href="/ch01/lifesat/demo">Probarlo en vivo →</a></span>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <svg class="interval-rule" viewBox="0 0 100 13" preserveAspectRatio="none" aria-hidden="true">
+      <line class="band" x1="18" y1="6.5" x2="82" y2="6.5"></line>
+      <line class="cap" x1="18" y1="2.5" x2="18" y2="10.5"></line>
+      <line class="cap" x1="82" y1="2.5" x2="82" y2="10.5"></line>
+      <circle class="pt" cx="44" cy="6.5" r="3"></circle>
+    </svg>
+  </div>
+
+  <!-- ══ LOS DATOS ═════════════════════════════════════════════════════ -->
+  <section class="wrap stack">
+    <span class="eyebrow">El dato</span>
+    <h2>Qué hay dentro</h2>
+    <p>
+      Dos fuentes cruzadas por país: el <strong>Better Life Index de la OCDE</strong>,
+      que pregunta a la gente cómo de satisfecha está con su vida en una escala de 0 a 10,
+      y las cifras de <strong>PIB per cápita del FMI</strong>. Géron lo publica ya
+      cruzado y filtrado.
+    </p>
+    <div class="marcador">
+      <div><span class="etq">Filas</span><span class="num">27</span><span class="pie">un país cada una</span></div>
+      <div><span class="etq">PIB per cápita</span><span class="num">26k – 60k</span><span class="pie">USD</span></div>
+      <div><span class="etq">Satisfacción</span><span class="num">5.4 – 7.6</span><span class="pie">escala 0–10</span></div>
+    </div>
+    <p class="note">
+      Una sola variable de entrada. Eso es deliberado: con una dimensión todo cabe en una
+      gráfica plana y no hace falta creerse nada. La diferencia entre los dos modelos se
+      <em>ve</em>.
+    </p>
+  </section>
+
+  <!-- ══ EL MONTAJE ════════════════════════════════════════════════════ -->
+  <section class="wrap stack">
+    <span class="eyebrow">El montaje</span>
+    <h2>Dos modelos, cuatro líneas</h2>
+    <p>
+      No hay preprocesamiento, ni partición, ni búsqueda de hiperparámetros. Se ajustan
+      los dos sobre las 27 filas completas y se les pregunta lo mismo.
+    </p>
+  </section>
+
+  <section class="wide">
+    <figure>
+      <div class="fig-head"><span class="fig-title">El núcleo de <code>src/lifesat.py</code></span></div>
+      <div class="fig-body">
+<pre><code>lineal  = LinearRegression().fit(X, y)
+vecinos = KNeighborsRegressor(n_neighbors=3).fit(X, y)
+
+lineal.predict([[37_655.2]])    # Chipre, que no está en los datos
+vecinos.predict([[37_655.2]])</code></pre>
+      </div>
+      <figcaption>
+        <strong>Chipre</strong> no aparece en el dataset y su PIB per cápita real es
+        37,655 USD. Es el caso nuevo sobre el que ambos tienen que pronunciarse.
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- ══ EL RESULTADO ══════════════════════════════════════════════════ -->
+  <section class="wrap stack">
+    <span class="eyebrow">El resultado</span>
+    <h2>Mismo número, caminos opuestos</h2>
+  </section>
+
+  <section class="wrap">
+    <div class="marcador">
+      <div><span class="etq">Por modelo · recta</span><span class="num warm">6.30</span><span class="pie">guarda 2 números</span></div>
+      <div><span class="etq">Por instancia · 3 vecinos</span><span class="num cool">6.33</span><span class="pie">guarda 27 países</span></div>
+    </div>
+    <p>
+      Tres centésimas de diferencia. Si el criterio fuera solo la respuesta, daría igual
+      cuál usar, y ese es justamente el punto: <strong>la distinción no está en el
+      resultado, está en qué tuvo que quedarse cada uno para producirlo.</strong>
+    </p>
+  </section>
+
+  <section class="wide">
+    <figure>
+      <div class="fig-head"><span class="fig-title">Lo que cada modelo se lleva a producción</span></div>
+      <div class="fig-body">
+        <table class="prose">
+          <tbody>
+            <tr>
+              <td>Regresión lineal</td>
+              <td>
+                <strong>Dos números:</strong> pendiente <code>6.78e-05</code> e
+                intersección <code>3.75</code>. Terminado el ajuste, los 27 países ya no
+                hacen falta y se pueden borrar. Predecir es una multiplicación y una suma.
+              </td>
+            </tr>
+            <tr>
+              <td>k-vecinos</td>
+              <td>
+                <strong>El dataset entero.</strong> No resume nada: guarda las 27 filas y,
+                ante un caso nuevo, recorre buscando los 3 más parecidos y promedia su
+                satisfacción. El «entrenamiento» es literalmente copiar los datos.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption>
+        Aquí son 27 filas y no importa. Con volúmenes reales sí importa: el modelo por
+        instancia <strong>despliega sus datos con él</strong> y responde más lento cuanto
+        más ha visto. Vuelve a aparecer en el capítulo 2, donde el mejor modelo pesaba
+        703 MB frente a los 2.4 MB del elegido.
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- ══ LA FORMA ══════════════════════════════════════════════════════ -->
+  <section class="wrap stack">
+    <span class="eyebrow">Lo que se ve</span>
+    <h2>Una línea suave contra una escalera</h2>
+  </section>
+
+  <section class="wide stack">
+    <figure>
+      <div class="fig-body">
+        <img src="/img/ch01/lifesat.png" alt="Dispersión de PIB per cápita contra satisfacción con la vida, con una recta de regresión y la escalera del k-vecinos superpuestas" loading="lazy" width="1350" height="780" />
+      </div>
+      <figcaption>
+        La escalera salta cada vez que el vecindario de los tres países más cercanos
+        cambia de composición. Entre saltos el valor es plano, porque el promedio de los
+        mismos tres países no depende del punto exacto dentro de ese tramo.
+      </figcaption>
+    </figure>
+  </section>
+
+  <section class="wrap stack">
+    <p>
+      Esa forma no es un defecto del dibujo, es la predicción real. El k-vecinos
+      <strong>no interpola</strong>: devuelve el promedio de un conjunto discreto, y ese
+      conjunto solo cambia en saltos. Por eso los escalones tienen anchos distintos: son
+      más anchos donde los países están más separados.
+    </p>
+    <p class="note">
+      La recta, en cambio, no puede saltar. Se le impuso una forma antes de ver un solo
+      dato, y lo único que el ajuste decidió fue su inclinación y su altura. Eso es
+      exactamente lo que significa «basado en modelo»: <strong>la forma se elige, los
+      datos solo la calibran</strong>.
+    </p>
+    <p>
+      En <a href="/ch01/lifesat/demo">la demo</a> se ve mejor que en la imagen, porque
+      ahí se resaltan los tres países que el modelo está usando en cada momento y se
+      puede ver el instante en que uno sale y otro entra.
+    </p>
+  </section>
+
+  <!-- ══ EL SUBAJUSTE ══════════════════════════════════════════════════ -->
+  <section class="wrap">
+    <div class="finding">
+      <div class="finding-head">
+        <h3>El subajuste, de propina</h3>
+        <span class="evidence" data-tone="none">R² = 0.73</span>
+      </div>
+      <p>
+        La recta explica el <strong>73% de la variación</strong>. El 27% restante no es
+        ruido de medición ni un problema de muestra pequeña: es que la satisfacción de un
+        país <strong>no es una función de su riqueza</strong>.
+      </p>
+      <p>
+        En la gráfica se ve a simple vista. Hay países ricos claramente por debajo de la
+        recta y países modestos por encima. Ninguna recta puede pasar por ambos a la vez,
+        porque una recta solo tiene dos grados de libertad y la estructura de los datos
+        necesita más.
+      </p>
+      <p class="note">
+        Eso es <strong>subajuste</strong>: un modelo demasiado simple para lo que hay.
+        Se arregla con más parámetros, mejores variables o menos regularización, nunca con
+        más datos. Esa es la diferencia clave frente al sobreajuste.
+      </p>
+    </div>
+  </section>
+
+  <!-- ══ HONESTIDAD ════════════════════════════════════════════════════ -->
+  <section class="wrap stack">
+    <span class="eyebrow">Lo que no se hizo, y por qué</span>
+    <h2>Aquí no hay medición de generalización</h2>
+    <p>
+      Ese R² está calculado <strong>sobre los mismos datos con los que se ajustó</strong>.
+      No es una estimación de cómo generalizaría. Es solo cuánta variación capta la
+      recta donde ya sabe la respuesta. Con 27 filas no hay conjunto de prueba que
+      signifique nada.
+    </p>
+    <table class="prose suelta">
+      <tbody>
+        <tr><td>Sin train/test</td><td>Partir 27 filas deja unas 5 en prueba. El número que saliera dependería de qué cinco países tocaron.</td></tr>
+        <tr><td>Sin MLflow</td><td>El resto del repositorio registra cada experimento. Aquí serían dos modelos de una línea sin hiperparámetros que comparar: ceremonia sin sustancia.</td></tr>
+        <tr><td>Sin validación cruzada</td><td>Mismo motivo. Promediar pliegues de cinco países mide ruido de muestreo, no desempeño.</td></tr>
+      </tbody>
+    </table>
+    <p class="note">
+      Decirlo importa porque el capítulo dedica su última sección justo a esto: a que el
+      conjunto de prueba se gasta y a que medir mal es peor que no medir. Publicar un
+      0.73 sin la advertencia sería contradecir el capítulo dentro del capítulo.
+    </p>
+  </section>
+
+  <!-- ══ CORRER ════════════════════════════════════════════════════════ -->
+  <section class="wide">
+    <figure>
+      <div class="fig-head"><span class="fig-title">Reproducirlo</span></div>
+      <div class="fig-body">
+<pre><code>cd ch01-panorama
+make lifesat</code></pre>
+      </div>
+      <figcaption>
+        Descarga el CSV si falta, imprime los números de arriba, regenera la gráfica en
+        <code>reports/lifesat.png</code> y vuelca los datos que consume la demo en
+        <code>web/public/data/ch01.json</code>, 2.4 KB, que es todo lo que el navegador
+        necesita para reajustar ambos modelos por su cuenta.
+      </figcaption>
+    </figure>
+  </section>
+
+  <section class="wrap stack">
+    <div class="cierre">
+      <p>
+        <strong>Lo que este dataset deja.</strong> Que «entrenar» significa cosas
+        distintas según el modelo: para uno es resolver un ajuste, para otro es guardar
+        una copia. Y que dos modelos con la misma respuesta pueden tener costes de
+        operación incomparables.
+      </p>
+      <a class="siguiente" href="/ch01/lifesat/demo">Probarlo en vivo →</a>
+    </div>
+  </section>
+
+  <style>
+    .hero { padding-top: clamp(2.5rem, 7vw, 4.5rem); display: flex; flex-direction: column; gap: 1.2rem; }
+    .hero .lede { font-size: 1.18rem; color: var(--ink-2); max-width: 58ch; }
+    .byline { font-family: var(--mono); font-size: .78rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: .35rem 1.1rem; }
+
+    table.suelta { margin-top: .2rem; }
+
+    .marcador { display: grid; gap: 1px; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      background: var(--hairline); border: 1px solid var(--hairline); border-radius: 6px; overflow: hidden; margin-block: .4rem; }
+    .marcador > div { background: var(--surface); padding: 1rem 1.2rem; display: flex; flex-direction: column; gap: .2rem; }
+    .marcador .etq { font-family: var(--mono); font-size: .66rem; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
+    .marcador .num { font-size: 1.85rem; font-weight: 600; letter-spacing: -.02em; line-height: 1; font-variant-numeric: tabular-nums; }
+    .marcador .num.cool { color: var(--cool); }
+    .marcador .num.warm { color: var(--warm); }
+    .marcador .pie { font-family: var(--mono); font-size: .7rem; color: var(--muted); }
+
+    .cierre { background: var(--surface); border: 1px solid var(--hairline); border-radius: 10px;
+      padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; box-shadow: var(--shadow); }
+    .cierre p { color: var(--ink-2); }
+    .siguiente { font-family: var(--mono); font-size: .8rem; color: var(--accent-ink); text-decoration: none; }
+    .siguiente:hover { text-decoration: underline; }
+  </style>
+</Base>

@@ -194,7 +194,7 @@ function dibujarIC() {
       `<text class="val" x="${W - R + 12}" y="${y + 4}">${f3(m.rmse)}</text>`;
   });
   s += `<text x="${X(mejor.hi)}" y="${T - 9}" text-anchor="middle" fill="var(--accent)">límite del mejor</text>`;
-  s += `<text x="${L}" y="${H - 4}" fill="var(--muted)">RMSE — menor es mejor</text>`;
+  s += `<text x="${L}" y="${H - 4}" fill="var(--muted)">RMSE · menor es mejor</text>`;
   document.getElementById("ci")!.innerHTML = s;
 
   document.getElementById("tblCi")!.innerHTML =
@@ -232,7 +232,7 @@ function dibujarAportes() {
       `<rect x="${xa}" y="${y - h / 2}" width="${Math.max(w, 2)}" height="${h}" fill="${col}" opacity=".8" rx="2"/>` +
       `<text class="val" x="${W - R + 14}" y="${y + 4}">${d.v > 0 ? "+" : ""}${d.v.toFixed(4)}</text>`;
   });
-  s += `<text x="${L}" y="${H - 4}" fill="var(--muted)">cambio en RMSE — izquierda es mejora</text>`;
+  s += `<text x="${L}" y="${H - 4}" fill="var(--muted)">cambio en RMSE · izquierda es mejora</text>`;
   document.getElementById("aportes")!.innerHTML = s;
 
   document.getElementById("tblAportes")!.innerHTML =

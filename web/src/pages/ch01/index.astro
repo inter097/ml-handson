@@ -1,10 +1,29 @@
 ---
-import Base from "../layouts/Base.astro";
+import Base from "../../layouts/Base.astro";
+
+// Lo práctico del capítulo vive en páginas propias. Aquí solo queda el
+// resumen conceptual y el enlace a cada pieza.
+const practicas = [
+  {
+    href: "/ch01/lifesat",
+    nombre: "lifesat",
+    titulo: "Los dos estilos de generalización",
+    resumen:
+      "27 países, PIB per cápita contra satisfacción con la vida. Una recta y un k-vecinos predicen para Chipre y llegan casi al mismo número por caminos opuestos.",
+    cifras: [
+      ["Países", "27"],
+      ["Recta", "6.30"],
+      ["3 vecinos", "6.33"],
+    ],
+    demo: "/ch01/lifesat/demo",
+  },
+];
 ---
 
 <Base
-  title="El panorama del machine learning — capítulo 1"
+  title="El panorama del machine learning · capítulo 1"
   description="Qué es el aprendizaje automático, cuándo conviene usarlo, y de qué formas fracasa."
+  capitulo="ch01"
 >
   <header class="wrap hero">
     <span class="eyebrow">Capítulo 1 · Panorama</span>
@@ -12,7 +31,7 @@ import Base from "../layouts/Base.astro";
     <p class="lede">
       Casi todo el capítulo es conceptual: responde <strong>en qué casos vale la pena
       aprender de los datos en lugar de escribir las reglas a mano</strong>, y enumera
-      las formas en que ese intento fracasa. Pero trae un dataset —27 países— y con él
+      las formas en que ese intento fracasa. Pero trae un dataset de 27 países, y con él
       enseña lo más concreto que se puede mostrar sin montar un proyecto.
     </p>
   </header>
@@ -42,8 +61,8 @@ import Base from "../layouts/Base.astro";
     </div>
     <p class="note">
       Un sistema aprende si su desempeño en la tarea mejora con la experiencia. Lo útil de
-      esta definición es que obliga a decidir <strong>P antes de empezar</strong> —
-      y elegir mal esa medida es de las formas más comunes de construir algo inútil sin
+      esta definición es que obliga a decidir <strong>P antes de empezar</strong>.
+      Elegir mal esa medida es de las formas más comunes de construir algo inútil sin
       enterarse.
     </p>
   </section>
@@ -59,21 +78,21 @@ import Base from "../layouts/Base.astro";
       <div class="via">
         <span class="via-etq">A mano</span>
         <ol>
-          <li>Miras muchos correos basura y notas patrones: «4U», «tarjeta de crédito», «gratis».</li>
-          <li>Escribes una regla para cada patrón.</li>
-          <li>Pruebas, encuentras fallos, añades más reglas. Repites.</li>
+          <li>Se examinan muchos correos basura y aparecen patrones: «4U», «tarjeta de crédito», «gratis».</li>
+          <li>Se escribe una regla para cada patrón.</li>
+          <li>Se prueba, salen fallos, se añaden más reglas. Y otra vez.</li>
         </ol>
         <p class="via-fin">
-          Acabas con una <strong>lista larga de reglas enredadas</strong> que nadie se
-          atreve a tocar.
+          El resultado es una <strong>lista larga de reglas enredadas</strong> que nadie
+          se atreve a tocar.
         </p>
       </div>
       <div class="via destacada">
         <span class="via-etq">Aprendiendo</span>
         <ol>
-          <li>Le das correos ya clasificados.</li>
+          <li>Se le entregan correos ya clasificados.</li>
           <li>El sistema detecta solo qué palabras aparecen sospechosamente seguido en unos y no en otros.</li>
-          <li>Lo pruebas contra correos que no vio.</li>
+          <li>Se contrasta contra correos que no vio.</li>
         </ol>
         <p class="via-fin">
           El programa queda <strong>más corto, más fácil de mantener y probablemente más
@@ -87,7 +106,7 @@ import Base from "../layouts/Base.astro";
     <p class="note">
       La diferencia de fondo aparece <strong>cuando el mundo cambia</strong>. Los spammers
       notan que sus correos con «4U» ya no llegan y empiezan a escribir «For U». Con
-      reglas a mano, alguien tiene que darse cuenta y añadir otra — y otra cuando cambien
+      reglas a mano, alguien tiene que darse cuenta y añadir otra, y otra cuando cambien
       de nuevo, para siempre. Un sistema que aprende <strong>lo nota solo</strong>.
     </p>
     <p>
@@ -111,9 +130,9 @@ import Base from "../layouts/Base.astro";
         </table>
       </div>
       <figcaption>
-        La lista sirve de filtro en dos direcciones: si tu problema no cae en ninguno de
-        estos casos, unas cuantas reglas escritas a mano son probablemente la respuesta
-        correcta.
+        La lista sirve de filtro en dos direcciones: un problema que no cae en ninguno de
+        estos casos probablemente se resuelve mejor con unas cuantas reglas escritas a
+        mano.
       </figcaption>
     </figure>
   </section>
@@ -139,7 +158,7 @@ import Base from "../layouts/Base.astro";
             <tr><td>Por refuerzo</td><td>Un agente actúa, recibe premio o castigo, y ajusta su estrategia.</td></tr>
 
             <tr class="grupo"><td colspan="2">Si aprende sobre la marcha</td></tr>
-            <tr><td>Por lotes</td><td>Se entrena una vez, se despliega, y ya no aprende más. Riesgo: <strong>el modelo se pudre</strong> — el mundo cambia y él se queda con la foto del día que se entrenó.</td></tr>
+            <tr><td>Por lotes</td><td>Se entrena una vez, se despliega, y ya no aprende más. Riesgo: <strong>el modelo se pudre</strong>, porque el mundo cambia y él se queda con la foto del día que se entrenó.</td></tr>
             <tr><td>En línea</td><td>Se alimenta según llegan los datos. Evita lo anterior, pero si entran datos malos el desempeño cae en vivo.</td></tr>
 
             <tr class="grupo"><td colspan="2">Cómo generaliza</td></tr>
@@ -148,49 +167,46 @@ import Base from "../layouts/Base.astro";
           </tbody>
         </table>
       </div>
-    </figure>
-  </section>
-
-  <!-- ══ EL DATASET ════════════════════════════════════════════════════ -->
-  <section class="wrap stack">
-    <span class="eyebrow">El único código del capítulo</span>
-    <h2>Los dos estilos, sobre los mismos 27 países</h2>
-    <p>
-      El dataset cruza el PIB per cápita de 27 países con su satisfacción declarada con
-      la vida. Se ajustan los dos modelos y se les pide una predicción para
-      <strong>Chipre</strong>, que no está en los datos.
-    </p>
-  </section>
-
-  <section class="wide stack">
-    <figure>
-      <div class="fig-body">
-        <img src="/img/ch01/lifesat.png" alt="Dispersión de PIB per cápita contra satisfacción con la vida, con una recta de regresión y la escalera del k-vecinos superpuestas" loading="lazy" width="1350" height="780" />
-      </div>
       <figcaption>
-        Una línea suave contra una escalera. La escalera salta cada vez que el vecindario
-        de los tres países más cercanos cambia de composición.
+        El tercer eje es el que el dataset del capítulo pone a prueba, y por eso tiene
+        página propia más abajo.
       </figcaption>
     </figure>
   </section>
 
+  <!-- ══ PRÁCTICA ══════════════════════════════════════════════════════ -->
   <section class="wrap stack">
-    <div class="marcador">
-      <div><span class="etq">Por modelo</span><span class="num warm">6.30</span><span class="pie">guarda 2 números</span></div>
-      <div><span class="etq">Por instancia</span><span class="num cool">6.33</span><span class="pie">guarda 27 países</span></div>
-    </div>
+    <span class="eyebrow">La práctica del capítulo</span>
+    <h2>Lo único que aquí se ejecuta</h2>
     <p>
-      Respuestas casi idénticas por caminos opuestos. La recta <strong>resume</strong> los
-      datos y después los descarta; el k-vecinos <strong>no resume nada</strong>, se queda
-      con todo y busca los más parecidos cuando le preguntas. En producción eso se nota:
-      el segundo carga con sus datos a cuestas y responde más lento cuanto más ha visto.
+      El capítulo trae un solo dataset y no pretende construir nada con él: existe para
+      hacer tangible el tercer eje de la tabla. El desarrollo completo está en su propia
+      página, con la demo aparte.
     </p>
-    <p class="note">
-      El mismo ejemplo enseña el <strong>subajuste</strong> de propina. La recta explica
-      el 73% de la variación, y el 27% restante no es ruido de medición: es que la
-      felicidad de un país no es una función de su riqueza. Hay países ricos por debajo de
-      la recta y modestos por encima, y ninguna recta puede capturarlos a la vez.
-    </p>
+  </section>
+
+  <section class="wide">
+    <div class="practicas">
+      {practicas.map((p) => (
+        <article class="practica">
+          <a class="practica-main" href={p.href}>
+            <span class="ds">{p.nombre}</span>
+            <h3>{p.titulo}</h3>
+            <p>{p.resumen}</p>
+            <dl class="cifras">
+              {p.cifras.map(([k, v]) => (
+                <div><dt>{k}</dt><dd>{v}</dd></div>
+              ))}
+            </dl>
+            <span class="ir">Ver el desarrollo →</span>
+          </a>
+          <a class="practica-demo" href={p.demo}>
+            <span class="demo-etq">Demo</span>
+            <span class="demo-txt">Los dos modelos, ejecutándose en el navegador</span>
+          </a>
+        </article>
+      ))}
+    </div>
   </section>
 
   <!-- ══ DESAFÍOS ══════════════════════════════════════════════════════ -->
@@ -210,7 +226,7 @@ import Base from "../layouts/Base.astro";
         <table class="prose">
           <tbody>
             <tr><td>Insuficientes</td><td>A un niño le señalas una manzana dos veces y ya reconoce manzanas. Un sistema necesita miles de ejemplos, o millones para imágenes y voz.</td></tr>
-            <tr><td>No representativos</td><td>Si no se parecen a los casos sobre los que vas a predecir, el modelo aprende un mundo que no existe. <em>Abajo, con detalle.</em></td></tr>
+            <tr><td>No representativos</td><td>Si no se parecen a los casos sobre los que se va a predecir, el modelo aprende un mundo que no existe. <em>Abajo, con detalle.</em></td></tr>
             <tr><td>De mala calidad</td><td>Errores, atípicos y ruido. Decidir si descartar o corregir, y qué hacer con los faltantes. No es glamoroso y es la mayor parte del trabajo.</td></tr>
             <tr><td>Variables irrelevantes</td><td>Basura entra, basura sale. La <strong>ingeniería de características</strong> son tres cosas: seleccionar las útiles, combinarlas en otras mejores, o conseguir datos nuevos.</td></tr>
           </tbody>
@@ -218,7 +234,7 @@ import Base from "../layouts/Base.astro";
       </div>
       <figcaption>
         Sobre el primero: un trabajo de Banko y Brill (2001) mostró que algoritmos muy
-        distintos rinden casi igual en cuanto se les dan suficientes datos — argumento
+        distintos rinden casi igual en cuanto se les dan suficientes datos. Es un argumento
         para invertir menos tiempo en elegir algoritmo y más en conseguir datos.
       </figcaption>
     </figure>
@@ -234,7 +250,7 @@ import Base from "../layouts/Base.astro";
         Hay dos motivos distintos y conviene no confundirlos. Si la muestra es pequeña
         aparece <strong>ruido de muestreo</strong>: datos poco representativos por
         casualidad. Pero incluso una muestra enorme falla si el método de recolección está
-        torcido — eso es <strong>sesgo de muestreo</strong>, y es el peligroso.
+        torcido. Eso es <strong>sesgo de muestreo</strong>, y es el peligroso.
       </p>
       <p>
         El ejemplo del capítulo es la encuesta del <em>Literary Digest</em> en las
@@ -247,7 +263,7 @@ import Base from "../layouts/Base.astro";
       </div>
       <p class="note">
         Fallaron por casi veinte puntos. Las listas de contacto salían de directorios
-        telefónicos, suscriptores de revistas y socios de clubes — gente acomodada, que se
+        telefónicos, suscriptores de revistas y socios de clubes: gente acomodada, que se
         inclinaba por Landon. Y encima respondieron sobre todo quienes tenían ganas de
         opinar.
       </p>
@@ -266,8 +282,8 @@ import Base from "../layouts/Base.astro";
       <p>
         <strong>Sobreajustar</strong> es aprenderse los datos de entrenamiento en vez del
         patrón: el modelo rinde espléndido donde ya sabe la respuesta y se derrumba en
-        cuanto ve algo nuevo. La analogía de Géron es humana — te roban el taxi en un país
-        extranjero y concluyes que ahí todos los taxistas son ladrones.
+        cuanto ve algo nuevo. La analogía de Géron es humana: a alguien le roba un taxista
+        en un país extranjero y concluye que ahí todos los taxistas son ladrones.
       </p>
       <p class="note">
         Ocurre cuando el modelo es <strong>demasiado complejo para la cantidad y el ruido
@@ -284,8 +300,8 @@ import Base from "../layouts/Base.astro";
       <p>
         <strong>Subajustar</strong> es lo contrario y no engaña a nadie: el modelo es
         demasiado simple para la estructura que hay. Predecir el bienestar de un país solo
-        con su riqueza queda corto porque la realidad no es una línea. Se arregla al revés
-        — más parámetros, mejores variables, o aflojar la regularización.
+        con su riqueza queda corto porque la realidad no es una línea. Se arregla al
+        revés: más parámetros, mejores variables, o aflojar la regularización.
       </p>
     </div>
   </section>
@@ -301,28 +317,28 @@ import Base from "../layouts/Base.astro";
       contraste es el diagnóstico.
     </p>
     <p>
-      Pero aparece un problema justo después. Dudas entre dos modelos, los comparas en
-      prueba y eliges. Luego ajustas la regularización probando cien valores y te quedas
-      con el mejor en prueba. El modelo rinde estupendamente — y en producción, mucho
+      Pero aparece un problema justo después. Ante la duda entre dos modelos, se comparan
+      en prueba y se elige. Luego se ajusta la regularización probando cien valores y se
+      conserva el mejor en prueba. El modelo rinde estupendamente, y en producción mucho
       peor.
     </p>
     <p class="note">
-      Mediste cien veces sobre el mismo conjunto y elegiste el que mejor le quedaba
+      Fueron cien mediciones sobre el mismo conjunto, y se eligió el que mejor le quedaba
       <strong>a ese conjunto en concreto</strong>. El número dejó de estimar
-      generalización y pasó a medir cuánto ajustaste a esos casos.
+      generalización y pasó a medir cuánto se ajustó a esos casos.
     </p>
     <p>
       La salida es apartar una tercera porción, el conjunto de <strong>validación</strong>:
       se comparan candidatos ahí, se elige uno, se reentrena con todo lo que no es prueba,
       y solo entonces se mide una vez en prueba. Si esa porción es muy pequeña la
-      comparación es ruidosa, y si es muy grande se entrena con poco — de ahí la
+      comparación es ruidosa, y si es muy grande se entrena con poco. De ahí la
       <strong>validación cruzada</strong>, que parte en pliegues y promedia a costa de
       multiplicar el tiempo.
     </p>
     <p class="note">
-      Un caso más sutil: si entrenas con fotos de flores descargadas de internet pero la
-      aplicación recibirá fotos tomadas con el móvil, <strong>validación y prueba tienen
-      que salir de las del móvil</strong> — de lo que el sistema verá de verdad.
+      Un caso más sutil: si el entrenamiento usa fotos de flores descargadas de internet
+      pero la aplicación recibirá fotos tomadas con el móvil, <strong>validación y prueba
+      tienen que salir de las del móvil</strong>, de lo que el sistema verá de verdad.
     </p>
   </section>
 
@@ -361,6 +377,29 @@ import Base from "../layouts/Base.astro";
     .via ol { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: .45rem; font-size: .94rem; color: var(--ink-2); }
     .via li::marker { font-family: var(--mono); font-size: .8rem; color: var(--muted); }
     .via-fin { font-size: .94rem; padding-top: .3rem; border-top: 1px solid var(--hairline); }
+
+    .practicas { display: grid; gap: 1.1rem; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+    .practica { background: var(--surface); border: 1px solid var(--hairline); border-radius: 10px;
+      box-shadow: var(--shadow); overflow: hidden; display: flex; flex-direction: column; }
+    .practica-main { display: flex; flex-direction: column; gap: .6rem; padding: 1.5rem 1.5rem 1.3rem;
+      text-decoration: none; color: inherit; transition: background .15s; }
+    .practica-main:hover { background: var(--surface-2); }
+    .practica .ds { font-family: var(--mono); font-size: .68rem; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--muted); }
+    .practica h3 { font-size: 1.28rem; }
+    .practica p { font-size: .95rem; color: var(--ink-2); }
+    .practica .ir { margin-top: auto; padding-top: .4rem; font-family: var(--mono); font-size: .73rem; color: var(--accent-ink); }
+    .practica-demo { display: flex; align-items: baseline; gap: .7rem; flex-wrap: wrap;
+      padding: .85rem 1.5rem; border-top: 1px solid var(--hairline);
+      text-decoration: none; transition: background .15s; }
+    .practica-demo:hover { background: var(--surface-2); }
+    .demo-etq { font-family: var(--mono); font-size: .64rem; letter-spacing: .1em; text-transform: uppercase;
+      color: var(--accent-ink); border: 1px solid var(--rule); border-radius: 999px; padding: .1rem .5rem; }
+    .demo-txt { font-size: .88rem; color: var(--ink-2); }
+
+    .cifras { display: flex; flex-wrap: wrap; gap: .3rem 1.4rem; margin: .3rem 0 0; }
+    .cifras dt { font-family: var(--mono); font-size: .62rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+    .cifras dd { margin: 0; font-size: 1.05rem; font-weight: 600; font-variant-numeric: tabular-nums; }
 
     table.suelta { margin-top: .2rem; }
     table.ejes tr.grupo td {

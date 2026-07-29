@@ -172,6 +172,15 @@ table.prose td:first-child { width: 11rem; font-family: var(--mono); font-size: 
 
 code { font-family: var(--mono); font-size: .87em; background: var(--surface-2); padding: .1em .32em; border-radius: 3px; }
 
+/* Bloques de código. El scroll es propio del bloque: una línea larga no debe
+   arrastrar la página entera en horizontal. */
+pre {
+  overflow-x: auto; margin: 0;
+  background: var(--surface-2); border: 1px solid var(--hairline);
+  border-radius: 6px; padding: .9rem 1rem;
+}
+pre code { background: none; padding: 0; font-size: .8rem; line-height: 1.7; color: var(--ink-2); }
+
 /* Filtros */
 .chip {
   font-family: var(--mono); font-size: .72rem; cursor: pointer;

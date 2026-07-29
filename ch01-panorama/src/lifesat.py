@@ -23,6 +23,7 @@ Uso:
     python src/lifesat.py
     # o: make lifesat
 """
+import json
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -34,6 +35,13 @@ from sklearn.neighbors import KNeighborsRegressor
 URL = "https://github.com/ageron/data/raw/main/lifesat/lifesat.csv"
 RAW = Path("data/raw/lifesat.csv")
 REPORTS = Path("reports")
+
+# La demo del sitio reajusta los modelos en el navegador. Puede hacerlo porque
+# los dos caben: la recta son dos números y el k-vecinos son 27 filas. Eso es
+# justamente lo que enseña el capítulo, así que la demo lo encarna.
+WEB = Path("../web/public/data/ch01.json")
+
+K = 3
 
 # País ausente del dataset, con su PIB per cápita real. Es el caso nuevo
 # sobre el que ambos modelos tienen que pronunciarse.
@@ -64,7 +72,7 @@ def run() -> None:
           f"{X.min():,.0f} a {X.max():,.0f} USD · satisfacción de {y.min()} a {y.max()}")
 
     lineal = LinearRegression().fit(X, y)
-    vecinos = KNeighborsRegressor(n_neighbors=3).fit(X, y)
+    vecinos = KNeighborsRegressor(n_neighbors=K).fit(X, y)
 
     nombre, pib = NUEVO
     p_lineal = float(lineal.predict([[pib]])[0])
@@ -72,7 +80,7 @@ def run() -> None:
 
     print(f"\n[lifesat] Predicción para {nombre} (PIB {pib:,.0f} USD), que no está en los datos")
     print(f"  por modelo (recta)        {p_lineal:.2f}")
-    print(f"  por instancia (3 vecinos) {p_vecinos:.2f}")
+    print(f"  por instancia ({K} vecinos) {p_vecinos:.2f}")
     print(f"  diferencia                {abs(p_lineal - p_vecinos):.2f}")
 
     print(f"\n[lifesat] Lo que guarda cada uno para predecir")
@@ -90,6 +98,33 @@ def run() -> None:
     print("  — el subajuste que describe el capítulo.")
 
     _plot(df, X, y, lineal, vecinos, nombre, pib, p_lineal, p_vecinos)
+    _exportar_web(df, lineal, r2, p_lineal, p_vecinos)
+
+
+def _exportar_web(df, lineal, r2, p_lineal, p_vecinos) -> None:
+    """Vuelca lo mínimo que la demo del sitio necesita para reajustar sola."""
+    if not WEB.parent.exists():
+        print(f"[lifesat] sin {WEB.parent}, no exporto para el sitio")
+        return
+
+    nombre, pib = NUEVO
+    WEB.write_text(json.dumps({
+        "k": K,
+        "r2": round(r2, 4),
+        "lineal": {
+            "pendiente": lineal.coef_[0],
+            "interseccion": lineal.intercept_,
+        },
+        "nuevo": {"nombre": nombre, "pib": pib,
+                  "lineal": round(p_lineal, 2), "vecinos": round(p_vecinos, 2)},
+        "paises": [
+            {"pais": r["Country"],
+             "pib": r["GDP per capita (USD)"],
+             "satisfaccion": r["Life satisfaction"]}
+            for _, r in df.iterrows()
+        ],
+    }, ensure_ascii=False, indent=1), encoding="utf-8")
+    print(f"[lifesat] datos del sitio → {WEB} ({WEB.stat().st_size / 1024:.1f} KB)")
 
 
 def _plot(df, X, y, lineal, vecinos, nombre, pib, p_lineal, p_vecinos) -> None:

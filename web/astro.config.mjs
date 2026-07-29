@@ -7,4 +7,10 @@ export default defineConfig({
   output: "static",
   site: "https://ml.eliuth.dev",
   build: { format: "directory" },
+
+  // Astro lo trae activado, pero colapsa el salto de línea que precede a una
+  // etiqueta en línea y pega la palabra con la siguiente: «de ahí la<strong>
+  // validación cruzada» salía como «lavalidación». Lo que ahorra es ruido
+  // frente a gzip; lo que rompe es el texto.
+  compressHTML: false,
 });

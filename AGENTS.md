@@ -40,13 +40,19 @@ capítulo crearía la suya y no se podrían comparar experimentos. Los `Makefile
 
 ---
 
-## Despliegue del caso de estudio del capítulo 2
+## Despliegue del sitio
 
-El sitio vive en **https://houses.eliuth.dev** y se redespliega solo en cada push a
-`main`. La configuración está en `vercel.json` en la raíz, con `outputDirectory`
-apuntando a `ch02-california-housing/site`.
+El sitio vive en **https://ml.eliuth.dev** y se redespliega solo en cada push a `main`.
+La configuración está en `vercel.json` en la raíz, con `outputDirectory` apuntando a
+`web/dist`.
 
-Cómo quedó armado, por si hay que replicarlo en otro capítulo:
+El `package.json` de la raíz es un delegador que solo existe para que Vercel detecte
+Node en vez de Python. Sin él el despliegue falla con «No python entrypoint found».
+`vercel.json` necesita `"framework": null` por el mismo motivo.
+
+Las convenciones de escritura y organización del sitio están en [`CLAUDE.md`](CLAUDE.md).
+
+Cómo quedó armado el dominio, por si hay que replicarlo:
 
 1. **Vercel** — el dominio se registra en el proyecto:
    `vercel domains add <sub>.eliuth.dev <proyecto>`

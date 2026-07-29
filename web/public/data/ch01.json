@@ -1,0 +1,151 @@
+{
+ "k": 3,
+ "r2": 0.7273,
+ "lineal": {
+  "pendiente": 6.778899694341222e-05,
+  "interseccion": 3.7490494273769093
+ },
+ "nuevo": {
+  "nombre": "Chipre",
+  "pib": 37655.2,
+  "lineal": 6.3,
+  "vecinos": 6.33
+ },
+ "paises": [
+  {
+   "pais": "Russia",
+   "pib": 26456.3879381321,
+   "satisfaccion": 5.8
+  },
+  {
+   "pais": "Greece",
+   "pib": 27287.0834009302,
+   "satisfaccion": 5.4
+  },
+  {
+   "pais": "Turkey",
+   "pib": 28384.9877846263,
+   "satisfaccion": 5.5
+  },
+  {
+   "pais": "Latvia",
+   "pib": 29932.4939100562,
+   "satisfaccion": 5.9
+  },
+  {
+   "pais": "Hungary",
+   "pib": 31007.7684065437,
+   "satisfaccion": 5.6
+  },
+  {
+   "pais": "Portugal",
+   "pib": 32181.1545372343,
+   "satisfaccion": 5.4
+  },
+  {
+   "pais": "Poland",
+   "pib": 32238.157259275,
+   "satisfaccion": 6.1
+  },
+  {
+   "pais": "Estonia",
+   "pib": 35638.4213511812,
+   "satisfaccion": 5.7
+  },
+  {
+   "pais": "Spain",
+   "pib": 36215.4475907307,
+   "satisfaccion": 6.3
+  },
+  {
+   "pais": "Slovenia",
+   "pib": 36547.7389559849,
+   "satisfaccion": 5.9
+  },
+  {
+   "pais": "Lithuania",
+   "pib": 36732.034744031,
+   "satisfaccion": 5.9
+  },
+  {
+   "pais": "Israel",
+   "pib": 38341.3075704083,
+   "satisfaccion": 7.2
+  },
+  {
+   "pais": "Italy",
+   "pib": 38992.1483807498,
+   "satisfaccion": 6.0
+  },
+  {
+   "pais": "United Kingdom",
+   "pib": 41627.129269425,
+   "satisfaccion": 6.8
+  },
+  {
+   "pais": "France",
+   "pib": 42025.6173730617,
+   "satisfaccion": 6.5
+  },
+  {
+   "pais": "New Zealand",
+   "pib": 42404.3937381567,
+   "satisfaccion": 7.3
+  },
+  {
+   "pais": "Canada",
+   "pib": 45856.6256264804,
+   "satisfaccion": 7.4
+  },
+  {
+   "pais": "Finland",
+   "pib": 47260.800458441,
+   "satisfaccion": 7.6
+  },
+  {
+   "pais": "Belgium",
+   "pib": 48210.0331113444,
+   "satisfaccion": 6.9
+  },
+  {
+   "pais": "Australia",
+   "pib": 48697.8370282475,
+   "satisfaccion": 7.3
+  },
+  {
+   "pais": "Sweden",
+   "pib": 50683.3235097178,
+   "satisfaccion": 7.3
+  },
+  {
+   "pais": "Germany",
+   "pib": 50922.3580234484,
+   "satisfaccion": 7.0
+  },
+  {
+   "pais": "Austria",
+   "pib": 51935.6038618156,
+   "satisfaccion": 7.1
+  },
+  {
+   "pais": "Iceland",
+   "pib": 52279.7288513646,
+   "satisfaccion": 7.5
+  },
+  {
+   "pais": "Netherlands",
+   "pib": 54209.5638357302,
+   "satisfaccion": 7.4
+  },
+  {
+   "pais": "Denmark",
+   "pib": 55938.2128086032,
+   "satisfaccion": 7.6
+  },
+  {
+   "pais": "United States",
+   "pib": 60235.7284916969,
+   "satisfaccion": 6.9
+  }
+ ]
+}

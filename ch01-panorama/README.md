@@ -9,6 +9,11 @@ cápita y su satisfacción con la vida**, cruzando el índice de la OCDE con cif
 make lifesat
 ```
 
+Imprime los números de abajo, regenera `reports/lifesat.png` y vuelca
+`web/public/data/ch01.json` — 2.4 KB con las 27 filas y los dos coeficientes de la
+recta, que es todo lo que la demo del sitio necesita para reajustar ambos modelos en
+el navegador. Que quepan es justamente lo que el capítulo enseña.
+
 Existe para enseñar una sola cosa — que hay dos maneras de generalizar a un caso nuevo.
 
 ![Los dos estilos de generalización](reports/lifesat.png)
@@ -45,6 +50,10 @@ ricos por debajo de la recta y países modestos por encima, y ninguna recta pued
 capturarlos a la vez.
 
 ---
+
+**En el sitio:** [`/ch01`](https://ml.eliuth.dev/ch01) es el resumen del capítulo,
+[`/ch01/lifesat`](https://ml.eliuth.dev/ch01/lifesat) el desarrollo de este dataset y
+[`/ch01/lifesat/demo`](https://ml.eliuth.dev/ch01/lifesat/demo) la demo interactiva.
 
 **Nota:** este capítulo no registra experimentos en MLflow. Son 27 filas y dos modelos de
 una línea; medir su desempeño con validación cruzada sería ceremonia sin sustancia. El

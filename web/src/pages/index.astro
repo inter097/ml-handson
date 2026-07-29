@@ -7,14 +7,15 @@ const capitulos = [
   {
     n: 1,
     titulo: "El panorama",
-    dataset: "Sin código · conceptos",
+    dataset: "lifesat · 27 países",
     href: "/ch01",
     estado: "completo",
     hallazgo:
-      "Cuándo conviene que la máquina descubra las reglas en vez de escribirlas — y las seis formas en que ese intento fracasa.",
+      "Cuándo conviene que la máquina descubra las reglas en vez de escribirlas, y las seis formas en que ese intento fracasa.",
     cifras: [
-      ["Sin código", "—"],
-      ["Conceptos", "6 fallos"],
+      ["Fallos", "6"],
+      ["Modelos", "2"],
+      ["Demo", "en vivo"],
     ],
   },
   {
@@ -58,7 +59,7 @@ const capitulos = [
 ---
 
 <Base
-  title="Aprendiendo machine learning — un capítulo por proyecto"
+  title="Aprendiendo machine learning: un capítulo por proyecto"
   description="Trabajando Hands-On Machine Learning de Aurélien Géron: un proyecto completo por capítulo, con lo que salió al revés de lo esperado."
   back={false}
 >
@@ -67,8 +68,8 @@ const capitulos = [
     <h1>Aprendiendo machine learning<br />sin saltarme las partes incómodas</h1>
     <p class="lede">
       Trabajando <em>Hands-On Machine Learning</em> de Aurélien Géron, un proyecto
-      completo por capítulo. Lo que documento no es que los modelos funcionen —
-      es <strong>qué resultó al revés de lo esperado</strong> y cómo se comprobó.
+      completo por capítulo. Lo que documento no es que los modelos funcionen.
+      Es <strong>qué resultó al revés de lo esperado</strong> y cómo se comprobó.
     </p>
     <div class="byline">
       <span>scikit-learn · XGBoost · MLflow</span>
@@ -120,7 +121,7 @@ const capitulos = [
     <h2>Toda afirmación va medida</h2>
     <p>
       La regla del repositorio es simple: si algo se afirma, se mide. Ha costado
-      corregir varias cosas que parecían obvias — que una variable importante mejoraría
+      corregir varias cosas que parecían obvias: que una variable importante mejoraría
       el modelo, que cierto algoritmo era lento por el tamaño de los datos, que
       la métrica más alta señalaba al mejor modelo. Ninguna resistió la medición.
     </p>
