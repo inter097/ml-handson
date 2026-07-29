@@ -32,43 +32,43 @@ import Base from "../../../layouts/Base.astro";
         <button id="aChipre" type="button">Volver a Chipre</button>
       </div>
 
-      <div class="lecturas">
-        <div class="lec warm">
-          <span class="etq">Por modelo · recta</span>
-          <span class="num" id="vLineal">—</span>
-          <span class="pie">2 números en memoria</span>
-        </div>
-        <div class="lec cool">
-          <span class="etq">Por instancia · 3 vecinos</span>
-          <span class="num" id="vVecinos">—</span>
-          <span class="pie">27 países en memoria</span>
-        </div>
-        <div class="lec">
-          <span class="etq">Diferencia</span>
-          <span class="num" id="vDif">—</span>
-          <span class="pie">en la escala 0–10</span>
-        </div>
-      </div>
     </div>
   </section>
 
   <section class="wrap compacta">
-    <div class="paneles">
-      <div class="panel">
-        <span class="p-etq">Los 3 que está promediando ahora</span>
-        <ul id="vecinos" class="vecinos"></ul>
-        <p class="p-nota">Al cruzar un umbral uno sale y otro entra: eso es el escalón.</p>
-      </div>
+    <div class="modelos">
+      <article class="modelo warm">
+        <span class="m-orden">Modelo 1</span>
+        <h2>Regresión lineal</h2>
+        <span class="m-clase">Aprendizaje por modelo</span>
 
-      <div class="panel">
-        <span class="p-etq">Lo que cada modelo necesita para responder</span>
-        <div class="guarda">
-          <code>pendiente = 6.78e-05<br />intersección = 3.75</code>
-          <span class="g-pie">La recta.</span>
+        <div class="m-pred">
+          <span class="m-num" id="vLineal">—</span>
+          <span class="m-pie">satisfacción predicha</span>
         </div>
+
+        <span class="m-etq">Lo que guarda · 2 números</span>
+        <code>pendiente = 6.78e-05<br />intersección = 3.75</code>
+        <p class="m-nota">Ajustada una vez. No vuelve a mirar los países.</p>
+      </article>
+
+      <article class="modelo cool">
+        <span class="m-orden">Modelo 2</span>
+        <h2>k-vecinos, k = 3</h2>
+        <span class="m-clase">Aprendizaje por instancia</span>
+
+        <div class="m-pred">
+          <span class="m-num" id="vVecinos">—</span>
+          <span class="m-pie">promedio de los tres marcados</span>
+        </div>
+
+        <span class="m-etq">Los tres que promedia ahora</span>
+        <ul id="vecinos" class="vecinos"></ul>
+        <p class="m-nota">Al cruzar un umbral uno sale y otro entra: eso es el escalón.</p>
+
+        <span class="m-etq">Lo que guarda · 27 países</span>
         <div id="almacen" class="almacen"></div>
-        <span class="g-pie">El k-vecinos.</span>
-      </div>
+      </article>
     </div>
   </section>
 
@@ -115,23 +115,37 @@ import Base from "../../../layouts/Base.astro";
       padding: .25rem .7rem; color: var(--ink-2); }
     .control button:hover { border-color: var(--rule); color: var(--accent-ink); }
 
-    .lecturas { display: grid; gap: 1px; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-      background: var(--hairline); border: 1px solid var(--hairline); border-radius: 6px; overflow: hidden; }
-    .lec { background: var(--surface); padding: .85rem 1.1rem; display: flex; flex-direction: column; gap: .15rem; }
-    .lec .etq { font-family: var(--mono); font-size: .64rem; letter-spacing: .08em;
-      text-transform: uppercase; color: var(--muted); }
-    .lec .num { font-size: 1.8rem; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; }
-    .lec.warm .num { color: var(--warm); }
-    .lec.cool .num { color: var(--cool); }
-    .lec .pie { font-family: var(--mono); font-size: .68rem; color: var(--muted); }
-
-    .paneles { display: grid; gap: 1.1rem; align-items: start;
+    .modelos { display: grid; gap: 1.1rem; align-items: start;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
-    .panel { background: var(--surface); border: 1px solid var(--hairline); border-radius: 10px;
-      padding: 1.2rem 1.3rem; display: flex; flex-direction: column; gap: .7rem; box-shadow: var(--shadow); }
-    .p-etq { font-family: var(--mono); font-size: .66rem; letter-spacing: .1em;
+    .modelo { background: var(--surface); border: 1px solid var(--hairline); border-radius: 10px;
+      padding: 1.3rem 1.4rem 1.4rem; display: flex; flex-direction: column; gap: .45rem;
+      box-shadow: var(--shadow); border-top-width: 3px; }
+    .modelo.warm { border-top-color: var(--warm); }
+    .modelo.cool { border-top-color: var(--cool); }
+
+    .m-orden { font-family: var(--mono); font-size: .64rem; letter-spacing: .12em;
       text-transform: uppercase; color: var(--muted); }
-    .p-nota { font-size: .88rem; color: var(--ink-2); }
+    .modelo h2 { font-size: 1.3rem; }
+    .m-clase { font-family: var(--mono); font-size: .66rem; letter-spacing: .08em;
+      text-transform: uppercase; }
+    .modelo.warm .m-clase { color: var(--warm); }
+    .modelo.cool .m-clase { color: var(--cool); }
+
+    .m-pred { display: flex; flex-direction: column; gap: .1rem;
+      padding: .8rem 0 .9rem; margin-top: .3rem; border-block: 1px solid var(--hairline); }
+    .m-num { font-size: 2.6rem; font-weight: 600; line-height: 1; letter-spacing: -.02em;
+      font-variant-numeric: tabular-nums; }
+    .modelo.warm .m-num { color: var(--warm); }
+    .modelo.cool .m-num { color: var(--cool); }
+    .m-pie { font-family: var(--mono); font-size: .68rem; color: var(--muted); }
+
+    .m-etq { font-family: var(--mono); font-size: .64rem; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--muted); margin-top: .55rem; }
+    .m-nota { font-size: .86rem; color: var(--ink-2); }
+
+    .modelo code { display: block; font-size: .8rem; line-height: 1.7; color: var(--warm);
+      background: var(--surface-2); border: 1px solid var(--hairline);
+      border-radius: 6px; padding: .6rem .8rem; }
 
     /* Los hijos de .vecinos y .almacen los inyecta el script, así que nacen sin
        el atributo de ámbito de Astro. Por eso van con :global. */
@@ -142,11 +156,7 @@ import Base from "../../../layouts/Base.astro";
     .vecinos :global(.n) { font-size: .92rem; }
     .vecinos :global(.s) { font-family: var(--mono); font-size: .88rem; color: var(--cool); font-variant-numeric: tabular-nums; }
 
-    .guarda code { display: block; font-size: .8rem; line-height: 1.7; color: var(--warm);
-      background: var(--surface-2); border: 1px solid var(--hairline); border-radius: 6px; padding: .6rem .8rem; }
-    .g-pie { font-family: var(--mono); font-size: .68rem; color: var(--muted); display: block; margin-top: .35rem; }
-
-    .almacen { display: flex; flex-wrap: wrap; gap: .25rem; margin-top: .5rem; }
+    .almacen { display: flex; flex-wrap: wrap; gap: .25rem; }
     .almacen :global(.fila) { font-family: var(--mono); font-size: .68rem; padding: .15rem .45rem;
       border: 1px solid var(--hairline); border-radius: 4px; color: var(--muted); }
     .almacen :global(.fila[data-on="1"]) { border-color: var(--cool); color: var(--cool); background: var(--surface-2); }

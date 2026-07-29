@@ -166,9 +166,6 @@ function dibujar() {
   document.getElementById("vVecinos")!.textContent = vVecinos.toFixed(2);
   document.getElementById("vPib")!.textContent =
     "USD " + Math.round(pibActual).toLocaleString("es-MX");
-  document.getElementById("vDif")!.textContent =
-    Math.abs(vLineal - vVecinos).toFixed(2);
-
   // Quiénes son los vecinos ahora mismo
   document.getElementById("vecinos")!.innerHTML = vecinos
     .map((i) => {
