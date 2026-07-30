@@ -1,0 +1,63 @@
+{
+ "repeticiones": 20,
+ "calentamiento": 3,
+ "ram_total_gb": 16.0,
+ "modelos": [
+  {
+   "modelo": "extra_trees",
+   "run_id": "29cb56e91d824fdea6c555eeea9be4d0",
+   "run_name": "extra_trees_tuned",
+   "rmse": 0.4063,
+   "artefacto_mb": 703.4,
+   "base_mb": 258.0,
+   "modelo_mb": 2229.0,
+   "rss_mb": 2487.0,
+   "latencia_ms": 28.68,
+   "latencia_min_ms": 26.77,
+   "latencia_max_ms": 29.77,
+   "repeticiones": 20
+  },
+  {
+   "modelo": "random_forest",
+   "run_id": "f85d8f7f343d4cce9ba545f5f3a4ba7c",
+   "run_name": "random_forest_tuned",
+   "rmse": 0.4235,
+   "artefacto_mb": 199.3,
+   "base_mb": 258.0,
+   "modelo_mb": 714.0,
+   "rss_mb": 972.0,
+   "latencia_ms": 28.65,
+   "latencia_min_ms": 27.08,
+   "latencia_max_ms": 29.59,
+   "repeticiones": 20
+  },
+  {
+   "modelo": "xgboost",
+   "run_id": "ca09f3c690ad43528fbb6d5f65bef174",
+   "run_name": "xgboost_tuned",
+   "rmse": 0.4291,
+   "artefacto_mb": 2.4,
+   "base_mb": 258.0,
+   "modelo_mb": 123.0,
+   "rss_mb": 381.0,
+   "latencia_ms": 2.17,
+   "latencia_min_ms": 2.07,
+   "latencia_max_ms": 2.7,
+   "repeticiones": 20
+  },
+  {
+   "modelo": "gradient_boosting",
+   "run_id": "4d4b887d8697465293f7def777a57a2e",
+   "run_name": "gradient_boosting_tuned",
+   "rmse": 0.4514,
+   "artefacto_mb": 7.3,
+   "base_mb": 258.0,
+   "modelo_mb": 116.0,
+   "rss_mb": 374.0,
+   "latencia_ms": 1.9,
+   "latencia_min_ms": 1.88,
+   "latencia_max_ms": 2.01,
+   "repeticiones": 20
+  }
+ ]
+}

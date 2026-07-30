@@ -1,0 +1,223 @@
+/**
+ * El explorador del mapa: /ch02/california-housing/demo
+ *
+ * Las predicciones se calcularon una vez con el modelo entrenado y viven en
+ * /data/ch02.json (las genera `make site RUN_ID=<id>`). Aquí solo se filtran y
+ * se recalculan estadísticas, y eso sí ocurre en el navegador, sobre datos
+ * reales, sin servidor detrás.
+ *
+ * Las gráficas de resultados del capítulo están en ch02-resultados.ts. Los tres
+ * ayudantes de formato se repiten en los dos archivos a propósito: son diez
+ * líneas y así cada página carga solo lo que dibuja.
+ */
+
+type Fila = [number, number, number, number, number, number];
+const I = { lat: 0, lon: 1, real: 2, pred: 3, ocean: 4, inc: 5 } as const;
+
+const css = (v: string) =>
+  getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const usd = (v: number) => "USD " + Math.round(v * 100000).toLocaleString("en-US");
+const f3 = (v: number) => v.toFixed(3);
+
+let ROWS: Fila[] = [];
+let OCEAN: string[] = [];
+let visibles: Fila[] = [];
+
+const estado = { ocean: new Set<number>(), inc: new Set<number>(), modo: "error" };
+
+/* ── Color ─────────────────────────────────────────────────────────────── */
+const hex2rgb = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+const mezclar = (a: number[], b: number[], t: number) =>
+  a.map((v, i) => Math.round(v + (b[i] - v) * t));
+const rgb = (c: number[]) => `rgb(${c[0]},${c[1]},${c[2]})`;
+
+function colorDe(r: Fila): string {
+  if (estado.modo === "error") {
+    const e = r[I.pred] - r[I.real];
+    const t = Math.max(-1, Math.min(1, e));
+    const mid = hex2rgb(css("--mid"));
+    return t < 0
+      ? rgb(mezclar(mid, hex2rgb(css("--cool")), -t))
+      : rgb(mezclar(mid, hex2rgb(css("--warm")), t));
+  }
+  const v = estado.modo === "real" ? r[I.real] : r[I.pred];
+  const t = Math.max(0, Math.min(1, (v - 0.15) / (5.0 - 0.15)));
+  return rgb(mezclar(hex2rgb(css("--mid")), hex2rgb(css("--cool")), 0.18 + t * 0.82));
+}
+
+/* ── Mapa ──────────────────────────────────────────────────────────────── */
+const cv = document.getElementById("map") as HTMLCanvasElement;
+const ctx = cv.getContext("2d")!;
+const BX = [-124.4, -114.2];
+const BY = [32.4, 42.1];
+const PAD = 26;
+const px = (lon: number) => PAD + ((lon - BX[0]) / (BX[1] - BX[0])) * (cv.width - PAD * 2);
+const py = (lat: number) => cv.height - PAD - ((lat - BY[0]) / (BY[1] - BY[0])) * (cv.height - PAD * 2);
+
+function dibujarMapa(filas: Fila[]) {
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  ctx.globalAlpha = 0.62;
+  for (const r of filas) {
+    ctx.fillStyle = colorDe(r);
+    ctx.beginPath();
+    ctx.arc(px(r[I.lon]), py(r[I.lat]), 3.1, 0, 6.2832);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+/* ── Tooltip ───────────────────────────────────────────────────────────── */
+const tip = document.getElementById("tip")!;
+cv.addEventListener("pointermove", (ev) => {
+  const b = cv.getBoundingClientRect();
+  const s = cv.width / b.width;
+  const mx = (ev.clientX - b.left) * s;
+  const my = (ev.clientY - b.top) * s;
+  let best: Fila | null = null;
+  let bd = 900;
+  for (const r of visibles) {
+    const dx = px(r[I.lon]) - mx;
+    const dy = py(r[I.lat]) - my;
+    const d = dx * dx + dy * dy;
+    if (d < bd) { bd = d; best = r; }
+  }
+  if (!best) { tip.dataset.on = "0"; return; }
+  const err = best[I.pred] - best[I.real];
+  tip.innerHTML =
+    `<div class="head">${OCEAN[best[I.ocean]]} · ${best[I.lat].toFixed(2)}, ${best[I.lon].toFixed(2)}</div>` +
+    `<dl><dt>Real</dt><dd>${usd(best[I.real])}</dd>` +
+    `<dt>Predicho</dt><dd>${usd(best[I.pred])}</dd>` +
+    `<dt>Error</dt><dd style="color:${err < 0 ? "var(--cool)" : "var(--warm)"}">${err > 0 ? "+" : ""}${usd(err)}</dd></dl>`;
+  tip.dataset.on = "1";
+  const lx = px(best[I.lon]) / s;
+  const ly = py(best[I.lat]) / s;
+  tip.style.left = Math.min(Math.max(lx + 14, 4), b.width - 190) + "px";
+  tip.style.top = Math.max(ly - 52, 4) + "px";
+});
+cv.addEventListener("pointerleave", () => (tip.dataset.on = "0"));
+
+/* ── Estadísticas en vivo ──────────────────────────────────────────────── */
+function dibujarVivo(filas: Fila[]) {
+  const el = document.getElementById("live")!;
+  const n = filas.length;
+  if (!n) {
+    el.innerHTML = `<div><span class="k">Sin datos</span><span class="v">—</span></div>`;
+    return;
+  }
+  let se = 0, ae = 0, sesgo = 0;
+  for (const r of filas) {
+    const e = r[I.pred] - r[I.real];
+    se += e * e; ae += Math.abs(e); sesgo += e;
+  }
+  el.innerHTML = [
+    ["Distritos", n.toLocaleString("es-MX")],
+    ["RMSE", f3(Math.sqrt(se / n))],
+    ["Error medio abs.", usd(ae / n)],
+    ["Sesgo", (sesgo > 0 ? "+" : "") + usd(sesgo / n)],
+  ].map(([k, v]) => `<div><span class="k">${k}</span><span class="v">${v}</span></div>`).join("");
+}
+
+function dibujarLeyenda() {
+  const el = document.getElementById("legend")!;
+  el.innerHTML = estado.modo === "error"
+    ? `<span class="ramp"><span class="lbl">subestima</span>` +
+      `<i style="background:linear-gradient(90deg,${css("--cool")},${css("--mid")},${css("--warm")})"></i>` +
+      `<span class="lbl">sobreestima</span></span><span class="hint">gris = sin error</span>`
+    : `<span class="ramp"><span class="lbl">USD 15k</span>` +
+      `<i style="background:linear-gradient(90deg,${css("--mid")},${css("--cool")})"></i>` +
+      `<span class="lbl">USD 500k</span></span>`;
+}
+
+function dibujarTablaMapa(filas: Fila[]) {
+  const top = [...filas]
+    .sort((a, b) => Math.abs(b[I.pred] - b[I.real]) - Math.abs(a[I.pred] - a[I.real]))
+    .slice(0, 12);
+  document.getElementById("tblMap")!.innerHTML =
+    `<table><caption class="eyebrow" style="text-align:left;padding-bottom:.5rem">Los 12 errores mayores del subconjunto</caption>` +
+    `<thead><tr><th>Zona</th><th>Lat</th><th>Lon</th><th>Real</th><th>Predicho</th><th>Error</th></tr></thead><tbody>` +
+    top.map((r) => {
+      const e = r[I.pred] - r[I.real];
+      return `<tr><td>${OCEAN[r[I.ocean]]}</td><td>${r[I.lat].toFixed(2)}</td><td>${r[I.lon].toFixed(2)}</td>` +
+        `<td>${usd(r[I.real])}</td><td>${usd(r[I.pred])}</td><td>${(e > 0 ? "+" : "") + usd(e)}</td></tr>`;
+    }).join("") + `</tbody></table>`;
+}
+
+/* ── Filtros ───────────────────────────────────────────────────────────── */
+function chip(texto: string, activo: boolean, alPulsar: (b: HTMLButtonElement) => void) {
+  const b = document.createElement("button");
+  b.className = "chip";
+  b.type = "button";
+  b.textContent = texto;
+  b.setAttribute("aria-pressed", activo ? "true" : "false");
+  b.addEventListener("click", () => alPulsar(b));
+  return b;
+}
+
+function montarFiltros() {
+  const fOcean = document.getElementById("fOcean")!;
+  OCEAN.forEach((o, i) =>
+    fOcean.appendChild(chip(o, false, (b) => {
+      estado.ocean.has(i) ? estado.ocean.delete(i) : estado.ocean.add(i);
+      b.setAttribute("aria-pressed", estado.ocean.has(i) ? "true" : "false");
+      render();
+    })),
+  );
+
+  const fInc = document.getElementById("fInc")!;
+  ["1 · más bajo", "2", "3", "4", "5 · más alto"].forEach((lab, i) =>
+    fInc.appendChild(chip(lab, false, (b) => {
+      const c = i + 1;
+      estado.inc.has(c) ? estado.inc.delete(c) : estado.inc.add(c);
+      b.setAttribute("aria-pressed", estado.inc.has(c) ? "true" : "false");
+      render();
+    })),
+  );
+
+  const fModo = document.getElementById("fModo")!;
+  ([["error", "Error"], ["real", "Precio real"], ["pred", "Precio predicho"]] as const)
+    .forEach(([k, lab], i) =>
+      fModo.appendChild(chip(lab, i === 0, (b) => {
+        estado.modo = k;
+        [...fModo.children].forEach((c) =>
+          c.setAttribute("aria-pressed", c === b ? "true" : "false"));
+        render();
+      })),
+    );
+}
+
+function montarToggle() {
+  const btn = document.getElementById("tblMapBtn")!;
+  const tbl = document.getElementById("tblMap") as HTMLElement;
+  btn.addEventListener("click", () => {
+    const abierto = btn.getAttribute("aria-pressed") === "true";
+    btn.setAttribute("aria-pressed", abierto ? "false" : "true");
+    btn.textContent = abierto ? "Ver tabla" : "Ocultar tabla";
+    tbl.hidden = abierto;
+  });
+}
+
+function render() {
+  visibles = ROWS.filter(
+    (r) =>
+      (estado.ocean.size === 0 || estado.ocean.has(r[I.ocean])) &&
+      (estado.inc.size === 0 || estado.inc.has(r[I.inc])),
+  );
+  dibujarMapa(visibles);
+  dibujarVivo(visibles);
+  dibujarLeyenda();
+  dibujarTablaMapa(visibles);
+}
+
+/* ── Arranque ──────────────────────────────────────────────────────────── */
+const datos = await fetch("/data/ch02.json").then((r) => r.json());
+ROWS = datos.rows;
+OCEAN = datos.ocean;
+
+montarFiltros();
+montarToggle();
+render();
+
+// El canvas guarda píxeles ya resueltos, así que un cambio de tema obliga a
+// repintarlo: los colores salen de variables CSS que acaban de cambiar.
+document.addEventListener("tema-cambiado", render);
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", render);

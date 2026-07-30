@@ -29,14 +29,32 @@ puede medir, no se escribe.
 
 ## Cómo se avanza por el libro
 
-Un capítulo por carpeta, en orden. **Los ejercicios de fin de capítulo se dejan todos
-para cuando el libro esté terminado**, no se hacen según van saliendo: rompen el avance
-y son 19 capítulos.
+Un capítulo por carpeta, en orden. **Los ejercicios de fin de capítulo se hacen dentro
+de su capítulo**, no se acumulan para el final: un capítulo no está terminado hasta que
+sus ejercicios están resueltos y publicados.
 
-La excepción es el capítulo 3, cuyos cuatro ejercicios se completaron antes de tomar esa
-decisión.
+Así es como ya venía saliendo. El capítulo 3 resolvió sus cuatro, y el 2 resolvió sus
+seis sin proponérselo, porque el proyecto los necesitaba (`svr_study.py`,
+`RandomizedSearchCV`, `SelectFromModel`, el transformador de k-vecinos, la búsqueda
+sobre el preprocesamiento y el clon de `StandardScaler`).
 
-Estado al 2026-07-29: capítulos 1, 2 y 3 terminados y publicados. Sigue el 4.
+**Cuántos ejercicios tiene un capítulo se comprueba, no se recuerda.** La fuente es el
+notebook oficial de la tercera edición, que trae la sección «Exercise solutions» al final:
+
+```
+https://raw.githubusercontent.com/ageron/handson-ml3/main/0N_<nombre>.ipynb
+```
+
+Aquí ya se afirmó que el capítulo 2 tenía ocho y que le faltaban dos. Tiene seis, y el
+notebook cierra el sexto con «All good! That's all for today!». Los dos inventados
+llegaron a `CLAUDE.md` y a una página publicada.
+
+Un ejercicio que resuelve algo que el desarrollo ya usa no necesita página propia: vive
+donde se usa, y su detalle se despliega con `<details>` donde se lista. Solo el ejercicio
+con dataset propio o resultado medible propio se documenta por separado.
+
+Estado al 2026-07-29: capítulos 1, 2 y 3 terminados y publicados, con todos sus
+ejercicios. Sigue el 4.
 
 ## Estructura del repositorio
 
@@ -92,6 +110,33 @@ Nunca segunda persona. Ni imperativos dirigidos al lector, ni posesivos.
 | Mediste cien veces y elegiste | Fueron cien mediciones, y se eligió |
 
 Tampoco primera persona del plural: «le impusimos una forma» → «se le impuso una forma».
+
+### Los seis tics que se cuelan igual
+
+Cambiar los verbos a tercera persona no basta. El texto sigue sonando a alguien hablando
+por seis vías más, y son las que hay que revisar antes de dar una página por buena:
+
+| Tic | No | Sí |
+|---|---|---|
+| Demostrativo que señala con el dedo | **Eso** no entra en ningún plan gratuito | Queda por encima de lo que admite un plan gratuito |
+| Adverbio de queja o de énfasis | y **encima** tarda más · **justo** el reflejo | y tarda más · el reflejo |
+| Objeto que actúa como persona | La tabla **enseña** algo · el capítulo **intenta** corregir | En la tabla **aparece** · el capítulo **desaconseja** |
+| Verbo con un sujeto oculto que es el autor | Seis salieron **sin buscarlos** | Seis **ya estaban resueltos** |
+| Sentencia de veredicto | No es una concesión. Es la decisión correcta, y es la que se toma en producción todos los días | Cuando la precisión no distingue, el desempate lo pone el costo |
+| Fragmento que continúa una charla | **Con** una consecuencia incómoda: | De ahí se sigue una consecuencia incómoda. |
+
+El veredicto es el peor de los seis: tres frases para dictar una moraleja que el dato ya
+demostró. Una basta, y va en indicativo.
+
+Barrido antes de cerrar, sobre las páginas tocadas:
+
+```
+grep -nE "\b(Eso|Ahí|encima|obviamente|por supuesto|o sea|digamos)\b" <archivos>
+grep -nE "\b(nuestro|nuestra|nosotros|hicimos|vimos|medimos|tenemos|podemos|tu |tus |verás)\b" <archivos>
+```
+
+Da falsos positivos («por encima de» es preposición, «Quien mira» es tercera persona).
+Se revisan a mano, no se corrigen a ciegas.
 
 ### Nada de rayas
 
@@ -249,6 +294,8 @@ en `/accounts/<account_id>/tokens/verify`.
    consola, sin desbordamiento horizontal a 390 y a 1280 px**.
 3. Si hay demo, comprobar que sus números **coinciden con los que imprime Python**.
 4. `grep` de rayas (`—`) y de segunda persona en las páginas tocadas.
+5. Releer buscando **los seis tics**, que el `grep` no atrapa solos. Un texto en tercera
+   persona todavía puede sonar a alguien opinando.
 
 Servidor local para ir viendo cambios: `cd web && npm run dev` (queda en segundo plano;
 `npx astro dev stop` para bajarlo). Recarga sola al guardar. El JSON de datos no: ese

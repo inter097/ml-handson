@@ -9,3 +9,6 @@ matplotlib>=3.8
 seaborn>=0.13
 jupyter>=1.0
 xgboost>=2.0
+
+# Medición de memoria en src/cost.py
+psutil>=5.9

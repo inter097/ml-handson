@@ -1,0 +1,483 @@
+---
+import Base from "../../../layouts/Base.astro";
+
+// Los seis ejercicios del capítulo que el desarrollo resolvió por su cuenta,
+// porque los necesitaba. No tienen página propia: viven donde se usan, y el
+// detalle se despliega aquí con <details>, que no necesita JS.
+//
+// `evidencia` solo va cuando hay una cifra medida. Un ejercicio sin número no
+// lleva chip vacío: llevaría a leer como resultado algo que no se midió.
+//
+// `tono` sigue el código de color del resto del sitio: cool para lo que mejoró,
+// warm para lo que no, y sin tono para un dato que no apunta a ningún lado.
+const ejercicios = [
+  {
+    n: 1,
+    texto: "SVR con varios kernels e hiperparámetros",
+    donde: "src/svr_study.py",
+    evidencia: "135× entre la combinación más lenta y la más rápida", tono: "none",
+    pide: "Probar un SVR con distintos kernels e hiperparámetros. El enunciado advierte que SVM no escala bien y sugiere entrenar solo con las primeras 5,000 filas para que no tarde horas.",
+    cuerpo: [
+      "En lugar de lanzar la búsqueda y esperar, se midió antes de dónde venía el costo. La explicación cómoda era que SVR escala con el cuadrado del número de filas. Medido sobre cinco tamaños, el exponente real es <strong>1.33</strong>, y un ajuste completo sobre las 16,512 filas se proyecta en 6.2 segundos.",
+      "El costo está en <code>C</code>. Un solo ajuste con kernel polinómico y <code>C = 100</code> tarda <strong>60.5 s</strong>; con <code>rbf</code> y <code>C = 1</code>, 0.45 s. La misma cantidad de datos, 135 veces el tiempo, porque un <code>C</code> alto tolera menos error y eso multiplica los vectores de soporte.",
+      "Afinado sobre una submuestra de 8,000 filas llegó a 0.523 en validación y 0.531 en prueba, peor que su propia versión sin afinar con todos los datos. Ahí quedó, y por eso <code>svr</code> está fuera de <code>make tune-all</code>.",
+    ],
+    comando: "make svr-study",
+  },
+  {
+    n: 2,
+    texto: "Búsqueda aleatoria en lugar de rejilla",
+    donde: "src/tune.py",
+    evidencia: "137 candidatos registrados",
+    pide: "Sustituir GridSearchCV por RandomizedSearchCV.",
+    cuerpo: [
+      "Toda la búsqueda del capítulo usa <code>RandomizedSearchCV</code> con cinco pliegues. La rejilla no escala: cinco parámetros con cinco valores cada uno son 3,125 combinaciones, y añadir un parámetro más las multiplica. La aleatoria muestrea <code>n_iter</code> combinaciones de distribuciones continuas, así que el presupuesto se fija de antemano y explora valores que ninguna lista habría incluido (Bergstra y Bengio, 2012).",
+      "El añadido práctico está en el registro: cada candidato se guarda como ejecución anidada en MLflow, no solo el ganador. Sin eso, <code>cv_results_</code> se descarta al terminar y queda una sola cifra sin contexto. Con los 137 candidatos guardados se puede ver después qué movió la aguja y qué no.",
+    ],
+  },
+  {
+    n: 3,
+    texto: "Selección de variables dentro del pipeline",
+    donde: "src/preprocessing.py",
+    evidencia: "+0.0068 RMSE: empeora", tono: "none",
+    pide: "Añadir un transformador SelectFromModel al pipeline de preparación.",
+    cuerpo: [
+      "Es un paso opcional del pipeline, entre el preprocesamiento y el modelo: un <code>SelectFromModel</code> sobre un bosque de 50 árboles que descarta las columnas por debajo de un umbral de importancia.",
+      "El resultado es la única barra del lado malo en la gráfica de aportes. Descarta cerca de la mitad de las columnas y cuesta <strong>0.0068 de RMSE</strong> en <code>random_forest</code>. Con 20,640 filas y una docena de variables no hay problema de dimensionalidad que compense la información perdida.",
+      "Queda en el código porque el ejercicio pide construirlo, y porque el resultado negativo es parte de lo que enseña: la selección de variables no es gratis por defecto.",
+    ],
+  },
+  {
+    n: 4,
+    texto: "Transformador propio con k-vecinos sobre las coordenadas",
+    donde: "src/preprocessing.py",
+    evidencia: "−0.0146 RMSE · correlación 0.845 y no 0.993", tono: "gain",
+    pide: "Escribir un transformador que use un k-NN para predecir a partir de latitud y longitud.",
+    cuerpo: [
+      "<code>KNNGeoFeature</code> ajusta un k-vecinos (k = 10, pesos por distancia) sobre las coordenadas y mete su predicción como una columna más. Responde a <em>cuánto cuestan las casas de al lado</em>.",
+      "El detalle del que depende todo está en <code>fit_transform</code>: sobre el conjunto de entrenamiento devuelve predicciones <strong>fuera de pliegue</strong>, calculadas con <code>cross_val_predict</code>, no las del k-vecinos completo. Sin eso cada casa aparece entre sus propios vecinos y la columna copia la respuesta. Con la fuga, su correlación con el precio era 0.993; corregida, 0.845.",
+      "Sobre datos nuevos, en <code>transform</code>, ya se usa el k-vecinos entrenado con todo, porque ahí no hay solapamiento posible. Es la asimetría que <code>TransformerMixin</code> no daría gratis, y por eso el método está escrito a mano.",
+      "Aporta 0.0146 de RMSE en <code>random_forest</code> y 0.0121 en XGBoost, la segunda variable más útil del proyecto.",
+    ],
+  },
+  {
+    n: 5,
+    texto: "Explorar opciones de preparación en la misma búsqueda",
+    donde: "src/tune.py",
+    evidencia: "el óptimo estaba fuera del rango inicial", tono: "none",
+    pide: "Usar la búsqueda de hiperparámetros para explorar también las opciones de preparación de datos.",
+    cuerpo: [
+      "Tres decisiones del preprocesamiento entran en el mismo espacio de búsqueda que las del modelo: la estrategia de imputación (mediana o media), el número de barrios representativos del agrupamiento geográfico, y el <code>gamma</code> de la similitud a esos barrios.",
+      "Solo es posible porque el preprocesamiento vive dentro del <code>Pipeline</code>. La búsqueda lo reajusta en cada pliegue, así que puede decidir cómo imputar sin que la decisión se tome mirando los datos de validación.",
+      "Y dejó una lección sobre cómo se eligen los rangos: con el número de barrios acotado a 30, la búsqueda elegía exactamente 30. Tocar el borde del espacio significa que el óptimo puede estar más allá, así que el rango se extendió hasta 60.",
+    ],
+  },
+  {
+    n: 6,
+    texto: "Reimplementar StandardScaler desde cero",
+    donde: "src/preprocessing.py",
+    pide: "Reimplementar StandardScaler desde cero, y añadirle inverse_transform, feature_names_in_ cuando la entrada es un DataFrame, y get_feature_names_out.",
+    cuerpo: [
+      "No aporta nada al modelo: el de sklearn hace lo mismo y mejor. Lo que enseña es el contrato que cumple un transformador, que es lo que hace falta para escribir los propios, y de ahí salieron los dos de los ejercicios 3 y 4.",
+      "Hereda de <code>BaseEstimator</code>, que da <code>get_params</code> y <code>set_params</code>, y con eso el transformador funciona dentro de una búsqueda de hiperparámetros. Y de <code>TransformerMixin</code>, que da <code>fit_transform</code>.",
+      "Los tres añadidos que pide el enunciado están implementados: <code>inverse_transform</code>, <code>feature_names_in_</code> cuando entra un DataFrame, y <code>get_feature_names_out</code> con su argumento opcional. Y los cuatro detalles que suelen olvidarse: los atributos aprendidos llevan guion bajo final (<code>mean_</code>, <code>scale_</code>); <code>fit</code> guarda <code>n_features_in_</code> para detectar después una forma incompatible; <code>transform</code> comprueba con <code>check_is_fitted</code> antes de usarse; y una columna constante tiene desviación cero, así que se deja pasar sin escalar en vez de dividir entre ella.",
+    ],
+  },
+];
+---
+
+<Base
+  title="California Housing · el desarrollo completo"
+  description="Pipeline de machine learning sobre California Housing: qué mejoró el modelo, qué no, y qué no se puede afirmar."
+  capitulo="ch02"
+>
+  <header class="wrap hero">
+    <span class="eyebrow">Capítulo 2 · California Housing</span>
+    <h1>Lo que el modelo aprendió,<br />y lo que no se puede afirmar</h1>
+    <p class="lede">
+      20,640 viviendas, nueve modelos, 180 experimentos registrados. El resultado
+      interesante no fue el error más bajo, sino descubrir cuáles de las mejoras eran
+      reales y cuáles solo lo parecían.
+    </p>
+
+    <div class="stat-row">
+      <div class="stat"><span class="k">Modelo desplegado</span><span class="v">XGBoost</span><span class="n">300 árboles · 2.4 MB</span></div>
+      <div class="stat"><span class="k">RMSE en test</span><span class="v">0.429</span><span class="n">± USD 42,910</span></div>
+      <div class="stat"><span class="k">R²</span><span class="v">0.863</span><span class="n">4,128 casas</span></div>
+      <div class="stat"><span class="k">Latencia</span><span class="v">2.2 ms</span><span class="n">por predicción</span></div>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <svg class="interval-rule" viewBox="0 0 100 13" preserveAspectRatio="none" aria-hidden="true">
+      <line class="band" x1="18" y1="6.5" x2="82" y2="6.5"></line>
+      <line class="cap" x1="18" y1="2.5" x2="18" y2="10.5"></line>
+      <line class="cap" x1="82" y1="2.5" x2="82" y2="10.5"></line>
+      <circle class="pt" cx="44" cy="6.5" r="3"></circle>
+    </svg>
+  </div>
+
+  <!-- ══ HALLAZGOS ═════════════════════════════════════════════════════ -->
+  <section class="wrap">
+    <div class="stack" style="margin-bottom:.6rem">
+      <span class="eyebrow">Hallazgos</span>
+      <h2>Tres cosas que resultaron al revés de lo esperado</h2>
+    </div>
+
+    <div class="finding">
+      <div class="finding-head">
+        <h3>La variable “más importante” no mejoraba nada</h3>
+        <span class="evidence" data-tone="none">+0.004 RMSE en XGBoost</span>
+      </div>
+      <p>
+        El dataset incluye una variable categórica que dice si el distrito está tierra
+        adentro, cerca de la bahía o frente al mar. Al añadirla, XGBoost la reportó como
+        su variable <strong>número uno</strong> por importancia, 0.61 contra 0.14 del
+        ingreso medio, que era el favorito hasta entonces. Parecía la mejora grande del
+        proyecto.
+      </p>
+      <p>
+        Midiendo con una ablación (mismo conjunto, misma semilla, única diferencia la
+        columna) resultó que mejora seis de siete modelos por márgenes mínimos, y que a
+        XGBoost <strong>lo empeora</strong>.
+      </p>
+      <p class="note">
+        La explicación: latitud y longitud ya estaban ahí. “Cerca del mar” era deducible
+        de las coordenadas, solo que costaba varios cortes. Al recibirlo servido, el
+        modelo lo usa de inmediato y reordena su ranking de importancia, pero la
+        información no era nueva. <strong>Importancia alta no significa mejora
+        predictiva</strong> cuando hay redundancia.
+      </p>
+    </div>
+
+    <div class="finding">
+      <div class="finding-head">
+        <h3>Lo que sí funcionó fue darle la geografía masticada</h3>
+        <span class="evidence" data-tone="gain">−0.036 RMSE</span>
+      </div>
+      <p>
+        Un árbol solo puede partir el espacio con cortes rectangulares sobre latitud y
+        longitud, así que aproximar “cerca de San Francisco” le cuesta muchos cortes y
+        nunca queda fino. La solución del libro es un transformador propio: agrupar las
+        coordenadas con <strong>K-means</strong> y reemplazar cada casa por su
+        <strong>similitud a cada centro</strong>.
+      </p>
+      <p>
+        Fue el cambio que más rindió de todo el proyecto, más que cualquier ajuste de
+        hiperparámetros. Y reordenó por completo la tabla: los métodos que promedian
+        árboles independientes, que eran los más penalizados por tener que aproximar la
+        geografía a mano, pasaron a ganarle a los de boosting.
+      </p>
+    </div>
+
+    <div class="finding">
+      <div class="finding-head">
+        <h3>Una variable que se veía excelente estaba haciendo trampa</h3>
+        <span class="evidence" data-tone="none">correlación 0.85 contra 0.99</span>
+      </div>
+      <p>
+        Siguiendo la misma idea, se añadió otra variable geográfica: un
+        <strong>k-vecinos</strong> sobre las coordenadas que responde <em>“¿cuánto
+        cuestan las casas de al lado?”</em>. Su respuesta entra al modelo como una
+        columna más.
+      </p>
+      <p>
+        En la primera versión su correlación con el precio era de <strong>0.993</strong>.
+        Una variable casi perfecta, y ahí estaba el problema: <strong>era demasiado
+        buena</strong>.
+      </p>
+      <p class="note">
+        El k-vecinos se había entrenado con las mismas casas sobre las que después
+        predecía, así que <strong>cada casa aparecía entre sus propios vecinos</strong>.
+        Estaba copiando la respuesta. Calculando la predicción de cada fila con un modelo
+        que nunca la vio, la correlación cae a <strong>0.845</strong>. Ese es su valor
+        real.
+      </p>
+      <p>
+        Aun corregida, sigue siendo la segunda variable más útil del proyecto. Pero sin
+        ese ajuste habría lucido espléndida durante el entrenamiento y se habría
+        derrumbado en producción.
+      </p>
+    </div>
+  </section>
+
+  <section class="wide stack">
+    <figure>
+      <div class="fig-head">
+        <span class="fig-title">Cuánto aportó cada decisión</span>
+        <button class="toggle" id="tblAportesBtn" aria-pressed="false" aria-controls="tblAportes">Ver tabla</button>
+      </div>
+      <div class="fig-body">
+        <svg class="chart" id="aportes" viewBox="0 0 720 352" role="img"
+          aria-label="Cambio en RMSE por decisión de modelado; valores negativos mejoran"></svg>
+      </div>
+      <div class="fig-body scroll-x" id="tblAportes" hidden style="padding-top:0"></div>
+      <figcaption>
+        Medido con ablación sobre el mismo conjunto: se quita el elemento y se vuelve a
+        entrenar. La selección de variables aparece del lado malo porque descarta la mitad
+        de las columnas y cuesta precisión. La partición estratificada no aparece porque
+        no mueve el error. Hace que el número sea confiable, que es otra cosa.
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- ══ DÓNDE FALLA ═══════════════════════════════════════════════════ -->
+  <section class="wrap stack">
+    <span class="eyebrow">Dónde falla</span>
+    <h2>El error no está repartido por igual</h2>
+    <p>
+      Un RMSE es un número por 4,128 distritos, y esconde que el modelo se equivoca mucho
+      más en unas zonas que en otras. Los 4,128 puntos del conjunto de prueba, con su
+      error real y filtrables por zona y por tramo de ingreso, están en la demo.
+    </p>
+  </section>
+
+  <section class="wrap compacta">
+    <a class="ir-demo" href="/ch02/california-housing/demo">
+      <span class="demo-etq">Demo</span>
+      <span class="demo-txt">El mapa de los 4,128 distritos, con las métricas recalculándose por subconjunto</span>
+    </a>
+  </section>
+
+  <!-- ══ INTERVALOS ════════════════════════════════════════════════════ -->
+  <section class="wrap stack">
+    <span class="eyebrow">El hallazgo incómodo</span>
+    <h2>Tres modelos empatados, aunque la tabla diga otra cosa</h2>
+    <p>
+      Con todo afinado, <code>extra_trees</code> quedó primero con 0.4063 de RMSE y
+      XGBoost tercero con 0.4291. Ordenar por esa columna y declarar un ganador es el
+      reflejo natural. Es también un error.
+    </p>
+    <p>
+      El RMSE sale de una muestra concreta de 4,128 casas. Con otras 4,128 habría dado
+      distinto. El intervalo de confianza acota cuánto puede moverse, y cuando dos
+      intervalos se traslapan, <strong>la diferencia cabe dentro del ruido del
+      muestreo</strong>.
+    </p>
+  </section>
+
+  <section class="wide stack">
+    <figure>
+      <div class="fig-head">
+        <span class="fig-title">RMSE con intervalo de confianza al 95%</span>
+        <button class="toggle" id="tblCiBtn" aria-pressed="false" aria-controls="tblCi">Ver tabla</button>
+      </div>
+      <div class="fig-body">
+        <svg class="chart" id="ci" viewBox="0 0 720 236" role="img"
+          aria-label="RMSE de cuatro modelos con sus intervalos de confianza al 95 por ciento"></svg>
+      </div>
+      <div class="fig-body scroll-x" id="tblCi" hidden style="padding-top:0"></div>
+      <figcaption>
+        Calculado con la distribución t sobre los errores cuadrados del conjunto de
+        prueba. Los tres primeros se solapan entre sí: no hay evidencia para ordenarlos.
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- ══ PRACTICIDAD ═══════════════════════════════════════════════════ -->
+  <section class="wrap stack">
+    <span class="eyebrow">La decisión</span>
+    <h2>Entonces gana el que se puede desplegar</h2>
+    <p>
+      Si la precisión no distingue a los tres primeros, el desempate lo pone lo que sí se
+      puede medir sin ambigüedad. Y ahí la diferencia no es sutil.
+    </p>
+  </section>
+
+  <section class="wide stack">
+    <figure>
+      <div class="fig-head"><span class="fig-title">Costo de servir cada modelo</span></div>
+      <div class="fig-body scroll-x" id="tblCosto"></div>
+      <figcaption>
+        Medido con <code>make cost</code>: cada artefacto se carga en su propio
+        subproceso y se cronometran 20 predicciones de una sola fila, de las que se
+        reporta la mediana. <em>Modelo en RAM</em> es lo que añade el modelo al cargarse;
+        <em>proceso</em> incluye además los 258 MB de suelo del intérprete y las
+        librerías, idénticos en los cuatro, y es lo que hay que provisionar de verdad.
+      </figcaption>
+    </figure>
+  </section>
+
+  <section class="wrap stack">
+    <p>
+      <code>extra_trees</code> requiere <strong>2.2 GB</strong> de memoria para el modelo
+      y 2.5 GB de proceso, por encima de lo que admite un plan gratuito o un servidor
+      pequeño, y tarda trece veces más por petición. XGBoost ocupa 2.4 MB de artefacto,
+      0.4 GB de proceso, y responde en 2.2 milisegundos.
+    </p>
+    <p class="note">
+      El intercambio son 0.023 de RMSE que no se pueden demostrar, contra un artefacto 293
+      veces más pequeño. Cuando la precisión no distingue, el desempate lo pone el costo.
+    </p>
+    <p>
+      En la tabla aparece además un resultado que no se buscaba:
+      <strong><code>random_forest</code> tarda lo mismo que <code>extra_trees</code></strong>,
+      28.7 ms los dos. La lentitud no corresponde a un modelo sino a la familia: ambos
+      promedian 300 árboles crecidos sin podar, y cada predicción los recorre enteros. Los
+      de boosting podan a 7 niveles y bajan a 2 ms.
+    </p>
+    <p>
+      De ahí se sigue una consecuencia incómoda. <code>gradient_boosting</code> quedó
+      cuarto, y su intervalo no se traslapa con el de <code>extra_trees</code>: contra el
+      mejor de la tabla sí es medible que es peor. Pero <strong>sí se traslapa con el de
+      XGBoost</strong>, que es el modelo desplegado. Entre esos dos la precisión tampoco
+      distingue.
+    </p>
+    <p class="note">
+      Y en costo <code>gradient_boosting</code> va parejo o por delante: 1.9 ms contra 2.2,
+      y 116 MB de modelo contra 123. Lo único donde XGBoost gana con holgura es el
+      artefacto, 2.4 MB contra 7.3. Ese es el criterio que de verdad separa a los dos, y no
+      se aplicó nunca, porque la comparación de despliegue se cerró sobre los dos primeros
+      del RMSE sin revisar quién más tenía el intervalo traslapado.
+    </p>
+  </section>
+
+  <section class="wide stack">
+    <span class="eyebrow">Resultados</span>
+    <h2>Tabla completa</h2>
+    <figure>
+      <div class="fig-body scroll-x" id="tblTodos"></div>
+      <figcaption>
+        Siete de los nueve pasaron por búsqueda aleatoria de hiperparámetros, sobre el
+        modelo <em>y</em> el preprocesamiento. Cada combinación probada quedó registrada en
+        MLflow como ejecución anidada: 137 candidatos en total.
+      </figcaption>
+    </figure>
+  </section>
+
+  <section class="wrap stack">
+    <h3>Los dos huecos de la columna de validación</h3>
+    <p>
+      <code>linear_regression</code> no tiene hiperparámetros que buscar, así que nunca
+      entró en una búsqueda y no hay nada que anotar en esa columna. Su RMSE de prueba es
+      su único número.
+    </p>
+    <p>
+      <code>svr</code> sí quedó fuera por decisión, y con medición detrás.
+      <code>svr_study.py</code> encontró que el costo de la búsqueda no está en el tamaño
+      del conjunto (el ajuste escala con <strong>n^1.33</strong>, no con n²) sino en el
+      valor de <code>C</code>: con kernel polinómico y <code>C = 100</code> un solo ajuste
+      tarda <strong>60.5 s</strong>, contra 0.45 s con <code>rbf</code> y
+      <code>C = 1</code>. Multiplicado por cinco pliegues y decenas de candidatos, la
+      búsqueda completa no cabía en el presupuesto del capítulo.
+    </p>
+    <p class="note">
+      Afinado sobre una submuestra de 8,000 filas llegó a 0.523 en validación y 0.531 en
+      prueba, peor que los 0.509 de su propia versión sin afinar con todos los datos, y
+      lejos de los 0.429 del mejor. La búsqueda entera habría confirmado lo que la
+      submuestra ya sugiere. Reproducible con <code>make svr-study</code>.
+    </p>
+  </section>
+
+  <!-- ══ EJERCICIOS ════════════════════════════════════════════════════ -->
+  <section class="wrap stack">
+    <span class="eyebrow">Los ejercicios</span>
+    <h2>Los seis, resueltos dentro del desarrollo</h2>
+    <p>
+      El capítulo cierra con seis ejercicios, y al terminar el proyecto estaban los seis
+      hechos dentro del código, no por adelantarse a la lista sino porque el desarrollo los
+      necesitaba. Ninguno tiene página propia: cada uno vive en el archivo donde se usa.
+    </p>
+  </section>
+
+  <section class="wide stack">
+    <figure>
+      <div class="ejs">
+        {ejercicios.map((e) => (
+          <details class="ej">
+            <summary>
+              <span class="ej-n">Ejercicio {e.n}</span>
+              <span class="ej-t">{e.texto}</span>
+              <code class="ej-f">{e.donde}</code>
+              {e.evidencia && <span class="ej-ev" data-tono={e.tono}>{e.evidencia}</span>}
+            </summary>
+            <div class="ej-cuerpo">
+              <p class="ej-pide"><span class="ej-etq">Qué pide</span>{e.pide}</p>
+              {e.cuerpo.map((p) => <p set:html={p} />)}
+              {e.comando && <p class="ej-cmd"><code>{e.comando}</code></p>}
+            </div>
+          </details>
+        ))}
+      </div>
+      <figcaption>
+        Cada uno se despliega con su enunciado, lo que se hizo y la cifra que dejó.
+        Enunciados según el notebook de la tercera edición.
+      </figcaption>
+    </figure>
+  </section>
+
+  <section class="wrap stack">
+    <span class="eyebrow">Detalles</span>
+    <dl class="kv">
+      <dt>Datos</dt><dd>California Housing, 20,640 distritos del censo de 1990. CSV original del repositorio del libro.</dd>
+      <dt>Partición</dt><dd>80/20 estratificada por categoría de ingreso. Una partición aleatoria simple subrepresentaba el estrato más pobre en 9.4%.</dd>
+      <dt>Preprocesamiento</dt><dd>Imputación por mediana, estandarización, codificación one-hot y similitud a centros geográficos, todo dentro del <code>Pipeline</code>.</dd>
+      <dt>Seguimiento</dt><dd>MLflow. 180 ejecuciones, 137 de ellas candidatos anidados de las búsquedas.</dd>
+    </dl>
+  </section>
+
+  <style>
+    .hero { padding-top: clamp(2.5rem, 7vw, 4.5rem); display: flex; flex-direction: column; gap: 1.4rem; }
+    .hero .lede { font-size: 1.18rem; color: var(--ink-2); max-width: 58ch; }
+    .hero .stat-row { margin-top: 1rem; }
+
+    .compacta { padding-block: clamp(.7rem, 1.6vw, 1.1rem); }
+
+    /* El mapa vivía aquí. Ahora en su sitio queda la puerta a la demo. */
+    .ir-demo { display: flex; align-items: baseline; gap: .7rem; flex-wrap: wrap;
+      background: var(--surface); border: 1px solid var(--hairline); border-radius: 8px;
+      box-shadow: var(--shadow); padding: 1rem 1.2rem; text-decoration: none;
+      transition: border-color .15s, background .15s; }
+    .ir-demo:hover { border-color: var(--rule); background: var(--surface-2); }
+    .demo-etq { font-family: var(--mono); font-size: .64rem; letter-spacing: .1em; text-transform: uppercase;
+      color: var(--accent-ink); border: 1px solid var(--rule); border-radius: 999px; padding: .1rem .5rem; }
+    .demo-txt { font-size: .92rem; color: var(--ink-2); }
+
+    table.prose td:first-child { width: 7.5rem; }
+
+    /* Los ejercicios: plegados por defecto. El resumen dice qué es y qué midió;
+       el detalle solo aparece si se pide. Con <details> nativo no hace falta JS
+       y el teclado funciona solo. */
+    .ejs > .ej + .ej { border-top: 1px solid var(--hairline); }
+
+    .ej > summary {
+      display: grid; gap: .15rem .8rem; cursor: pointer;
+      grid-template-columns: 7.5rem 1fr; align-items: baseline;
+      padding: .95rem 1.25rem; list-style: none;
+    }
+    .ej > summary::-webkit-details-marker { display: none; }
+    .ej > summary:hover { background: var(--surface-2); }
+    .ej[open] > summary { background: var(--surface-2); }
+
+    .ej-n { font-family: var(--mono); font-size: .78rem; color: var(--ink-2); }
+    .ej-t { font-size: .95rem; }
+    /* El signo va pegado al título, no en una columna propia: al plegarse en
+       móvil una columna de 1 rem se quedaba huérfana. */
+    .ej-t::after { content: " +"; font-family: var(--mono); color: var(--muted); }
+    .ej[open] .ej-t::after { content: " −"; }
+
+    .ej-f, .ej-ev { grid-column: 2; font-size: .72rem; }
+    .ej-f { font-family: var(--mono); color: var(--muted); background: none; padding: 0; }
+    .ej-ev { font-family: var(--mono); color: var(--muted); }
+    .ej-ev[data-tono="gain"] { color: var(--cool); }
+    .ej-ev[data-tono="none"] { color: var(--warm); }
+
+    .ej-cuerpo { padding: .2rem 1.25rem 1.3rem; display: flex; flex-direction: column; gap: .8rem; }
+    .ej-cuerpo p { font-size: .92rem; color: var(--ink-2); max-width: var(--measure); }
+    .ej-etq {
+      display: block; font-family: var(--mono); font-size: .64rem; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: .2rem;
+    }
+    .ej-pide { color: var(--ink); }
+    .ej-cmd code { font-size: .78rem; }
+
+    @media (max-width: 34rem) {
+      .ej > summary { grid-template-columns: 1fr; }
+      .ej-f, .ej-ev { grid-column: 1; }
+    }
+  </style>
+
+  <script>
+    import "../../../scripts/ch02-resultados.ts";
+  </script>
+</Base>

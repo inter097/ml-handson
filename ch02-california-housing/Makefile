@@ -1,4 +1,4 @@
-.PHONY: all setup data features train-all tune-all analysis evaluate predict site svr-study ui clean help
+.PHONY: all setup data features train-all tune-all analysis evaluate cost cost-check predict site svr-study ui clean help
 
 # El entorno y el registro de experimentos viven en la raíz del repo y se
 # comparten entre capítulos. ROOT se resuelve desde la ruta de este Makefile,
@@ -77,6 +77,16 @@ analysis:
 evaluate:
 	$(PYTHON) src/evaluate.py --run-id $(RUN_ID)
 
+# ── Costo de servir cada modelo ──────────────────────────────────────────────
+# Carga cada artefacto en su propio subproceso y mide tamaño, memoria y latencia.
+# `cost-check` proyecta el pico sin cargar nada y aborta si pasa el 45% de la RAM.
+
+cost-check:
+	$(PYTHON) src/cost.py --check
+
+cost:
+	$(PYTHON) src/cost.py
+
 # ── Inferencia ───────────────────────────────────────────────────────────────
 # Uso: make predict RUN_ID=<id>            → demo con 5 filas del test set
 #      make predict RUN_ID=<id> INPUT=x.csv → predice sobre un CSV crudo
@@ -115,6 +125,8 @@ help:
 	@echo "  make analysis       Importancia de features + curvas de aprendizaje → reports/"
 	@echo "  make ui             Abrir MLflow UI en http://localhost:5000"
 	@echo "  make evaluate RUN_ID=<id>  Evaluar el mejor run y guardar reporte"
+	@echo "  make cost           Medir tamaño, memoria y latencia de cada modelo"
+	@echo "  make cost-check     Solo proyectar el pico de memoria, sin cargar nada"
 	@echo "  make predict RUN_ID=<id>   Predecir (--demo o INPUT=archivo.csv)"
 	@echo "  make site RUN_ID=<id>      Generar los datos del sitio (web/public/data/)"
 	@echo "  make clean          Borrar datos y runs locales"

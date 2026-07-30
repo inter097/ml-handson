@@ -1,0 +1,106 @@
+---
+import Base from "../../../layouts/Base.astro";
+---
+
+<Base
+  title="Demo de California Housing: dónde se equivoca el modelo"
+  description="Los 4,128 distritos del conjunto de prueba, coloreados por error de predicción, con las métricas recalculándose sobre cada subconjunto."
+  capitulo="ch02"
+>
+  <header class="wrap hero">
+    <span class="eyebrow">Capítulo 2 · Demo</span>
+    <h1>Dónde se equivoca el modelo</h1>
+  </header>
+
+  <section class="wrap stack compacta-fin">
+    <div class="ficha">
+      <div><span class="f-etq">Entrada</span><p>Ocho variables del distrito: <strong>ingreso medio</strong>, antigüedad, habitaciones, población, coordenadas y proximidad al océano.</p></div>
+      <div><span class="f-etq">Salida</span><p>El <strong>precio medio de la vivienda</strong> del distrito, en dólares.</p></div>
+      <div><span class="f-etq">Tarea</span><p>Regresión.</p></div>
+    </div>
+  </section>
+
+  <section class="wrap compacta">
+    <figure>
+      <div class="filters">
+        <div class="fgroup">
+          <span class="eyebrow">Proximidad al océano</span>
+          <div class="chips" id="fOcean"></div>
+        </div>
+        <div class="fgroup">
+          <span class="eyebrow">Categoría de ingreso</span>
+          <div class="chips" id="fInc"></div>
+        </div>
+        <div class="fgroup">
+          <span class="eyebrow">Colorear por</span>
+          <div class="chips" id="fModo"></div>
+        </div>
+      </div>
+
+      <div class="map-shell">
+        <canvas id="map" width="1000" height="820" role="img"
+          aria-label="Mapa de California con 4,128 distritos coloreados por error de predicción"></canvas>
+        <div class="tip" id="tip" role="status"></div>
+      </div>
+
+      <div class="map-live" id="live"></div>
+
+      <div class="fig-body legend-row">
+        <div class="legend" id="legend"></div>
+        <button class="toggle" id="tblMapBtn" aria-pressed="false" aria-controls="tblMap">Ver tabla</button>
+      </div>
+      <div class="fig-body scroll-x" id="tblMap" hidden style="padding-top:0"></div>
+    </figure>
+  </section>
+
+  <section class="wrap compacta">
+    <p class="nota">
+      Cada punto es un distrito que el modelo nunca vio al entrenar. Las predicciones se
+      calcularon una vez y se sirven como JSON; los filtros y las métricas se computan en
+      el navegador.
+    </p>
+  </section>
+
+  <section class="wrap compacta">
+    <p class="enlaces">
+      <a href="/ch02/california-housing">El desarrollo completo</a>
+      <a href="/ch02">Capítulo 2</a>
+    </p>
+  </section>
+
+  <script>
+    import "../../../scripts/ch02-mapa.ts";
+  </script>
+
+  <style>
+    .hero { padding-top: clamp(2.2rem, 6vw, 3.6rem); display: flex; flex-direction: column; gap: .6rem; }
+
+    /* Ficha, mapa y nota son una sola unidad. El aire por defecto de <section>
+       se suma entre cada par y los separa como si fueran temas distintos. */
+    .compacta { padding-block: clamp(.7rem, 1.6vw, 1.1rem); }
+    .compacta-fin { padding-bottom: clamp(.7rem, 1.6vw, 1.1rem); }
+
+    .ficha { display: grid; gap: 1px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      background: var(--hairline); border: 1px solid var(--hairline); border-radius: 6px; overflow: hidden; }
+    .ficha > div { background: var(--surface); padding: .95rem 1.1rem; display: flex; flex-direction: column; gap: .25rem; }
+    .f-etq { font-family: var(--mono); font-size: .64rem; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--muted); }
+    .ficha p { font-size: .9rem; color: var(--ink-2); }
+
+    .filters { display: flex; flex-wrap: wrap; gap: 1.1rem 1.6rem; align-items: flex-end;
+      padding: 1.1rem 1.25rem; border-bottom: 1px solid var(--hairline); }
+    .fgroup { display: flex; flex-direction: column; gap: .45rem; }
+    .fgroup > .eyebrow { font-size: .65rem; }
+    .chips { display: flex; flex-wrap: wrap; gap: .35rem; }
+
+    .map-shell { position: relative; }
+    #map { display: block; width: 100%; height: auto; touch-action: pan-y; }
+    .map-live { display: grid; grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+      gap: 1px; background: var(--hairline); border-top: 1px solid var(--hairline); }
+    .legend-row { display: flex; flex-wrap: wrap; gap: .9rem 1.5rem; align-items: center; justify-content: space-between; }
+
+    .nota { font-size: .88rem; color: var(--muted); }
+    .enlaces { display: flex; flex-wrap: wrap; gap: .4rem 1.4rem;
+      font-family: var(--mono); font-size: .76rem; }
+  </style>
+</Base>

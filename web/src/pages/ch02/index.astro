@@ -1,0 +1,281 @@
+---
+import Base from "../../layouts/Base.astro";
+
+// Lo práctico del capítulo vive en páginas propias. Aquí solo queda el método y
+// el enlace a cada pieza.
+const practicas = [
+  {
+    href: "/ch02/california-housing",
+    nombre: "California Housing",
+    titulo: "Los ocho pasos, ejecutados",
+    resumen:
+      "20,640 distritos del censo de 1990, nueve modelos y 180 experimentos registrados. Los tres primeros resultaron indistinguibles entre sí, y el desempate lo puso el costo de servirlos.",
+    cifras: [
+      ["Error", "USD 42,910"],
+      ["R²", "0.863"],
+      ["Modelos", "9"],
+    ],
+    demo: "/ch02/california-housing/demo",
+    demoTxt: "El mapa de los 4,128 distritos, coloreados por error",
+  },
+];
+
+const pasos = [
+  ["Enmarcar el problema", "Qué se predice, quién usará la respuesta, y con qué métrica se juzga. La métrica se elige antes de entrenar, no después de ver los resultados."],
+  ["Obtener los datos", "Y apartar el conjunto de prueba de inmediato, antes de mirarlos."],
+  ["Explorar", "Distribuciones, correlaciones, valores atípicos y huecos. Solo sobre el conjunto de entrenamiento."],
+  ["Preparar", "Imputar, escalar, codificar y combinar variables. Todo dentro del pipeline, nunca a mano sobre la tabla completa."],
+  ["Entrenar", "Varios modelos con parámetros por defecto, para saber desde dónde se parte."],
+  ["Afinar", "Buscar hiperparámetros sobre el mejor puñado, con validación cruzada."],
+  ["Presentar", "Explicar qué funcionó, qué no, y qué no se puede afirmar."],
+  ["Desplegar", "El modelo recibe datos crudos y responde. Lo que se despliega es el pipeline entero, no el estimador solo."],
+];
+---
+
+<Base
+  title="Proyecto de punta a punta · capítulo 2"
+  description="El método de ocho pasos del capítulo 2: apartar el conjunto de prueba, meter el preprocesamiento en el pipeline, y no confundir una diferencia con el ruido del muestreo."
+  capitulo="ch02"
+>
+  <header class="wrap hero">
+    <span class="eyebrow">Capítulo 2 · Proyecto de punta a punta</span>
+    <h1>Un orden de trabajo,<br />no una colección de trucos</h1>
+    <p class="lede">
+      El capítulo más largo del libro no enseña un algoritmo. Enseña
+      <strong>en qué orden se hacen las cosas</strong> para que el número final signifique
+      algo, y señala los puntos del procedimiento que se contaminan solos cuando nadie los
+      vigila.
+    </p>
+  </header>
+
+  <div class="wrap">
+    <svg class="interval-rule" viewBox="0 0 100 13" preserveAspectRatio="none" aria-hidden="true">
+      <line class="band" x1="18" y1="6.5" x2="82" y2="6.5"></line>
+      <line class="cap" x1="18" y1="2.5" x2="18" y2="10.5"></line>
+      <line class="cap" x1="82" y1="2.5" x2="82" y2="10.5"></line>
+      <circle class="pt" cx="44" cy="6.5" r="3"></circle>
+    </svg>
+  </div>
+
+  <!-- ══ LOS OCHO PASOS ════════════════════════════════════════════════ -->
+  <section class="wide stack">
+    <span class="eyebrow">El método</span>
+    <h2>Los ocho pasos</h2>
+    <figure>
+      <div class="fig-body">
+        <table class="prose">
+          <tbody>
+            {pasos.map(([paso, qué]) => (
+              <tr><td>{paso}</td><td>{qué}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <figcaption>
+        Se siguen siempre, en un problema de casas o en cualquier otro. El resto de esta
+        página son los cuatro pasos donde algo puede salir mal sin que se note.
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- ══ APARTAR EL TEST ═══════════════════════════════════════════════ -->
+  <section class="wrap stack">
+    <span class="eyebrow">Paso 2</span>
+    <h2>El conjunto de prueba se aparta antes de mirar los datos</h2>
+    <p>
+      Es el paso que más se salta, porque parece burocracia. Explorar primero y partir
+      después resulta más natural y no cuesta nada, y en eso consiste el peligro: no
+      cuesta nada y tampoco se nota.
+    </p>
+    <p>
+      Quien mira los datos completos empieza a formarse ideas sobre qué variables importan
+      y qué transformaciones convienen. Esas ideas ya vienen contaminadas por casos que
+      luego servirán de examen. El nombre del libro para eso es <strong>sesgo de
+      indagación de datos</strong>, y su efecto es un error de prueba optimista que nadie
+      puede detectar mirando la tabla de resultados.
+    </p>
+    <p class="note">
+      La partición también tiene que ser <strong>estable entre ejecuciones</strong>. Una
+      partición aleatoria distinta en cada corrida termina mostrándole al modelo, a lo
+      largo de varias sesiones, el conjunto de prueba completo.
+    </p>
+  </section>
+
+  <section class="wrap stack">
+    <h2>Aleatorio contra estratificado</h2>
+    <p>
+      Partir al azar funciona con muchos datos. Con pocos, o cuando una variable pesa
+      mucho en la respuesta, el azar desequilibra: un estrato queda subrepresentado en la
+      prueba y el error medido deja de hablar de la población real.
+    </p>
+    <p>
+      El <strong>muestreo estratificado</strong> divide los datos en grupos por esa
+      variable y toma de cada grupo la proporción que le toca. No mejora el modelo. Mejora
+      la confianza en lo que se mide, que es una cosa distinta y se confunde a menudo.
+    </p>
+  </section>
+
+  <!-- ══ EL PIPELINE ═══════════════════════════════════════════════════ -->
+  <section class="wrap stack">
+    <span class="eyebrow">Paso 4</span>
+    <h2>El preprocesamiento va dentro del pipeline</h2>
+    <p>
+      Escalar la tabla completa antes de partirla es la fuga más común del oficio. La
+      media y la desviación que usa el escalador salen de todas las filas, incluidas las
+      de prueba, así que cada fila de entrenamiento lleva dentro un rastro del examen.
+    </p>
+    <p>
+      Lo mismo con imputar por la mediana, con codificar categorías y con cualquier
+      transformación que aprenda algo de los datos. Metida en el <code>Pipeline</code>, la
+      validación cruzada la reajusta en cada pliegue por separado y el error deja de salir
+      optimista.
+    </p>
+    <p class="note">
+      Hay un segundo motivo, más práctico: lo que se despliega es el pipeline entero. Un
+      modelo que espera datos ya escalados obliga a reproducir el escalado en producción, a
+      mano, sin equivocarse. Un pipeline recibe datos crudos.
+    </p>
+  </section>
+
+  <!-- ══ VALIDACIÓN Y BÚSQUEDA ═════════════════════════════════════════ -->
+  <section class="wrap stack">
+    <span class="eyebrow">Pasos 5 y 6</span>
+    <h2>Comparar sin gastar la prueba</h2>
+    <p>
+      Cada vez que se mide en prueba para decidir algo, ese conjunto pierde valor como
+      estimador. Elegir entre nueve modelos comparándolos ahí ya es elegir el que mejor le
+      queda a esas filas concretas.
+    </p>
+    <p>
+      La <strong>validación cruzada</strong> resuelve el problema partiendo el
+      entrenamiento en pliegues: cada pliegue hace de validación una vez y de
+      entrenamiento el resto, y los errores se promedian. Cuesta multiplicar el tiempo por
+      el número de pliegues, y compra un número que se puede usar para decidir tantas
+      veces como haga falta.
+    </p>
+  </section>
+
+  <section class="wide stack">
+    <figure>
+      <div class="fig-head"><span class="fig-title">Rejilla contra búsqueda aleatoria</span></div>
+      <div class="fig-body">
+        <table class="prose">
+          <tbody>
+            <tr><td>Rejilla</td><td>Prueba todas las combinaciones de una lista. Exhaustiva y predecible, pero el costo se multiplica con cada hiperparámetro añadido.</td></tr>
+            <tr><td>Aleatoria</td><td>Sortea combinaciones de distribuciones continuas, tantas como se le pidan. El presupuesto se fija de antemano y explora valores que ninguna lista habría incluido.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption>
+        La aleatoria gana cuando el espacio es grande, que es casi siempre. Con diez
+        hiperparámetros, una rejilla de tres valores cada uno son 59,049 ajustes; una
+        búsqueda aleatoria de 60 cubre sesenta valores distintos <em>de cada</em>
+        hiperparámetro por el precio de 60.
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- ══ EL INTERVALO ══════════════════════════════════════════════════ -->
+  <section class="wrap stack">
+    <span class="eyebrow">Paso 7</span>
+    <h2>Una diferencia no es una diferencia hasta que sale del ruido</h2>
+    <p>
+      El error de prueba es una estimación calculada sobre una muestra concreta. Otra
+      muestra del mismo tamaño habría dado un número distinto, y el
+      <strong>intervalo de confianza</strong> acota cuánto.
+    </p>
+    <p>
+      De ahí la consecuencia que el libro deja caer sin subrayarla: cuando los intervalos
+      de dos modelos se traslapan, <strong>ordenarlos por la métrica no está
+      justificado</strong>. La tabla sigue teniendo un primer lugar, pero ese primer lugar
+      es del muestreo, no del modelo.
+    </p>
+    <p class="note">
+      Es la parte que convierte el capítulo en algo más que un tutorial. Sin el intervalo,
+      todo el procedimiento anterior sirve para producir un número que después se
+      sobreinterpreta.
+    </p>
+  </section>
+
+  <section class="wrap stack">
+    <h2>El 95% es convención, no resultado</h2>
+    <p>
+      Nada en los datos elige ese número. Viene de Fisher, que redondeó a dos las 1.96
+      desviaciones estándar por comodidad para las tablas de su época, y la convención se
+      mantuvo. La física de partículas exige cinco desviaciones para lo mismo.
+    </p>
+    <p>
+      El nivel tampoco significa lo que suele leerse. El valor verdadero es fijo y no tiene
+      probabilidad. Lo que el 95% describe es el <strong>procedimiento</strong>: repetido
+      sobre muchas muestras, el 95% de los intervalos que produce contienen ese valor.
+    </p>
+    <p class="note">
+      Ser convención no lo hace inofensivo: el nivel decide el ancho de los intervalos, y
+      por tanto qué conclusiones caben dentro. Por eso se fija antes de ver los resultados,
+      igual que la métrica. Elegirlo después es el sesgo de indagación entrando por la
+      puerta de atrás.
+    </p>
+  </section>
+
+  <!-- ══ PRÁCTICA ══════════════════════════════════════════════════════ -->
+  <section class="wrap stack">
+    <span class="eyebrow">La práctica del capítulo</span>
+    <h2>El método, aplicado a un dataset</h2>
+    <p>
+      El libro recorre los ocho pasos sobre un solo problema. El desarrollo completo está
+      en su propia página, con la demo aparte.
+    </p>
+  </section>
+
+  <section class="wide">
+    <div class="practicas">
+      {practicas.map((p) => (
+        <article class="practica">
+          <a class="practica-main" href={p.href}>
+            <span class="ds">{p.nombre}</span>
+            <h3>{p.titulo}</h3>
+            <p>{p.resumen}</p>
+            <dl class="cifras">
+              {p.cifras.map(([k, v]) => (
+                <div><dt>{k}</dt><dd>{v}</dd></div>
+              ))}
+            </dl>
+            <span class="ir">Ver el desarrollo →</span>
+          </a>
+          <a class="practica-demo" href={p.demo}>
+            <span class="demo-etq">Demo</span>
+            <span class="demo-txt">{p.demoTxt}</span>
+          </a>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <style>
+    .hero { padding-top: clamp(2.5rem, 7vw, 4.5rem); display: flex; flex-direction: column; gap: 1.2rem; }
+    .hero .lede { font-size: 1.18rem; color: var(--ink-2); max-width: 58ch; }
+
+    .practicas { display: grid; gap: 1.1rem; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+    .practica { background: var(--surface); border: 1px solid var(--hairline); border-radius: 10px;
+      box-shadow: var(--shadow); overflow: hidden; display: flex; flex-direction: column; }
+    .practica-main { display: flex; flex-direction: column; gap: .6rem; padding: 1.5rem 1.5rem 1.3rem;
+      text-decoration: none; color: inherit; transition: background .15s; }
+    .practica-main:hover { background: var(--surface-2); }
+    .practica .ds { font-family: var(--mono); font-size: .68rem; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--muted); }
+    .practica h3 { font-size: 1.28rem; }
+    .practica p { font-size: .95rem; color: var(--ink-2); }
+    .practica .ir { margin-top: auto; padding-top: .4rem; font-family: var(--mono); font-size: .73rem; color: var(--accent-ink); }
+    .practica-demo { display: flex; align-items: baseline; gap: .7rem; flex-wrap: wrap;
+      padding: .85rem 1.5rem; border-top: 1px solid var(--hairline);
+      text-decoration: none; transition: background .15s; }
+    .practica-demo:hover { background: var(--surface-2); }
+    .demo-etq { font-family: var(--mono); font-size: .64rem; letter-spacing: .1em; text-transform: uppercase;
+      color: var(--accent-ink); border: 1px solid var(--rule); border-radius: 999px; padding: .1rem .5rem; }
+    .demo-txt { font-size: .88rem; color: var(--ink-2); }
+
+    .cifras { display: flex; flex-wrap: wrap; gap: .3rem 1.4rem; margin: .3rem 0 0; }
+    .cifras dt { font-family: var(--mono); font-size: .62rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+    .cifras dd { margin: 0; font-size: 1.05rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+  </style>
+</Base>

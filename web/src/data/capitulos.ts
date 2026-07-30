@@ -18,7 +18,11 @@ export const CAPITULOS: Record<string, Parte[]> = {
     { href: "/ch01/lifesat", nombre: "lifesat", pie: "dataset" },
     { href: "/ch01/lifesat/demo", nombre: "Recta contra vecinos", pie: "demo" },
   ],
-  ch02: [{ href: "/ch02", nombre: "California Housing", pie: "proyecto" }],
+  ch02: [
+    { href: "/ch02", nombre: "Punta a punta", pie: "método" },
+    { href: "/ch02/california-housing", nombre: "California Housing", pie: "dataset" },
+    { href: "/ch02/california-housing/demo", nombre: "Dónde se equivoca", pie: "demo" },
+  ],
   ch03: [{ href: "/ch03", nombre: "MNIST", pie: "clasificación" }],
 };
 
