@@ -1,0 +1,3 @@
+
+# Registros en vivo de las ejecuciones largas: transitorios, el JSON es el resultado.
+reports/*.log

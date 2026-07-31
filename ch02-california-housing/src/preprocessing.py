@@ -28,7 +28,7 @@ from sklearn.metrics.pairwise import rbf_kernel
 from sklearn.model_selection import cross_val_predict
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, StandardScaler
 from sklearn.utils.validation import check_array, check_is_fitted
 
 PROCESSED_DIR = Path("data/processed")
@@ -204,10 +204,23 @@ def load_data() -> tuple:
     return X_train, X_test, y_train, y_test
 
 
+def columnas_sesgadas(X: pd.DataFrame, umbral: float = 1.0) -> list:
+    """Columnas con cola larga y todas sus observaciones positivas.
+
+    El criterio se mide, no se elige a mano: asimetría por encima del umbral y
+    mínimo positivo, que es lo que el logaritmo admite. Longitude queda fuera
+    por negativa, HouseAge por simétrica.
+    """
+    num = X.select_dtypes("number")
+    return [c for c in num.columns
+            if abs(num[c].skew()) > umbral and num[c].min() > 0]
+
+
 def build_preprocessor(
     X: pd.DataFrame,
     use_geo_clusters: bool = True,
     use_knn_geo: bool = False,
+    use_log: bool = False,
 ) -> ColumnTransformer:
     categorical = [c for c in CATEGORICAL if c in X.columns]
     geo_cols = [c for c in GEO if c in X.columns]
@@ -221,10 +234,23 @@ def build_preprocessor(
         ("scaler", StandardScaler()),
     ])
 
+    # El logaritmo del libro sobre las columnas de cola larga. Está apagado por
+    # defecto porque el capítulo se armó alrededor de modelos de árbol, que
+    # parten por umbrales y no cambian con una transformación monótona. Un SVR
+    # mide distancias, así que ahí sí puede pesar: AveOccup tiene asimetría 94.
+    log_cols = columnas_sesgadas(X) if use_log else []
+    numeric = [c for c in numeric if c not in log_cols]
+
     # Lat/Long siguen en la rama numérica además de generar los clusters: las
     # coordenadas crudas y la similitud a centroides aportan cosas distintas y
     # los árboles pueden usar ambas.
     transformers = [("num", numeric_branch, numeric)]
+    if log_cols:
+        transformers.append(("log", Pipeline([
+            ("imputer", SimpleImputer(strategy="median")),
+            ("log", FunctionTransformer(np.log, feature_names_out="one-to-one")),
+            ("scaler", StandardScaler()),
+        ]), log_cols))
     if geo:
         transformers.append(("geo", ClusterSimilarity(), geo))
     if use_knn_geo and geo_cols:
@@ -246,6 +272,7 @@ def build_pipeline(
     use_knn_geo: bool = False,
     select_features: bool = False,
     select_threshold: str = "median",
+    use_log: bool = False,
 ) -> Pipeline:
     """Preprocesamiento + modelo en un solo objeto serializable.
 
@@ -255,7 +282,7 @@ def build_pipeline(
     preprocesamiento porque solo entonces existen las columnas del one-hot
     y las similitudes de cluster.
     """
-    steps = [("prep", build_preprocessor(X, use_geo_clusters, use_knn_geo))]
+    steps = [("prep", build_preprocessor(X, use_geo_clusters, use_knn_geo, use_log))]
     if select_features:
         steps.append(("select", SelectFromModel(
             RandomForestRegressor(n_estimators=50, random_state=42, n_jobs=-1),

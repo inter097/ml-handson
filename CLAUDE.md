@@ -53,6 +53,26 @@ Un ejercicio que resuelve algo que el desarrollo ya usa no necesita página prop
 donde se usa, y su detalle se despliega con `<details>` donde se lista. Solo el ejercicio
 con dataset propio o resultado medible propio se documenta por separado.
 
+### Los tres bloques de un ejercicio
+
+El libro es la guía y dice qué pide cada ejercicio. El cuaderno es lo propio y mide sobre
+su pipeline. Confundir los dos fue lo que dejó ejercicios marcados como resueltos por algo
+parecido pero distinto de lo que el enunciado pedía. Cada ejercicio lleva los tres bloques,
+en este orden:
+
+1. **Qué pide**, literal del notebook oficial.
+2. **La versión del libro**, ejecutada. Su código y su cifra.
+3. **Qué pasó aquí**, sobre el pipeline del capítulo, con la ruta del archivo.
+
+Cuando los dos coinciden, el tercero es una línea. Cuando no, ahí está lo que vale la pena
+publicar. Ejecutar la rejilla literal del ejercicio 1 del capítulo 2 dejó una medición que
+el atajo no daba: el kernel lineal se estanca en 0.6452 desde `C = 10`, y el tramo caro del
+enunciado cuesta 48 veces más para devolver la misma cifra.
+
+**Tope de costo: dos horas de reloj proyectadas.** Por encima, se recorta y se publica el
+número por el que se recortó. Un recorte medido y declarado es parte del resultado; uno
+silencioso es lo que hubo que corregir.
+
 Estado al 2026-07-29: capítulos 1, 2 y 3 terminados y publicados, con todos sus
 ejercicios. Sigue el 4.
 
