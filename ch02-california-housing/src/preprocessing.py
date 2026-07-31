@@ -29,7 +29,7 @@ from sklearn.model_selection import cross_val_predict
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, StandardScaler
-from sklearn.utils.validation import check_array, check_is_fitted
+from sklearn.utils.validation import check_array, check_is_fitted, validate_data
 
 PROCESSED_DIR = Path("data/processed")
 
@@ -58,12 +58,12 @@ SKOPS_TRUSTED = [
 ]
 
 
-class StandardScalerClone(BaseEstimator, TransformerMixin):
+class StandardScalerClone(TransformerMixin, BaseEstimator):
     """StandardScaler reimplementado desde cero.
 
     Referencia: Géron cap. 2, ejercicio 6.
 
-    No aporta nada al modelo — el de sklearn hace lo mismo y mejor. El punto
+    No aporta nada al modelo: el de sklearn hace lo mismo y mejor. El punto
     es entender qué contrato cumple un transformer para poder escribir los
     propios: heredar de BaseEstimator (da get_params/set_params, y con eso
     funciona la búsqueda de hiperparámetros) y de TransformerMixin (da
@@ -73,48 +73,68 @@ class StandardScalerClone(BaseEstimator, TransformerMixin):
       - los atributos aprendidos llevan guion bajo final (mean_, scale_)
       - fit guarda n_features_in_ para detectar formas incompatibles después
       - transform valida que el modelo esté ajustado antes de usarse
+      - los nombres de columna se leen ANTES de check_array, que devuelve un
+        array y con él ya no hay nombres que leer
     """
 
     def __init__(self, with_mean: bool = True):
         self.with_mean = with_mean
 
     def fit(self, X, y=None):
-        X = check_array(X)
+        # El orden importa: la validación convierte el DataFrame en ndarray,
+        # así que preguntar por las columnas después no encuentra ninguna.
+        if hasattr(X, "columns"):
+            self.feature_names_in_ = np.array(X.columns, dtype=object)
+        # validate_data y no check_array: además de validar, guarda
+        # n_features_in_ al ajustar y lo comprueba con reset=False, con el
+        # mensaje que espera check_estimator. Escrito a mano, el mensaje era
+        # distinto y la comprobación de sklearn no lo reconocía.
+        X = validate_data(self, X)
         self.mean_ = X.mean(axis=0)
         scale = X.std(axis=0)
         # Una columna constante tiene desviación 0; dividir entre ella daría
         # inf. sklearn hace lo mismo: la deja pasar sin escalar.
         self.scale_ = np.where(scale == 0, 1.0, scale)
-        self.n_features_in_ = X.shape[1]
-        if hasattr(X, "columns"):
-            self.feature_names_in_ = np.array(X.columns, dtype=object)
         return self
 
     def transform(self, X):
         check_is_fitted(self)
-        X = check_array(X)
-        if self.n_features_in_ != X.shape[1]:
-            raise ValueError(
-                f"Se ajustó con {self.n_features_in_} columnas y se recibieron {X.shape[1]}"
-            )
+        X = validate_data(self, X, reset=False)
         if self.with_mean:
             X = X - self.mean_
         return X / self.scale_
 
     def inverse_transform(self, X):
         check_is_fitted(self)
-        X = check_array(X) * self.scale_
+        X = validate_data(self, X, reset=False) * self.scale_
         return X + self.mean_ if self.with_mean else X
 
     def get_feature_names_out(self, input_features=None):
-        if input_features is not None:
-            return np.asarray(input_features, dtype=object)
-        if hasattr(self, "feature_names_in_"):
-            return self.feature_names_in_
-        return np.array([f"x{i}" for i in range(self.n_features_in_)], dtype=object)
+        """Nombres de salida, con la validación que pide el enunciado.
+
+        Devolver lo que llegue sin comprobarlo deja pasar una lista de otro
+        largo, y el error aparece más tarde y en otro sitio.
+        """
+        check_is_fitted(self)
+        if input_features is None:
+            if hasattr(self, "feature_names_in_"):
+                return self.feature_names_in_
+            return np.array([f"x{i}" for i in range(self.n_features_in_)], dtype=object)
+
+        nombres = np.asarray(input_features, dtype=object)
+        if len(nombres) != self.n_features_in_:
+            raise ValueError(
+                f"input_features tiene {len(nombres)} nombres y se ajustó con "
+                f"{self.n_features_in_} columnas"
+            )
+        if hasattr(self, "feature_names_in_") and not np.array_equal(
+            nombres, self.feature_names_in_
+        ):
+            raise ValueError("input_features no coincide con feature_names_in_")
+        return nombres
 
 
-class KNNGeoFeature(BaseEstimator, TransformerMixin):
+class KNNGeoFeature(TransformerMixin, BaseEstimator):
     """Predicción de un k-NN sobre lat/long, usada como feature.
 
     Referencia: Géron cap. 2, ejercicio 4.
@@ -160,7 +180,7 @@ class KNNGeoFeature(BaseEstimator, TransformerMixin):
         return np.array(["knn_geo_price"], dtype=object)
 
 
-class ClusterSimilarity(BaseEstimator, TransformerMixin):
+class ClusterSimilarity(TransformerMixin, BaseEstimator):
     """Convierte lat/long en similitud a N barrios representativos.
 
     Referencia: Géron cap. 2, "Custom Transformers".
