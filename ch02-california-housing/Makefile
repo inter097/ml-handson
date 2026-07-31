@@ -1,4 +1,4 @@
-.PHONY: all setup data features train-all tune-all analysis evaluate cost cost-check predict site svr-study svr-official svr-random select-study export-demo ui clean help
+.PHONY: all setup data features train-all tune-all analysis evaluate cost cost-check predict site svr-study svr-official svr-random select-study prep-search export-demo ui clean help
 
 # El entorno y el registro de experimentos viven en la raíz del repo y se
 # comparten entre capítulos. ROOT se resuelve desde la ruta de este Makefile,
@@ -101,6 +101,10 @@ svr-random:
 select-study:
 	$(PYTHON) src/select_study.py
 
+prep-search:
+	$(PYTHON) src/prep_search.py --check --tope 1800
+	$(PYTHON) src/prep_search.py --tope 1800
+
 # El modelo a JSON para la demo del sitio, con su prueba de paridad.
 export-demo:
 	$(PYTHON) src/export_demo.py
@@ -148,6 +152,7 @@ help:
 	@echo "  make svr-official   La rejilla completa del ejercicio 1"
 	@echo "  make svr-random     La búsqueda aleatoria del ejercicio 2"
 	@echo "  make select-study   La selección de variables del ejercicio 3"
+	@echo "  make prep-search    El preprocesamiento dentro de la búsqueda, ejercicio 5"
 	@echo "  make export-demo    El modelo a JSON para la demo del sitio"
 	@echo "  make predict RUN_ID=<id>   Predecir (--demo o INPUT=archivo.csv)"
 	@echo "  make site RUN_ID=<id>      Generar los datos del sitio (web/public/data/)"

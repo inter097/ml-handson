@@ -57,12 +57,48 @@ for kernel in ["rbf", "linear", "poly"]:
     n: 2,
     texto: "Búsqueda aleatoria en lugar de rejilla",
     donde: "src/tune.py",
-    evidencia: "137 candidatos registrados",
-    pide: "Sustituir GridSearchCV por RandomizedSearchCV.",
-    cuerpo: [
-      "Toda la búsqueda del capítulo usa <code>RandomizedSearchCV</code> con cinco pliegues. La rejilla no escala: cinco parámetros con cinco valores cada uno son 3,125 combinaciones, y añadir un parámetro más las multiplica. La aleatoria muestrea <code>n_iter</code> combinaciones de distribuciones continuas, así que el presupuesto se fija de antemano y explora valores que ninguna lista habría incluido (Bergstra y Bengio, 2012).",
-      "El añadido práctico está en el registro: cada candidato se guarda como ejecución anidada en MLflow, no solo el ganador. Sin eso, <code>cv_results_</code> se descarta al terminar y queda una sola cifra sin contexto. Con los 137 candidatos guardados se puede ver después qué movió la aguja y qué no.",
-    ],
+    evidencia: "pierde contra la rejilla: 0.5553 contra 0.5414", tono: "none",
+    pide: "Sustituir GridSearchCV por RandomizedSearchCV, sobre el mismo SVR y las mismas 5,000 filas del ejercicio anterior.",
+    libro: {
+      codigo: `param_distribs = {
+    "svr__kernel": ["linear", "rbf"],
+    "svr__C": loguniform(20, 200_000),
+    "svr__gamma": expon(scale=1.0),
+}
+RandomizedSearchCV(svr_pipeline, param_distribs, n_iter=50, cv=3,
+                   scoring="neg_root_mean_squared_error", random_state=42)`,
+      notas: [
+        "Lo que enseña no es cambiar de clase, es de dónde salen los valores: <code>loguniform</code> reparte parejo por órdenes de magnitud, así que explora la zona baja de <code>C</code> tanto como la alta, y muestrea 50 valores distintos en cada eje en lugar de los 8 o 6 de una lista (Bergstra y Bengio, 2012).",
+        "Ejecutada aquí, <strong>pierde</strong>: 0.5553 en prueba contra 0.5414 de la rejilla, con el mismo presupuesto de 50 candidatos. Y el motivo no es el método.",
+        `<table class="ej-tabla"><tbody>
+          <tr><td>rbf, gamma=0.1, C=1</td><td>0.5445</td></tr>
+          <tr><td>rbf, gamma=0.1, C=3</td><td><strong>0.5347</strong> el mejor de los 50</td></tr>
+          <tr><td>rbf, gamma=0.1, C=100</td><td>0.6059</td></tr>
+          <tr><td>rbf, gamma=0.1, C=1,000</td><td>0.7846</td></tr>
+        </tbody></table>`,
+        "El óptimo está en <code>C = 3</code>, y <code>loguniform(20, 200_000)</code> <strong>empieza en 20</strong>: la zona buena queda fuera de su rango por debajo. La rejilla la cubría porque su lista de rbf empieza en 1. Gana el método cuyo rango contiene el óptimo, y la ventaja de la aleatoria no es magia sino cobertura.",
+        "En el notebook oficial ocurre lo contrario, y por la misma razón invertida: allí la rejilla elige el kernel lineal con 69,814 de RMSE, porque su rbf se corta en <code>C = 1000</code>, y la aleatoria encuentra <code>C = 157,055</code> y baja a 55,854. En un pipeline el óptimo estaba por encima del borde y en el otro por debajo. <strong>Un rango de <code>C</code> no se copia entre proyectos</strong>: es una suposición sobre unos datos concretos.",
+        `<table class="ej-tabla"><tbody>
+          <tr><td>43 candidatos ejecutados</td><td>2.4 h de reloj</td></tr>
+          <tr><td>19 lineales</td><td>2.2 h, el 92% del tiempo</td></tr>
+          <tr><td>24 rbf</td><td>10.8 minutos</td></tr>
+          <tr><td>7 saltados por el tope</td><td>27.1 h que no se gastaron</td></tr>
+        </tbody></table>`,
+        "La mitad de los sorteos cae en el kernel lineal, que el ejercicio 1 ya midió como una meseta. Un tope de 30 minutos por candidato ahorró 27 horas de CPU en una rama sin recorrido, y los siete saltados quedan anotados con su proyección.",
+      ],
+    },
+    aqui: {
+      codigo: `# src/tune.py: cada candidato queda registrado, no solo el ganador
+with mlflow.start_run(nested=True, run_name=f"candidato_{i:02d}"):
+    mlflow.log_params(params)
+    mlflow.log_metric("cv_rmse", -score)
+    mlflow.log_metric("rank", rank)`,
+      notas: [
+        "Toda la búsqueda del capítulo usa <code>RandomizedSearchCV</code> con cinco pliegues, sobre los nueve modelos. La rejilla no escala: cinco parámetros con cinco valores cada uno son 3,125 combinaciones.",
+        "El añadido está en el registro. Sin él, <code>cv_results_</code> se descarta al terminar y queda una cifra sin contexto; con los <strong>137 candidatos guardados</strong> como ejecuciones anidadas se puede ver después qué movió la aguja y qué no.",
+      ],
+    },
+    comando: "make svr-random",
   },
   {
     n: 3,
