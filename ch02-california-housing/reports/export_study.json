@@ -1,0 +1,86 @@
+{
+  "ic_campeon": [
+    0.3844,
+    0.4271
+  ],
+  "presupuesto_kb": 300,
+  "codificaciones": [
+    {
+      "codificacion": "JSON anidado",
+      "kb_crudo": 1280.095703125,
+      "kb_gzip": 284.341796875,
+      "kb_brotli": 184.5703125
+    },
+    {
+      "codificacion": "JSON plano",
+      "kb_crudo": 1170.009765625,
+      "kb_gzip": 338.0966796875,
+      "kb_brotli": 229.205078125
+    },
+    {
+      "codificacion": "binario por columnas",
+      "kb_crudo": 486.876953125,
+      "kb_gzip": 225.826171875,
+      "kb_brotli": 191.1259765625
+    }
+  ],
+  "candidatos": [
+    {
+      "candidato": "xgboost_tuned (el actual)",
+      "rmse": 0.42909660333780003,
+      "arboles": 300,
+      "kb_gzip": 284.341796875,
+      "kb_brotli": 184.5703125,
+      "dentro_del_ic": false
+    },
+    {
+      "candidato": "profundidad 7, 150 \u00e1rboles",
+      "rmse": 0.44861560637632075,
+      "arboles": 150,
+      "kb_gzip": 151.45703125,
+      "kb_brotli": 104.041015625,
+      "dentro_del_ic": false
+    },
+    {
+      "candidato": "profundidad 6, 300 \u00e1rboles",
+      "rmse": 0.4412502673269503,
+      "arboles": 300,
+      "kb_gzip": 164.4287109375,
+      "kb_brotli": 112.0703125,
+      "dentro_del_ic": false
+    },
+    {
+      "candidato": "profundidad 5, 300 \u00e1rboles",
+      "rmse": 0.45503941131326786,
+      "arboles": 300,
+      "kb_gzip": 86.6640625,
+      "kb_brotli": 63.59765625,
+      "dentro_del_ic": false
+    },
+    {
+      "candidato": "profundidad 4, 300 \u00e1rboles",
+      "rmse": 0.4718328119478435,
+      "arboles": 300,
+      "kb_gzip": 42.6201171875,
+      "kb_brotli": 33.396484375,
+      "dentro_del_ic": false
+    },
+    {
+      "candidato": "profundidad 4, 500 \u00e1rboles",
+      "rmse": 0.45647419875050993,
+      "arboles": 500,
+      "kb_gzip": 72.6826171875,
+      "kb_brotli": 54.240234375,
+      "dentro_del_ic": false
+    },
+    {
+      "candidato": "profundidad 3, 500 \u00e1rboles",
+      "rmse": 0.47973021011997513,
+      "arboles": 500,
+      "kb_gzip": 33.296875,
+      "kb_brotli": 26.431640625,
+      "dentro_del_ic": false
+    }
+  ],
+  "nota_prep": "El preprocesamiento son 73 n\u00fameros, despreciable frente a los \u00e1rboles"
+}

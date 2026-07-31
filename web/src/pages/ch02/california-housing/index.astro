@@ -227,15 +227,52 @@ const ejercicios = [
     <h2>El error no está repartido por igual</h2>
     <p>
       Un RMSE es un número por 4,128 distritos, y esconde que el modelo se equivoca mucho
-      más en unas zonas que en otras. Los 4,128 puntos del conjunto de prueba, con su
-      error real y filtrables por zona y por tramo de ingreso, están en la demo.
+      más en unas zonas que en otras.
     </p>
+  </section>
+
+  <section class="wrap compacta">
+    <figure>
+      <div class="filters">
+        <div class="fgroup">
+          <span class="eyebrow">Proximidad al océano</span>
+          <div class="chips" id="fOcean"></div>
+        </div>
+        <div class="fgroup">
+          <span class="eyebrow">Categoría de ingreso</span>
+          <div class="chips" id="fInc"></div>
+        </div>
+        <div class="fgroup">
+          <span class="eyebrow">Colorear por</span>
+          <div class="chips" id="fModo"></div>
+        </div>
+      </div>
+
+      <div class="map-shell">
+        <canvas id="map" width="1000" height="820" role="img"
+          aria-label="Mapa de California con 4,128 distritos coloreados por error de predicción"></canvas>
+        <div class="tip" id="tip" role="status"></div>
+      </div>
+
+      <div class="map-live" id="live"></div>
+
+      <div class="fig-body legend-row">
+        <div class="legend" id="legend"></div>
+        <button class="toggle" id="tblMapBtn" aria-pressed="false" aria-controls="tblMap">Ver tabla</button>
+      </div>
+      <div class="fig-body scroll-x" id="tblMap" hidden style="padding-top:0"></div>
+      <figcaption>
+        Cada punto es un distrito que el modelo nunca vio al entrenar. Las predicciones se
+        calcularon una vez y se sirven como JSON; los filtros y las métricas se recalculan
+        en el navegador sobre el subconjunto visible.
+      </figcaption>
+    </figure>
   </section>
 
   <section class="wrap compacta">
     <a class="ir-demo" href="/ch02/california-housing/demo">
       <span class="demo-etq">Demo</span>
-      <span class="demo-txt">El mapa de los 4,128 distritos, con las métricas recalculándose por subconjunto</span>
+      <span class="demo-txt">Inventar un distrito y ver qué precio le pone el modelo</span>
     </a>
   </section>
 
@@ -423,7 +460,19 @@ const ejercicios = [
 
     .compacta { padding-block: clamp(.7rem, 1.6vw, 1.1rem); }
 
-    /* El mapa vivía aquí. Ahora en su sitio queda la puerta a la demo. */
+    /* El mapa de errores es una figura, así que vive aquí, junto al texto que
+       explica dónde falla el modelo. La ruta /demo es para usarlo. */
+    .filters { display: flex; flex-wrap: wrap; gap: 1.1rem 1.6rem; align-items: flex-end;
+      padding: 1.1rem 1.25rem; border-bottom: 1px solid var(--hairline); }
+    .fgroup { display: flex; flex-direction: column; gap: .45rem; }
+    .fgroup > .eyebrow { font-size: .65rem; }
+    .chips { display: flex; flex-wrap: wrap; gap: .35rem; }
+    .map-shell { position: relative; }
+    #map { display: block; width: 100%; height: auto; touch-action: pan-y; }
+    .map-live { display: grid; grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+      gap: 1px; background: var(--hairline); border-top: 1px solid var(--hairline); }
+    .legend-row { display: flex; flex-wrap: wrap; gap: .9rem 1.5rem; align-items: center; justify-content: space-between; }
+
     .ir-demo { display: flex; align-items: baseline; gap: .7rem; flex-wrap: wrap;
       background: var(--surface); border: 1px solid var(--hairline); border-radius: 8px;
       box-shadow: var(--shadow); padding: 1rem 1.2rem; text-decoration: none;
@@ -479,5 +528,6 @@ const ejercicios = [
 
   <script>
     import "../../../scripts/ch02-resultados.ts";
+    import "../../../scripts/ch02-mapa.ts";
   </script>
 </Base>

@@ -23,7 +23,7 @@ const practicas = [
 const pasos = [
   ["Enmarcar el problema", "Qué se predice, quién usará la respuesta, y con qué métrica se juzga. La métrica se elige antes de entrenar, no después de ver los resultados."],
   ["Obtener los datos", "Y apartar el conjunto de prueba de inmediato, antes de mirarlos."],
-  ["Explorar", "Distribuciones, correlaciones, valores atípicos y huecos. Solo sobre el conjunto de entrenamiento."],
+  ["Explorar", "Distribuciones, correlaciones, valores atípicos y huecos. Solo sobre el conjunto de entrenamiento, y sabiendo que la correlación solo detecta relaciones lineales: una parábola perfecta da cero."],
   ["Preparar", "Imputar, escalar, codificar y combinar variables. Todo dentro del pipeline, nunca a mano sobre la tabla completa."],
   ["Entrenar", "Varios modelos con parámetros por defecto, para saber desde dónde se parte."],
   ["Afinar", "Buscar hiperparámetros sobre el mejor puñado, con validación cruzada."],
@@ -74,6 +74,45 @@ const pasos = [
       <figcaption>
         Se siguen siempre, en un problema de casas o en cualquier otro. El resto de esta
         página son los cuatro pasos donde algo puede salir mal sin que se note.
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- ══ LA MÉTRICA ════════════════════════════════════════════════════ -->
+  <section class="wrap stack">
+    <span class="eyebrow">Paso 1</span>
+    <h2>La métrica se fija antes de entrenar</h2>
+    <p>
+      RMSE eleva los errores al cuadrado antes de promediarlos, así que un fallo grande
+      pesa más que varios pequeños. MAE los promedia tal cual. Elegir entre las dos es
+      decidir si un error grande es peor que su parte proporcional de errores chicos, y
+      esa decisión pertenece a quien va a usar la predicción.
+    </p>
+    <p>
+      Con los dieciséis modelos del capítulo ya medidos, cambiar de métrica reordena
+      poco. Los cinco primeros quedan igual y solo se intercambian tres parejas
+      consecutivas:
+    </p>
+  </section>
+
+  <section class="wide stack compacta">
+    <figure>
+      <div class="fig-body">
+        <table class="prose">
+          <thead>
+            <tr><th>Por RMSE</th><th>Por MAE</th><th>Qué significa</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>6.º xgboost</td><td>6.º random_forest</td><td rowspan="2">random_forest falla en promedio un poco más, pero se le escapan menos casos por mucho</td></tr>
+            <tr><td>7.º random_forest</td><td>7.º xgboost</td></tr>
+            <tr><td>8.º mlp_tuned</td><td>8.º svr</td><td rowspan="2">svr acierta más veces de cerca y se estrella más fuerte cuando falla</td></tr>
+            <tr><td>9.º svr</td><td>9.º mlp_tuned</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption>
+        Las parejas que se cruzan están separadas por menos de 0.01 de RMSE, dentro del
+        ruido del muestreo. La métrica reordena la cola, no decide el ganador.
       </figcaption>
     </figure>
   </section>

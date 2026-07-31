@@ -216,6 +216,28 @@ web/src/pages/chNN/<dataset>/demo.astro
 El capítulo lista sus prácticas como tarjetas. Nunca explica el dataset dentro de su
 propia página.
 
+### Qué es una demo
+
+**Una demo se usa: el visitante mueve las variables y el modelo responde.** Entra un
+caso, sale una predicción. Eso, y nada más, es lo que lleva la ruta `/demo`.
+
+Una gráfica que muestra el error, un mapa coloreado o una correlación **no son demos**.
+Son figuras, y su sitio es la página del desarrollo, junto al texto que explican.
+
+| Es demo | No es demo |
+|---|---|
+| Controles que fijan las variables y devuelven una predicción | Un mapa de los errores del modelo |
+| Comparar dos modelos sobre el mismo caso introducido | Una curva de aprendizaje |
+| Mover un umbral y ver cambiar la decisión | Una dispersión de predicho contra real |
+
+La diferencia práctica: una demo necesita el modelo del lado del navegador, así que hay
+que exportar lo aprendido a JSON (coeficientes, centros de los clusters, medias y escalas
+del escalador, los árboles si el modelo es de árboles) y reimplementar la predicción en
+TypeScript. Una figura solo necesita datos ya calculados.
+
+Estado al 2026-07-30: la página `/ch02/california-housing/demo` es un mapa de errores, o
+sea una figura. Queda por hacer la demo de verdad.
+
 ### La barra de navegación
 
 `web/src/data/capitulos.ts` define las partes de cada capítulo en orden de lectura.

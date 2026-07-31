@@ -1,0 +1,30 @@
+{
+  "run_id": "ca09f3c690ad43528fbb6d5f65bef174",
+  "rmse_completo": 0.42909660333780003,
+  "rmse_con_medianas": 0.4478095531513694,
+  "penalizacion": 0.018712949813569357,
+  "variables_visibles": [
+    "MedInc",
+    "AveOccup",
+    "AveRooms",
+    "HouseAge"
+  ],
+  "variables_ocultas": [
+    "AveBedrms",
+    "Population"
+  ],
+  "medianas_ocultas": {
+    "AveBedrms": 1.0488805346700083,
+    "Population": 1167.0
+  },
+  "arboles": 300,
+  "kb_crudo": 1284.9228515625,
+  "kb_gzip": 286.521484375,
+  "kb_brotli": 186.189453125,
+  "presupuesto_kb": 300,
+  "ic_campeon": [
+    0.3844,
+    0.4271
+  ],
+  "dentro_del_ic": false
+}
