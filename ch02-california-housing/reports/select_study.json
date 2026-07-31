@@ -1,0 +1,53 @@
+{
+  "n_train": 5000,
+  "cv": 3,
+  "umbral_libro": 0.005,
+  "svr": {
+    "kernel": "rbf",
+    "C": 3.0,
+    "gamma": 0.1
+  },
+  "filas": [
+    {
+      "caso": "SVR sin selecci\u00f3n",
+      "cv_rmse": 0.5346824624716718,
+      "cv_std": 0.02811828789437868,
+      "seconds": 4.070980958989821
+    },
+    {
+      "caso": "SVR con SelectFromModel(0.005)",
+      "cv_rmse": 0.539340152731501,
+      "cv_std": 0.02940749465212366,
+      "seconds": 2.5690499169868417,
+      "select_features": true,
+      "select_threshold": 0.005
+    },
+    {
+      "caso": "SVR con SelectFromModel(\"median\")",
+      "cv_rmse": 0.5478422461472406,
+      "cv_std": 0.030615816865634488,
+      "seconds": 2.3563230840081815,
+      "select_features": true,
+      "select_threshold": "median"
+    },
+    {
+      "caso": "random_forest sin selecci\u00f3n",
+      "cv_rmse": 0.5027126858866103,
+      "cv_std": 0.02903743172088161,
+      "seconds": 8.343276208004681
+    },
+    {
+      "caso": "random_forest con SelectFromModel(0.005)",
+      "cv_rmse": 0.5026388304231642,
+      "cv_std": 0.0286172593917741,
+      "seconds": 8.926007208006922,
+      "select_features": true,
+      "select_threshold": 0.005
+    }
+  ],
+  "columnas": {
+    "total": 25,
+    "umbral_libro": 20,
+    "median": 13
+  }
+}

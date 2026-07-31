@@ -14,14 +14,43 @@ const ejercicios = [
   {
     n: 1,
     texto: "SVR con varios kernels e hiperparámetros",
-    donde: "src/svr_study.py",
-    evidencia: "135× entre la combinación más lenta y la más rápida", tono: "none",
-    pide: "Probar un SVR con distintos kernels e hiperparámetros. El enunciado advierte que SVM no escala bien y sugiere entrenar solo con las primeras 5,000 filas para que no tarde horas.",
-    cuerpo: [
-      "En lugar de lanzar la búsqueda y esperar, se midió antes de dónde venía el costo. La explicación cómoda era que SVR escala con el cuadrado del número de filas. Medido sobre cinco tamaños, el exponente real es <strong>1.33</strong>, y un ajuste completo sobre las 16,512 filas se proyecta en 6.2 segundos.",
-      "El costo está en <code>C</code>. Un solo ajuste con kernel polinómico y <code>C = 100</code> tarda <strong>60.5 s</strong>; con <code>rbf</code> y <code>C = 1</code>, 0.45 s. La misma cantidad de datos, 135 veces el tiempo, porque un <code>C</code> alto tolera menos error y eso multiplica los vectores de soporte.",
-      "Afinado sobre una submuestra de 8,000 filas llegó a 0.523 en validación y 0.531 en prueba, peor que su propia versión sin afinar con todos los datos. Ahí quedó, y por eso <code>svr</code> está fuera de <code>make tune-all</code>.",
-    ],
+    donde: "src/svr_official.py · src/svr_study.py",
+    evidencia: "0.5347 el mejor · 2 h el candidato más caro, y empeora", tono: "none",
+    pide: "Probar un SVR con kernel lineal y varios valores de C, y con kernel rbf y varios valores de C y gamma. El enunciado advierte que SVM no escala bien, así que sugiere entrenar con las primeras 5,000 filas y validación cruzada de 3 pliegues. Y pregunta cuánto rinde el mejor.",
+    libro: {
+      codigo: `param_grid = [
+    {"svr__kernel": ["linear"], "svr__C": [10., 30., 100., 300., 1000.,
+                                           3000., 10000., 30000.]},
+    {"svr__kernel": ["rbf"],    "svr__C": [1., 3., 10., 30., 100., 300., 1000.],
+     "svr__gamma": [0.01, 0.03, 0.1, 0.3, 1., 3.]},
+]`,
+      notas: [
+        "50 candidatos con <code>cv=3</code>, ejecutados enteros. La respuesta a la pregunta del enunciado: <strong>rbf con C = 3 y gamma = 0.1</strong>, 0.5347 en validación y <strong>0.5414 en prueba</strong>. Tarda 0.7 segundos.",
+        `<table class="ej-tabla"><tbody>
+          <tr><td><code>linear</code> C=10</td><td>RMSE 0.6452</td><td>6 s</td></tr>
+          <tr><td><code>linear</code> C=1,000</td><td>RMSE 0.6452</td><td>4.8 min</td></tr>
+          <tr><td><code>linear</code> C=10,000</td><td>RMSE 0.6439</td><td>44 min</td></tr>
+          <tr><td><code>linear</code> C=30,000</td><td>RMSE 0.6465</td><td><strong>117 min</strong></td></tr>
+        </tbody></table>`,
+        "Ahí está lo que el ejercicio no anuncia: <strong>el kernel lineal se estanca</strong>. Tres órdenes de magnitud de <code>C</code> mueven la cuarta decimal, y el último valor, que costó dos horas, sale peor que el primero, que costó seis segundos. <code>C</code> castiga el error de entrenamiento, pero un hiperplano no se dobla por mucho que se le castigue: el error que queda es de sesgo, y <code>C</code> no toca el sesgo.",
+        "Ocho de los 50 candidatos se gastaron en esa meseta. La rejilla no puede saberlo, porque la lista se escribe antes de medir nada.",
+      ],
+    },
+    aqui: {
+      codigo: `# src/svr_study.py: medir de dónde viene el costo, en vez de suponerlo
+for kernel in ["rbf", "linear", "poly"]:
+    for C in [1.0, 10.0, 100.0]:
+        pipe = build_pipeline(SVR(kernel=kernel, C=C), Xs)
+        t0 = time.perf_counter()
+        pipe.fit(Xs, ys)
+        rows.append({"kernel": kernel, "C": C,
+                     "seconds": time.perf_counter() - t0})`,
+      notas: [
+        "La explicación cómoda era que SVR escala con el cuadrado del número de filas. Medido sobre cinco tamaños, el exponente real es <strong>1.33</strong>, y un ajuste completo sobre las 16,512 filas se proyecta en 6.2 segundos. Lo que no escala es <code>C</code>: con kernel polinómico y <code>C = 100</code>, 60.5 s; con <code>rbf</code> y <code>C = 1</code>, 0.45 s. Los mismos datos, <strong>135 veces el tiempo</strong>.",
+        "El aviso del enunciado apunta al sitio equivocado: recortar a 5,000 filas ataca la parte barata.",
+        "La proyección del costo también falló, y en la misma dirección: 79 minutos calculados para el último candidato contra 117 reales. Extrapolar un factor por década sobre dos décadas y media se queda corto cuando el factor crece.",
+      ],
+    },
     comando: "make svr-study",
   },
   {
@@ -38,27 +67,79 @@ const ejercicios = [
   {
     n: 3,
     texto: "Selección de variables dentro del pipeline",
-    donde: "src/preprocessing.py",
-    evidencia: "+0.0068 RMSE: empeora", tono: "none",
-    pide: "Añadir un transformador SelectFromModel al pipeline de preparación.",
-    cuerpo: [
-      "Es un paso opcional del pipeline, entre el preprocesamiento y el modelo: un <code>SelectFromModel</code> sobre un bosque de 50 árboles que descarta las columnas por debajo de un umbral de importancia.",
-      "El resultado es la única barra del lado malo en la gráfica de aportes. Descarta cerca de la mitad de las columnas y cuesta <strong>0.0068 de RMSE</strong> en <code>random_forest</code>. Con 20,640 filas y una docena de variables no hay problema de dimensionalidad que compense la información perdida.",
-      "Queda en el código porque el ejercicio pide construirlo, y porque el resultado negativo es parte de lo que enseña: la selección de variables no es gratis por defecto.",
-    ],
+    donde: "src/preprocessing.py · src/select_study.py",
+    evidencia: "empeora en los cuatro casos medidos", tono: "none",
+    pide: "Añadir un transformador SelectFromModel al pipeline de preparación, para quedarse solo con los atributos más importantes.",
+    libro: {
+      codigo: `selector_pipeline = Pipeline([
+    ("preprocessing", preprocessing),
+    ("selector", SelectFromModel(RandomForestRegressor(random_state=42),
+                                 threshold=0.005)),   # importancia mínima
+    ("svr", SVR(**mejores_parametros)),
+])`,
+      notas: [
+        "Umbral absoluto y sobre el SVR de 5,000 filas, no sobre el bosque con todos los datos. Ejecutado con el ganador del ejercicio 1:",
+        `<table class="ej-tabla"><tbody>
+          <tr><td>SVR sin selección</td><td>0.5347</td><td>25 columnas</td></tr>
+          <tr><td>SVR con umbral 0.005</td><td>0.5393 <span class="peor">+0.0046</span></td><td>20 columnas</td></tr>
+          <tr><td>SVR con umbral "median"</td><td>0.5478 <span class="peor">+0.0131</span></td><td>13 columnas</td></tr>
+          <tr><td>random_forest sin selección</td><td>0.5027</td><td>25 columnas</td></tr>
+          <tr><td>random_forest con umbral 0.005</td><td>0.5026</td><td>20 columnas</td></tr>
+        </tbody></table>`,
+        "El umbral del libro es tan bajo que apenas descarta cinco columnas, y sobre el bosque no cambia nada. Cuanto más agresivo el umbral, peor el resultado.",
+      ],
+    },
+    aqui: {
+      codigo: `steps = [("prep", build_preprocessor(X, use_geo_clusters, use_knn_geo, use_log))]
+if select_features:
+    steps.append(("select", SelectFromModel(
+        RandomForestRegressor(n_estimators=50, random_state=42, n_jobs=-1),
+        threshold=select_threshold,
+    )))
+steps.append(("model", estimator))`,
+      notas: [
+        "Un paso opcional del pipeline, entre el preprocesamiento y el modelo. Sobre <code>random_forest</code> con las 16,512 filas y umbral <code>\"median\"</code> descarta cerca de la mitad de las columnas y cuesta <strong>0.0068 de RMSE</strong>: la única barra del lado malo en la gráfica de aportes.",
+        "Cuatro mediciones, dos modelos, dos umbrales, y ninguna mejora. Con 20,640 filas y una docena de variables no hay problema de dimensionalidad que compense la información perdida. El resultado negativo es parte de lo que el ejercicio enseña: la selección de variables no es gratis por defecto.",
+      ],
+    },
+    comando: "make select-study",
   },
   {
     n: 4,
     texto: "Transformador propio con k-vecinos sobre las coordenadas",
     donde: "src/preprocessing.py",
     evidencia: "−0.0146 RMSE · correlación 0.845 y no 0.993", tono: "gain",
-    pide: "Escribir un transformador que use un k-NN para predecir a partir de latitud y longitud.",
-    cuerpo: [
-      "<code>KNNGeoFeature</code> ajusta un k-vecinos (k = 10, pesos por distancia) sobre las coordenadas y mete su predicción como una columna más. Responde a <em>cuánto cuestan las casas de al lado</em>.",
-      "El detalle del que depende todo está en <code>fit_transform</code>: sobre el conjunto de entrenamiento devuelve predicciones <strong>fuera de pliegue</strong>, calculadas con <code>cross_val_predict</code>, no las del k-vecinos completo. Sin eso cada casa aparece entre sus propios vecinos y la columna copia la respuesta. Con la fuga, su correlación con el precio era 0.993; corregida, 0.845.",
-      "Sobre datos nuevos, en <code>transform</code>, ya se usa el k-vecinos entrenado con todo, porque ahí no hay solapamiento posible. Es la asimetría que <code>TransformerMixin</code> no daría gratis, y por eso el método está escrito a mano.",
-      "Aporta 0.0146 de RMSE en <code>random_forest</code> y 0.0121 en XGBoost, la segunda variable más útil del proyecto.",
-    ],
+    pide: "Escribir un transformador propio que entrene un KNeighborsRegressor en su fit() y devuelva sus predicciones en transform(). Añadirlo al pipeline usando latitud y longitud como entradas, para que aporte el precio mediano de los distritos vecinos.",
+    libro: {
+      codigo: `def transform(self, X):
+    check_is_fitted(self)
+    predictions = self.estimator_.predict(X)   # el mismo X con el que se ajustó
+    if predictions.ndim == 1:
+        predictions = predictions.reshape(-1, 1)
+    return predictions`,
+      notas: [
+        "La solución oficial <strong>tiene fuga</strong>. Sobre el pliegue de entrenamiento, ese <code>predict</code> devuelve predicciones en muestra: con <code>weights=\"distance\"</code>, cada casa aparece entre sus propios vecinos a distancia cero y la columna copia su etiqueta.",
+        "No es un detalle cosmético. Medido: con la fuga, la correlación de la columna con el precio es <strong>0.993</strong>; sin ella, <strong>0.845</strong>. Una variable que parece casi perfecta y que en datos nuevos no lo es.",
+      ],
+    },
+    aqui: {
+      codigo: `def fit_transform(self, X, y=None, **kwargs):
+    # Sobre el train, predicciones FUERA DE PLIEGUE: cada fila la predice un
+    # k-vecinos que no la vio. TransformerMixin llamaría fit().transform()
+    # y filtraría el objetivo.
+    self.fit(X, y)
+    return self.oof_
+
+def transform(self, X):
+    # Datos nuevos: aquí sí vale el k-vecinos entrenado con todo, porque no
+    # hay solapamiento posible.
+    return self.knn_.predict(check_array(X)).reshape(-1, 1)`,
+      notas: [
+        "<code>KNNGeoFeature</code> ajusta un k-vecinos (k = 10, pesos por distancia) sobre las coordenadas y mete su predicción como una columna más. Responde a <em>cuánto cuestan las casas de al lado</em>.",
+        "La asimetría entre <code>fit_transform</code> y <code>transform</code> es todo el ejercicio, y <code>TransformerMixin</code> no la da gratis: su <code>fit_transform</code> por defecto encadena <code>fit</code> y <code>transform</code>, que es justo lo que filtra. Por eso el método está escrito a mano.",
+        "Aporta <strong>0.0146 de RMSE</strong> en <code>random_forest</code> y 0.0121 en XGBoost: la segunda variable más útil del proyecto.",
+      ],
+    },
   },
   {
     n: 5,
@@ -76,12 +157,47 @@ const ejercicios = [
     n: 6,
     texto: "Reimplementar StandardScaler desde cero",
     donde: "src/preprocessing.py",
-    pide: "Reimplementar StandardScaler desde cero, y añadirle inverse_transform, feature_names_in_ cuando la entrada es un DataFrame, y get_feature_names_out.",
-    cuerpo: [
-      "No aporta nada al modelo: el de sklearn hace lo mismo y mejor. Lo que enseña es el contrato que cumple un transformador, que es lo que hace falta para escribir los propios, y de ahí salieron los dos de los ejercicios 3 y 4.",
-      "Hereda de <code>BaseEstimator</code>, que da <code>get_params</code> y <code>set_params</code>, y con eso el transformador funciona dentro de una búsqueda de hiperparámetros. Y de <code>TransformerMixin</code>, que da <code>fit_transform</code>.",
-      "Los tres añadidos que pide el enunciado están implementados: <code>inverse_transform</code>, <code>feature_names_in_</code> cuando entra un DataFrame, y <code>get_feature_names_out</code> con su argumento opcional. Y los cuatro detalles que suelen olvidarse: los atributos aprendidos llevan guion bajo final (<code>mean_</code>, <code>scale_</code>); <code>fit</code> guarda <code>n_features_in_</code> para detectar después una forma incompatible; <code>transform</code> comprueba con <code>check_is_fitted</code> antes de usarse; y una columna constante tiene desviación cero, así que se deja pasar sin escalar en vez de dividir entre ella.",
-    ],
+    evidencia: "4 defectos, dos los encontró check_estimator", tono: "none",
+    pide: "Reimplementar StandardScalerClone desde cero. Añadirle inverse_transform, guardar feature_names_in_ cuando la entrada es un DataFrame, e implementar get_feature_names_out con un argumento opcional input_features, que debe comprobarse contra n_features_in_ y contra feature_names_in_.",
+    libro: {
+      codigo: `class StandardScalerClone(TransformerMixin, BaseEstimator):
+    def fit(self, X, y=None):
+        X = validate_data(self, X, ensure_2d=True)
+        self.n_features_in_ = X.shape[1]
+        if self.with_mean:
+            self.mean_ = np.mean(X, axis=0)
+        self.scale_ = np.std(X, axis=0, ddof=0)
+        self.scale_[self.scale_ == 0] = 1   # evitar dividir entre cero
+        return self`,
+      notas: [
+        "No aporta nada al modelo: el <code>StandardScaler</code> de sklearn hace lo mismo y mejor. Lo que enseña es el contrato que cumple un transformador, y ese contrato es lo que hace falta para escribir los propios. De ahí salieron los de los ejercicios 3 y 4.",
+      ],
+    },
+    aqui: {
+      codigo: `# Lo que fallaba, y no se veía:
+X = check_array(X)          # el DataFrame se vuelve ndarray
+if hasattr(X, "columns"):   # ya no hay columnas: la rama nunca entra
+    self.feature_names_in_ = ...
+
+# Lo que quedó:
+if hasattr(X, "columns"):
+    self.feature_names_in_ = np.array(X.columns, dtype=object)
+X = validate_data(self, X)  # guarda n_features_in_ y lo comprueba
+                            # con el mensaje que espera check_estimator`,
+      notas: [
+        "La versión que había aquí daba por implementados los tres añadidos, y probados fallaban dos. <code>check_estimator</code>, que es lo que usa el propio notebook, encontró otros dos que a mano no se veían.",
+        `<table class="ej-tabla"><tbody>
+          <tr><td><code>feature_names_in_</code></td><td>No se guardaba nunca</td></tr>
+          <tr><td><code>get_feature_names_out()</code></td><td>Devolvía <code>x0, x1</code> en vez de los nombres</td></tr>
+          <tr><td><code>get_feature_names_out(otros)</code></td><td>Aceptaba una lista de cualquier largo</td></tr>
+          <tr><td>Mensaje de <code>transform</code></td><td>Propio, y sklearn no lo reconocía</td></tr>
+          <tr><td>Orden de mixins</td><td><code>BaseEstimator</code> iba primero, al revés</td></tr>
+        </tbody></table>`,
+        "El defecto de fondo cabía en el orden de dos líneas: <code>check_array</code> devuelve un array, así que preguntar por <code>X.columns</code> después de validar no encuentra nunca nada, y el atributo se queda sin poner en silencio. Ninguna prueba propia lo detectaba porque la prueba era que no reventara.",
+        "El orden de los mixins afectaba a los tres transformadores del capítulo, no solo a este.",
+      ],
+    },
+    comando: "check_estimator(StandardScalerClone())  →  pasa",
   },
 ];
 ---
@@ -411,9 +527,11 @@ const ejercicios = [
     <span class="eyebrow">Los ejercicios</span>
     <h2>Los seis, resueltos dentro del desarrollo</h2>
     <p>
-      El capítulo cierra con seis ejercicios, y al terminar el proyecto estaban los seis
-      hechos dentro del código, no por adelantarse a la lista sino porque el desarrollo los
-      necesitaba. Ninguno tiene página propia: cada uno vive en el archivo donde se usa.
+      El capítulo cierra con seis ejercicios, y el desarrollo los fue resolviendo por su
+      cuenta porque los necesitaba. Pero resolver algo parecido no es resolver lo que el
+      enunciado pide, así que cada uno se ejecutó también en la versión del libro. De ahí
+      salieron las dos horas que cuesta el candidato más caro del ejercicio 1, y la fuga que
+      tiene la solución oficial del ejercicio 4.
     </p>
   </section>
 
@@ -430,15 +548,32 @@ const ejercicios = [
             </summary>
             <div class="ej-cuerpo">
               <p class="ej-pide"><span class="ej-etq">Qué pide</span>{e.pide}</p>
-              {e.cuerpo.map((p) => <p set:html={p} />)}
+
+              {e.libro && (
+                <div class="ej-bloque">
+                  <span class="ej-etq">La versión del libro</span>
+                  <pre><code set:html={e.libro.codigo} /></pre>
+                  {e.libro.notas.map((p) => <p set:html={p} />)}
+                </div>
+              )}
+
+              {e.aqui && (
+                <div class="ej-bloque">
+                  <span class="ej-etq">Qué pasó aquí</span>
+                  {e.aqui.codigo && <pre><code set:html={e.aqui.codigo} /></pre>}
+                  {e.aqui.notas.map((p) => <p set:html={p} />)}
+                </div>
+              )}
+
+              {e.cuerpo && e.cuerpo.map((p) => <p set:html={p} />)}
               {e.comando && <p class="ej-cmd"><code>{e.comando}</code></p>}
             </div>
           </details>
         ))}
       </div>
       <figcaption>
-        Cada uno se despliega con su enunciado, lo que se hizo y la cifra que dejó.
-        Enunciados según el notebook de la tercera edición.
+        Cada ficha lleva tres bloques: qué pide el enunciado, la versión del libro
+        ejecutada, y qué pasó aquí. Enunciados según el notebook de la tercera edición.
       </figcaption>
     </figure>
   </section>

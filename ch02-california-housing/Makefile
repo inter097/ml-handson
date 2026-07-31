@@ -1,4 +1,4 @@
-.PHONY: all setup data features train-all tune-all analysis evaluate cost cost-check predict site svr-study ui clean help
+.PHONY: all setup data features train-all tune-all analysis evaluate cost cost-check predict site svr-study svr-official svr-random select-study export-demo ui clean help
 
 # El entorno y el registro de experimentos viven en la raíz del repo y se
 # comparten entre capítulos. ROOT se resuelve desde la ruta de este Makefile,
@@ -87,6 +87,24 @@ cost-check:
 cost:
 	$(PYTHON) src/cost.py
 
+# ── Las versiones del libro, ejecutadas aparte ───────────────────────────────
+# Cada ejercicio se resuelve dos veces: como lo pide el enunciado y como lo usa
+# el capítulo. `svr-random` proyecta su costo con --check antes de ajustar nada.
+
+svr-official:
+	$(PYTHON) src/svr_official.py
+
+svr-random:
+	$(PYTHON) src/svr_random.py --check --tope 1800
+	$(PYTHON) src/svr_random.py --tope 1800
+
+select-study:
+	$(PYTHON) src/select_study.py
+
+# El modelo a JSON para la demo del sitio, con su prueba de paridad.
+export-demo:
+	$(PYTHON) src/export_demo.py
+
 # ── Inferencia ───────────────────────────────────────────────────────────────
 # Uso: make predict RUN_ID=<id>            → demo con 5 filas del test set
 #      make predict RUN_ID=<id> INPUT=x.csv → predice sobre un CSV crudo
@@ -127,6 +145,10 @@ help:
 	@echo "  make evaluate RUN_ID=<id>  Evaluar el mejor run y guardar reporte"
 	@echo "  make cost           Medir tamaño, memoria y latencia de cada modelo"
 	@echo "  make cost-check     Solo proyectar el pico de memoria, sin cargar nada"
+	@echo "  make svr-official   La rejilla completa del ejercicio 1"
+	@echo "  make svr-random     La búsqueda aleatoria del ejercicio 2"
+	@echo "  make select-study   La selección de variables del ejercicio 3"
+	@echo "  make export-demo    El modelo a JSON para la demo del sitio"
 	@echo "  make predict RUN_ID=<id>   Predecir (--demo o INPUT=archivo.csv)"
 	@echo "  make site RUN_ID=<id>      Generar los datos del sitio (web/public/data/)"
 	@echo "  make clean          Borrar datos y runs locales"
