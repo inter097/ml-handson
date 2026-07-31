@@ -6,10 +6,10 @@ que viajar como JSON. El campeón no puede: `extra_trees_tuned` ocupa 703 MB de
 artefacto. XGBoost afinado ocupa 2.4 MB y su RMSE queda a 0.023 del campeón,
 así que es el único candidato realista.
 
-Medido antes de escribir la interfaz: los 300 árboles compactados ocupan 186 KB
-servidos con brotli, que es lo que responde Vercel, dentro del presupuesto de
-300 KB. `export_study.py` comprobó que ninguna otra codificación ni ningún
-modelo más pequeño mejora ese punto.
+Medido antes de escribir la interfaz: los 300 árboles compactados llegan al
+navegador en 296 KB, contra un presupuesto de 300. La cifra sale de pedirle el
+archivo al sitio en producción, no de comprimirlo aquí al máximo: Vercel usa un
+nivel de brotli bajo, y la diferencia entre suponerlo y medirlo son 110 KB.
 
 Lo que exporta, que es todo lo que hace falta para reproducir la predicción:
 
@@ -94,12 +94,13 @@ def compactar(nodo: dict) -> dict:
 
 
 def tamanos(objeto) -> tuple:
-    """Bruto, gzip y brotli, en KB.
+    """Bruto, gzip y brotli en KB, con el brotli que se sirve de verdad.
 
-    El número que importa es el de brotli: comprobado contra el sitio en
-    producción, Vercel responde `content-encoding: br` para los JSON. Medir
-    solo gzip daba 286 KB y hacía parecer justo un presupuesto que estaba al
-    62%.
+    Vercel responde `content-encoding: br`, comprobado contra producción, pero
+    **no comprime al máximo**: el archivo llega en 296 KB y `brotli -q 11` da
+    186. Comprimiendo a mano por niveles, el que coincide es `-q 3`, que es lo
+    razonable para algo que se comprime al vuelo. Medir con `-q 11` daba un
+    margen que no existe.
     """
     crudo = json.dumps(objeto, separators=(",", ":")).encode()
     br = float("nan")
@@ -109,7 +110,7 @@ def tamanos(objeto) -> tuple:
             origen = Path(f.name)
         destino = origen.with_suffix(".br")
         destino.unlink(missing_ok=True)
-        subprocess.run(["brotli", "-q", "11", "-o", str(destino), str(origen)], check=True)
+        subprocess.run(["brotli", "-q", "3", "-o", str(destino), str(origen)], check=True)
         br = destino.stat().st_size / 1024
         origen.unlink()
         destino.unlink()

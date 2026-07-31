@@ -18,7 +18,7 @@ import Base from "../../../layouts/Base.astro";
   </header>
 
   <section class="wrap compacta">
-    <p id="cargando" class="cargando">Cargando el modelo, 186 KB…</p>
+    <p id="cargando" class="cargando">Cargando el modelo, 296 KB…</p>
 
     <div id="demo" hidden>
       <figure class="tablero">
@@ -72,8 +72,10 @@ import Base from "../../../layouts/Base.astro";
   <section class="wrap stack">
     <h2>Qué se está ejecutando</h2>
     <p>
-      El modelo servido es <code>xgboost_tuned</code>, 300 árboles exportados a JSON,
-      186 KB con la compresión que usa el servidor. No es el mejor del capítulo:
+      El modelo servido es <code>xgboost_tuned</code>, 300 árboles exportados a JSON que
+      llegan al navegador en <strong>296 KB</strong>. Esa cifra sale de pedirle el archivo
+      al sitio, no de comprimirlo en local: al máximo son 186 KB, pero un servidor que
+      comprime al vuelo no gasta ese esfuerzo. No es el mejor modelo del capítulo:
       <code>extra_trees_tuned</code> baja el error a 0.4063, y su artefacto ocupa
       <strong>703 MB</strong>. La demo existe gracias a un modelo 290 veces más ligero
       que cuesta 0.023 de RMSE.

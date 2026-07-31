@@ -1,7 +1,7 @@
 /**
  * La demo del capítulo 2: un distrito inventado, un precio
  *
- * El modelo entero viaja al navegador (186 KB con brotli) y predice aquí, sin
+ * El modelo entero viaja al navegador (296 KB comprimido) y predice aquí, sin
  * servidor. `ch02-modelo.ts` reproduce el Pipeline de scikit-learn; este
  * archivo solo conecta los controles y dibuja.
  *
