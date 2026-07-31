@@ -73,8 +73,11 @@ enunciado cuesta 48 veces más para devolver la misma cifra.
 número por el que se recortó. Un recorte medido y declarado es parte del resultado; uno
 silencioso es lo que hubo que corregir.
 
-Estado al 2026-07-29: capítulos 1, 2 y 3 terminados y publicados, con todos sus
-ejercicios. Sigue el 4.
+Estado al 2026-07-31: capítulos 1 y 3 terminados. El 2 está en su segunda pasada:
+resolver algo parecido a lo que pide un enunciado no es resolverlo, y al ejecutar las
+versiones del libro aparecieron una meseta de dos horas en el ejercicio 1, cuatro
+defectos en el 6 y una fuga en la solución oficial del 4. Quedan la ficha del ejercicio
+2, que se está midiendo, y decidir si se ejecuta la del 5. Después, el capítulo 4.
 
 ## Estructura del repositorio
 
@@ -235,8 +238,16 @@ que exportar lo aprendido a JSON (coeficientes, centros de los clusters, medias 
 del escalador, los árboles si el modelo es de árboles) y reimplementar la predicción en
 TypeScript. Una figura solo necesita datos ya calculados.
 
-Estado al 2026-07-30: la página `/ch02/california-housing/demo` es un mapa de errores, o
-sea una figura. Queda por hacer la demo de verdad.
+**Un modelo en el navegador se verifica contra Python.** El exportador deja en el JSON
+unas cuantas filas con su predicción, y la página las comprueba al cargar. Dos errores
+que producían números creíbles y falsos se cazaron así: redondear los umbrales a cinco
+decimales desviaba hasta 0.35, y comparar en float64 cuando XGBoost compara en float32,
+hasta 0.0155. `cd web && npm run verificar` lo revisa entero fuera del navegador.
+
+**Vercel comprime con brotli de nivel bajo.** Medir con `brotli -q 11` daba 186 KB para
+el modelo del capítulo 2, y el archivo llega en 296. El nivel que coincide es `-q 3`. Un
+presupuesto de tamaño se comprueba pidiéndole el archivo al sitio, no comprimiéndolo en
+local.
 
 ### La barra de navegación
 

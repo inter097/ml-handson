@@ -8,6 +8,8 @@ Crece con los capítulos. Al terminar cada uno se revisa qué de aquí cambió.
 
 Estado: capítulos 1, 2 y 3.
 
+Última revisión: 2026-07-31.
+
 ---
 
 ## Fase 0 · Antes de cargar nada
@@ -395,7 +397,30 @@ estimación honesta. Se reporta la diferencia y se explica.
 
 ---
 
-## Fase 9 · Guardar y vigilar
+## Fase 9 · Servir el modelo en el navegador
+
+Un modelo que predice en la página, sin servidor, es la demo más convincente de un
+portafolio. Lo que hay que saber antes de intentarlo:
+
+- **El tamaño manda sobre la precisión.** Aquí el campeón ocupaba 703 MB de artefacto y
+  quedó descartado; el que cabía pesaba 2.4 MB y costaba 0.023 de RMSE. Los árboles se
+  exportan a JSON, los modelos lineales son cuatro números, y las redes ya piden un
+  runtime aparte.
+- **Se verifica contra Python, siempre.** El exportador deja unas filas con su predicción
+  y la página las comprueba al cargar. Sin eso, una demo que se desvía sigue devolviendo
+  números creíbles.
+- **Cuidado con la precisión numérica.** XGBoost compara umbrales en float32 y JavaScript
+  calcula en float64: comparar en doble precisión desviaba la predicción 0.0155. Y
+  redondear los umbrales al exportarlos, hasta 0.35.
+- **El presupuesto se mide contra el servidor, no en local.** Vercel comprime al vuelo con
+  un nivel bajo de brotli: el archivo que en local daba 186 KB llegaba en 296.
+- **Las entradas que el usuario no da hay que rellenarlas**, y con qué se rellenan importa.
+  La mediana global rompía los casos raros; los valores del caso real, cuando existen,
+  cuestan 103 dólares de desvío frente a 6,385.
+
+---
+
+## Fase 10 · Guardar y vigilar
 
 - El `Pipeline` entero serializado, no solo el modelo: el preprocesamiento va dentro.
 - La versión de los datos, del código y de las librerías junto al artefacto.
@@ -418,6 +443,8 @@ Vale más que cualquier lista de buenas prácticas, porque cada uno pasó de ver
 | Un rango de búsqueda que tocaba el borde | El óptimo salía siempre en 30 | Una búsqueda entera repetida |
 | Contar ejercicios de memoria | El notebook oficial tenía seis, no ocho | Dos ejercicios inventados, publicados |
 | `n_jobs=-1` anidado | La máquina se quedó sin memoria | Un reinicio |
+| Medir el tamaño comprimido en local | El servidor sirve otro nivel de brotli | 110 KB de presupuesto imaginario |
+| Redondear umbrales «que no se notan» | La predicción se desviaba 0.35 | Una demo que mentía con cara de seguridad |
 
 La regla que sale de todos: **si algo se afirma, se mide.** Y si no se puede medir, no
 se escribe.
