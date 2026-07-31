@@ -29,6 +29,8 @@ import Base from "../../../layouts/Base.astro";
         </div>
 
         <div class="controles">
+          <button type="button" id="cargar" class="cargar">Cargar un distrito real</button>
+
           <label class="ctl">
             <span class="ctl-n">Ingreso mediano del hogar<em id="vMedInc">–</em></span>
             <input type="range" id="cMedInc" />
@@ -80,12 +82,19 @@ import Base from "../../../layouts/Base.astro";
       Dos de las seis variables no tienen control: dormitorios por hogar y población del
       distrito quedan fijas en su mediana. Cuánto cuesta esconderlas está medido en
       <strong>0.0187 de RMSE</strong>. Esconder también las habitaciones por hogar costaba
-      0.0868, así que se quedó a la vista.
+      0.0868, así que se quedó a la vista. Sobre los 4,128 distritos de prueba, esta demo
+      se aparta del pipeline completo <strong>6,302 dólares</strong> en promedio.
     </p>
     <p>
       Los deslizadores de personas y habitaciones por hogar paran en el percentil 99. Más
       arriba hay cuarteles y residencias, con hasta 502 personas por hogar, y con ese tope
       el 99% de los casos cabría en el primer píxel del control.
+    </p>
+    <p>
+      El botón carga un distrito que existió, con su valor real al lado del predicho. En
+      cuanto se mueve un control deja de ser ese distrito y pasa a ser un caso hipotético,
+      así que la comparación desaparece. El 96.1% de los distritos reales cabe dentro de
+      los controles; el resto llega recortado, y la demo lo dice.
     </p>
     <p class="nota">
       La proximidad al océano no se pregunta: sale del distrito real más cercano al punto
@@ -134,6 +143,14 @@ import Base from "../../../layouts/Base.astro";
       border-top: 1px solid var(--hairline); padding-top: .9rem; }
     .cifra { font-family: var(--mono); font-size: 1.5rem; color: var(--ink); }
     .vecino { font-size: .78rem; color: var(--ink-2); }
+    .vecino[data-estado="cerca"] { color: var(--cool); }
+    .vecino[data-estado="lejos"] { color: var(--warm); }
+
+    .cargar { font-family: var(--mono); font-size: .7rem; letter-spacing: .06em;
+      background: none; border: 1px solid var(--rule); border-radius: 999px;
+      padding: .3rem .8rem; color: var(--accent-ink); cursor: pointer; align-self: flex-start;
+      transition: background .15s; }
+    .cargar:hover { background: var(--surface-2); }
 
     .paridad { font-family: var(--mono); font-size: .68rem; color: var(--muted); margin-top: .5rem; }
     .paridad[data-estado="mal"] { color: var(--warm); }

@@ -45,6 +45,7 @@ REPORTS_DIR = Path("reports")
 SITE_DIR = Path("../web/public/data")
 REPORTE = REPORTS_DIR / "demo_export.json"
 MODELO = SITE_DIR / "ch02-modelo.json"
+DISTRITOS = SITE_DIR / "ch02-distritos.json"
 
 RUN_ID = "ca09f3c690ad43528fbb6d5f65bef174"   # xgboost_tuned
 IC_CAMPEON = (0.3844, 0.4271)                 # extra_trees_tuned, del reporte de evaluación
@@ -222,6 +223,27 @@ def main() -> None:
         "arboles": arboles,
         "paridad": paridad,
     }
+
+    # ── Los distritos reales, para poder anclar la demo ──────────────────────
+    # Un barrio inventado no se puede comprobar contra nada. Con los 4,128 del
+    # conjunto de prueba, la demo puede cargar uno que existió, enseñar su valor
+    # real junto al predicho, y dejar que se modifique desde ahí.
+    pred_test = pipe.predict(X_test)
+    orden = ["Latitude", "Longitude", *VISIBLES]
+    distritos = {
+        "cols": [*orden, "real", "pred", "ocean"],
+        "ocean": [str(c) for c in cat.categories_[0]],
+        "rows": [
+            [*[round(float(fila[c]), 3) for c in orden],
+             round(float(real), 3), round(float(pred), 3),
+             int(list(cat.categories_[0]).index(fila["ocean_proximity"]))]
+            for (_, fila), real, pred in zip(X_test.iterrows(), y_test, pred_test)
+        ],
+    }
+    DISTRITOS.write_text(json.dumps(distritos, separators=(",", ":")))
+    d_crudo, _, d_br = tamanos(distritos)
+    print(f"[export] {len(distritos['rows'])} distritos reales · "
+          f"{d_crudo:.1f} KB en bruto · {d_br:.1f} KB brotli → {DISTRITOS}")
 
     crudo, gz, br = tamanos(modelo)
     MODELO.write_text(json.dumps(modelo, separators=(",", ":")))

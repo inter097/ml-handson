@@ -15,8 +15,9 @@
  */
 import { cargarModelo, predecir, verificarParidad, type Caso, type Modelo } from "./ch02-modelo.ts";
 
-type Fila = [number, number, number, number, number, number];
-const I = { lat: 0, lon: 1, real: 2, pred: 3, ocean: 4 } as const;
+/** Un distrito real del conjunto de prueba, tal como lo exporta export_demo.py. */
+type Fila = number[];
+const I = { lat: 0, lon: 1, inc: 2, occ: 3, rooms: 4, age: 5, real: 6, pred: 7, ocean: 8 } as const;
 
 const usd = (v: number) => "USD " + Math.round(v * 100000).toLocaleString("en-US");
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -25,6 +26,10 @@ let modelo: Modelo;
 let distritos: Fila[] = [];
 let etiquetasOcean: string[] = [];
 let punto = { lat: 34.05, lon: -118.24 };   // Los Ángeles, para que arranque en algo
+/** El distrito cargado, si lo hay, y si sus controles siguen intactos. */
+let anclado: Fila | null = null;
+/** Si algún valor del distrito cargado no cabía en su control. */
+let recortado = false;
 
 /* ── Mapa: aquí es entrada, no resultado ─────────────────────────────────── */
 const cv = $<HTMLCanvasElement>("mapa");
@@ -111,9 +116,19 @@ function actualizar() {
     : "";
 
   const cerca = vecino();
-  $("vecino").innerHTML =
-    `Distrito real más cercano: <strong>${usd(cerca[I.real])}</strong> ` +
-    `· ${etiquetasOcean[cerca[I.ocean]]} · el modelo le asigna ${usd(cerca[I.pred])}`;
+  if (anclado) {
+    const error = acotada - anclado[I.real];
+    $("vecino").innerHTML =
+      `Valor real de este distrito: <strong>${usd(anclado[I.real])}</strong> · ` +
+      `el modelo se pasa por ${usd(Math.abs(error))} ${error >= 0 ? "arriba" : "abajo"}` +
+      (recortado ? " · algún valor no cabía en su control y se recortó" : "");
+    $("vecino").dataset.estado = Math.abs(error) < 0.25 ? "cerca" : "lejos";
+  } else {
+    $("vecino").innerHTML =
+      `Distrito inventado. El real más cercano vale <strong>${usd(cerca[I.real])}</strong> ` +
+      `· ${etiquetasOcean[cerca[I.ocean]]}`;
+    $("vecino").dataset.estado = "";
+  }
 
   for (const [id, valor] of [
     ["vMedInc", caso.MedInc.toFixed(2)],
@@ -127,11 +142,38 @@ function actualizar() {
   dibujarMapa();
 }
 
+/**
+ * Carga un distrito que existió, al azar.
+ *
+ * Un barrio inventado no se puede comprobar contra nada. Con uno real, la demo
+ * enseña el valor verdadero junto al predicho, y desde ahí se puede mover una
+ * variable y ver el efecto sobre un caso que existió.
+ */
+function cargarDistrito() {
+  const d = distritos[Math.floor(Math.random() * distritos.length)];
+  punto = { lat: d[I.lat], lon: d[I.lon] };
+  recortado = false;
+  for (const [id, col] of [
+    ["cMedInc", I.inc], ["cAveOccup", I.occ],
+    ["cAveRooms", I.rooms], ["cHouseAge", I.age],
+  ] as const) {
+    const control = $<HTMLInputElement>(id);
+    // Los controles paran en el percentil 99 y el 3.9% de los distritos reales
+    // lo pasa. Ahí el valor se recorta y el caso deja de ser el original, así
+    // que se dice en lugar de disimularlo.
+    const ajustado = Math.min(Math.max(d[col], +control.min), +control.max);
+    if (ajustado !== d[col]) recortado = true;
+    control.value = String(ajustado);
+  }
+  anclado = d;
+  actualizar();
+}
+
 /* ── Arranque ────────────────────────────────────────────────────────────── */
 async function iniciar() {
   const [m, datos] = await Promise.all([
     cargarModelo(),
-    fetch("/data/ch02.json").then((r) => r.json()),
+    fetch("/data/ch02-distritos.json").then((r) => r.json()),
   ]);
   modelo = m;
   distritos = datos.rows;
@@ -155,7 +197,12 @@ async function iniciar() {
     control.max = String(r.max);
     control.step = campo === "HouseAge" ? "1" : "0.01";
     control.value = String(r.inicio);
-    control.addEventListener("input", actualizar);
+    // Mover un control deja de ser el distrito cargado: pasa a ser un caso
+    // hipotético, y la comparación con el valor real ya no aplica.
+    control.addEventListener("input", () => {
+      anclado = null;
+      actualizar();
+    });
   }
 
   const fijar = (ev: MouseEvent | Touch) => {
@@ -167,15 +214,22 @@ async function iniciar() {
     };
     actualizar();
   };
-  cv.addEventListener("click", fijar);
+  cv.addEventListener("click", (e) => {
+    anclado = null;
+    recortado = false;
+    fijar(e);
+  });
   cv.addEventListener("touchstart", (e) => {
     e.preventDefault();
+    anclado = null;
     fijar(e.touches[0]);
   }, { passive: false });
 
+  $("cargar").addEventListener("click", cargarDistrito);
+
   $("cargando").hidden = true;
   $("demo").hidden = false;
-  actualizar();
+  cargarDistrito();
 }
 
 iniciar().catch((e) => {
