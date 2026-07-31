@@ -80,10 +80,11 @@ import Base from "../../../layouts/Base.astro";
     </p>
     <p>
       Dos de las seis variables no tienen control: dormitorios por hogar y población del
-      distrito quedan fijas en su mediana. Cuánto cuesta esconderlas está medido en
-      <strong>0.0187 de RMSE</strong>. Esconder también las habitaciones por hogar costaba
-      0.0868, así que se quedó a la vista. Sobre los 4,128 distritos de prueba, esta demo
-      se aparta del pipeline completo <strong>6,302 dólares</strong> en promedio.
+      distrito. Con un distrito cargado se usan sus valores verdaderos, así que la demo
+      predice lo mismo que el pipeline completo, <strong>103 dólares</strong> de diferencia
+      en promedio, que es lo que cuesta redondear las entradas al exportarlas. Con un
+      barrio inventado se rellenan con la mediana estatal, y ahí la desviación sube a
+      6,385 dólares de media.
     </p>
     <p>
       Los deslizadores de personas y habitaciones por hogar paran en el percentil 99. Más
@@ -94,7 +95,8 @@ import Base from "../../../layouts/Base.astro";
       El botón carga un distrito que existió, con su valor real al lado del predicho. En
       cuanto se mueve un control deja de ser ese distrito y pasa a ser un caso hipotético,
       así que la comparación desaparece. El 96.1% de los distritos reales cabe dentro de
-      los controles; el resto llega recortado, y la demo lo dice.
+      los controles; los otros 160 llegan recortados, la demo lo dice, y ahí la diferencia
+      con el pipeline sube a 12,400 dólares.
     </p>
     <p class="nota">
       La proximidad al océano no se pregunta: sale del distrito real más cercano al punto

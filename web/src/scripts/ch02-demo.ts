@@ -6,9 +6,10 @@
  * archivo solo conecta los controles y dibuja.
  *
  * Cuatro controles y un punto en el mapa. Las otras dos variables del modelo
- * quedan fijas en su mediana, y eso cuesta 0.0187 de RMSE, medido en
- * `export_demo.py`. Esconder también las habitaciones por vivienda costaba
- * 0.0868, así que se quedó como control.
+ * no se preguntan: con un distrito cargado se toman sus valores verdaderos, y
+ * con un barrio inventado, la mediana estatal. Rellenar siempre con la mediana
+ * costaba 0.0187 de RMSE y desviaba hasta 100,000 dólares en distritos rurales
+ * pequeños, donde `population_per_household` se dispara.
  *
  * `ocean_proximity` no se pregunta: sale del distrito real más cercano al
  * punto elegido. Es información geográfica y el punto ya la contiene.
@@ -17,7 +18,8 @@ import { cargarModelo, predecir, verificarParidad, type Caso, type Modelo } from
 
 /** Un distrito real del conjunto de prueba, tal como lo exporta export_demo.py. */
 type Fila = number[];
-const I = { lat: 0, lon: 1, inc: 2, occ: 3, rooms: 4, age: 5, real: 6, pred: 7, ocean: 8 } as const;
+const I = { lat: 0, lon: 1, inc: 2, occ: 3, rooms: 4, age: 5,
+            bedrms: 6, pop: 7, real: 8, pred: 9, ocean: 10 } as const;
 
 const usd = (v: number) => "USD " + Math.round(v * 100000).toLocaleString("en-US");
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -90,13 +92,24 @@ function vecino(): Fila {
 /* ── Predicción ──────────────────────────────────────────────────────────── */
 function casoActual(): Caso {
   const v = (id: string) => parseFloat($<HTMLInputElement>(id).value);
+  // Con un distrito cargado se usan sus dos valores verdaderos, así que la
+  // demo predice exactamente lo que predice el pipeline completo y la
+  // comparación mide el error del modelo. Con un barrio inventado no hay
+  // valor verdadero que usar, y la mediana estatal es el relleno neutral.
+  // Un nulo es un dormitorio ausente del dataset, y son 39 distritos. Pasa
+  // como NaN para que lo impute el mismo paso que lo imputa en Python, en vez
+  // de colarse como cero y torcer el cociente.
+  const oNaN = (v: number | null) => (v === null ? NaN : v);
+  const ocultas = anclado
+    ? { AveBedrms: oNaN(anclado[I.bedrms]), Population: oNaN(anclado[I.pop]) }
+    : modelo.medianas_ocultas;
   return {
     MedInc: v("cMedInc"),
     AveOccup: v("cAveOccup"),
     AveRooms: v("cAveRooms"),
     HouseAge: v("cHouseAge"),
-    AveBedrms: modelo.medianas_ocultas.AveBedrms,
-    Population: modelo.medianas_ocultas.Population,
+    AveBedrms: ocultas.AveBedrms,
+    Population: ocultas.Population,
     Latitude: punto.lat,
     Longitude: punto.lon,
     ocean_proximity: etiquetasOcean[vecino()[I.ocean]],

@@ -228,13 +228,22 @@ def main() -> None:
     # Un barrio inventado no se puede comprobar contra nada. Con los 4,128 del
     # conjunto de prueba, la demo puede cargar uno que existió, enseñar su valor
     # real junto al predicho, y dejar que se modifique desde ahí.
+    # Las dos ocultas viajan también: con ellas, un distrito cargado predice
+    # exactamente lo que predice el pipeline completo, y la comparación con su
+    # valor real mide el error del modelo y no el de la simplificación.
     pred_test = pipe.predict(X_test)
-    orden = ["Latitude", "Longitude", *VISIBLES]
+    orden = ["Latitude", "Longitude", *VISIBLES, *OCULTAS]
     distritos = {
         "cols": [*orden, "real", "pred", "ocean"],
         "ocean": [str(c) for c in cat.categories_[0]],
+        # Tres decimales: con seis, el archivo pasa de 81 a 102 KB y la
+        # diferencia con el pipeline baja de 103 a 40 dólares, que es el 0.1%
+        # del error del propio modelo. No compensa.
+        # None y no NaN: `json.dumps` escribe NaN tal cual y eso no es JSON
+        # válido, así que `JSON.parse` revienta en el navegador. Los 207
+        # dormitorios ausentes del dataset llegan por aquí.
         "rows": [
-            [*[round(float(fila[c]), 3) for c in orden],
+            [*[None if pd.isna(fila[c]) else round(float(fila[c]), 3) for c in orden],
              round(float(real), 3), round(float(pred), 3),
              int(list(cat.categories_[0]).index(fila["ocean_proximity"]))]
             for (_, fila), real, pred in zip(X_test.iterrows(), y_test, pred_test)
