@@ -73,11 +73,20 @@ enunciado cuesta 48 veces más para devolver la misma cifra.
 número por el que se recortó. Un recorte medido y declarado es parte del resultado; uno
 silencioso es lo que hubo que corregir.
 
-Estado al 2026-07-31: capítulos 1 y 3 terminados. El 2 está en su segunda pasada:
-resolver algo parecido a lo que pide un enunciado no es resolverlo, y al ejecutar las
-versiones del libro aparecieron una meseta de dos horas en el ejercicio 1, cuatro
-defectos en el 6 y una fuga en la solución oficial del 4. Quedan la ficha del ejercicio
-2, que se está midiendo, y decidir si se ejecuta la del 5. Después, el capítulo 4.
+Estado al 2026-08-01: capítulos 1, 2 y 3 terminados. Sigue el capítulo 4.
+
+La segunda pasada del 2 dejó lo que el atajo no daba: resolver algo parecido a lo que
+pide un enunciado no es resolverlo, y ejecutar las versiones del libro sacó una meseta
+de dos horas en el ejercicio 1, cuatro defectos en el 6, una fuga en la solución oficial
+del 4, y en el 5 un modelo que gana en validación cruzada y se desploma en prueba por
+54 predicciones de 4,128.
+
+Ese último caso conviene tenerlo a mano para los capítulos siguientes. Un kernel lineal
+no está acotado: un distrito con `AveOccup` de 1,243 contra un máximo de 21.33 en
+entrenamiento sale predicho en 72 sobre un objetivo que topa en 5, y el RMSE pasa de
+0.5123 a 1.3263. **La validación cruzada no puede verlo**, porque los pliegues salen de
+las mismas filas donde el valor extremo no está. Cuando la métrica de prueba se separa
+de la de validación, mirar primero la cola de los errores.
 
 ## Estructura del repositorio
 

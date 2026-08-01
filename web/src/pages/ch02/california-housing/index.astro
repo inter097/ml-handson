@@ -180,14 +180,46 @@ def transform(self, X):
   {
     n: 5,
     texto: "Explorar opciones de preparación en la misma búsqueda",
-    donde: "src/tune.py",
-    evidencia: "el óptimo estaba fuera del rango inicial", tono: "none",
-    pide: "Usar la búsqueda de hiperparámetros para explorar también las opciones de preparación de datos.",
-    cuerpo: [
-      "Tres decisiones del preprocesamiento entran en el mismo espacio de búsqueda que las del modelo: la estrategia de imputación (mediana o media), el número de barrios representativos del agrupamiento geográfico, y el <code>gamma</code> de la similitud a esos barrios.",
-      "Solo es posible porque el preprocesamiento vive dentro del <code>Pipeline</code>. La búsqueda lo reajusta en cada pliegue, así que puede decidir cómo imputar sin que la decisión se tome mirando los datos de validación.",
-      "Y dejó una lección sobre cómo se eligen los rangos: con el número de barrios acotado a 30, la búsqueda elegía exactamente 30. Tocar el borde del espacio significa que el óptimo puede estar más allá, así que el rango se extendió hasta 60.",
-    ],
+    donde: "src/prep_search.py · src/tune.py",
+    evidencia: "0.5123 en prueba, pero 1.3263 sin recortar", tono: "gain",
+    pide: "Usar la búsqueda de hiperparámetros para explorar también las opciones de preparación de datos. La solución oficial mete en el mismo espacio los parámetros del transformador de k-vecinos del ejercicio 4 y los del SVR.",
+    libro: {
+      codigo: `param_distribs = {
+    "preprocessing__geo__estimator__n_neighbors": range(1, 30),
+    "preprocessing__geo__estimator__weights": ["distance", "uniform"],
+    "svr__C": loguniform(20, 200_000),
+    "svr__gamma": expon(scale=1.0),
+}`,
+      notas: [
+        "Lo que cambia respecto al ejercicio 2 no es el espacio, es que ahora <strong>el preprocesamiento se reajusta en cada pliegue</strong>. Solo se puede porque vive dentro del <code>Pipeline</code>: ajustar el k-vecinos una vez fuera contaminaría la validación con las filas que después hacen de validación.",
+        "El mejor de los 40 candidatos medidos es <code>linear</code> con <code>C = 45.19</code>, k = 8 y pesos por distancia: <strong>0.4917 en validación cruzada</strong>. Mejora el 0.5347 del ejercicio 1, así que buscar el preprocesamiento junto al modelo sirvió.",
+        "En prueba da <strong>1.3263</strong>, y la distancia entre las dos cifras es todo el resultado.",
+        `<table class="ej-tabla"><tbody>
+          <tr><td>Predicción mayor del test</td><td><strong>72.45</strong></td></tr>
+          <tr><td>Máximo del objetivo</td><td>5.00001</td></tr>
+          <tr><td>Predicciones fuera de rango</td><td>54 de 4,128</td></tr>
+          <tr><td>RMSE recortado al rango</td><td><strong>0.5123</strong></td></tr>
+        </tbody></table>`,
+        "La culpa es de <code>AveOccup</code>. Dos distritos del test valen 599.7 y 1243.3 ocupantes por vivienda, y el máximo de las 5,000 filas de entrenamiento es 21.33. Un kernel lineal no está acotado, así que sobre entradas de hasta 58 veces ese máximo devuelve 34 y 72. Recortar al rango conocido del objetivo baja el RMSE de 1.3263 a 0.5123, y sigue ganándole al 0.5414 del ejercicio 1.",
+        "El mejor <code>rbf</code> no tiene el problema: predice como mucho 6.3, y recortar apenas le mueve la cifra, de 0.6017 a 0.5988. La validación cruzada premió al lineal porque los pliegues salen de las mismas 5,000 filas, donde esos distritos no aparecen.",
+      ],
+    },
+    aqui: {
+      codigo: `# src/prep_search.py: el recorte se anota, no se calla
+estado["recorte"] = {
+    "ejecutados": 40,
+    "sin_ejecutar": 10,
+    "reloj_medido_horas": 1.14,
+    "reloj_proyectado_restante_horas": 24.2,
+}`,
+      notas: [
+        "La búsqueda se cortó en 40 de 50 candidatos. Los 40 costaron <strong>1.14 h</strong> de reloj medido; los 10 que faltan son todos lineales con <code>C</code> entre 4,685 y 145,200, y proyectan <strong>24.2 h</strong> más. Por encima del tope de dos horas del cuaderno, así que quedan anotados con su proyección en lugar de ejecutados.",
+        "Es la misma meseta del ejercicio 1 vista desde otro sitio: el candidato ganador tardó 26.6 s, y el más caro de los medidos gastó 1,572 s para salir peor.",
+        "En el desarrollo del capítulo la idea entra por otra puerta. <code>src/tune.py</code> mete tres decisiones del preprocesamiento en el espacio de búsqueda de los nueve modelos: la estrategia de imputación, el número de barrios representativos del agrupamiento geográfico, y el <code>gamma</code> de la similitud a esos barrios.",
+        "De ahí salió una lección sobre los rangos. Con el número de barrios acotado a 30, la búsqueda elegía exactamente 30. Tocar el borde del espacio significa que el óptimo puede estar más allá, así que el rango se extendió hasta 60.",
+      ],
+    },
+    comando: "make prep-search",
   },
   {
     n: 6,

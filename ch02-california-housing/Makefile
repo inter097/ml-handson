@@ -1,4 +1,4 @@
-.PHONY: all setup data features train-all tune-all analysis evaluate cost cost-check predict site svr-study svr-official svr-random select-study prep-search export-demo ui clean help
+.PHONY: all setup data features train-all tune-all analysis evaluate cost cost-check predict site svr-study svr-official svr-random select-study prep-search prep-search-cerrar export-demo ui clean help
 
 # El entorno y el registro de experimentos viven en la raíz del repo y se
 # comparten entre capítulos. ROOT se resuelve desde la ruta de este Makefile,
@@ -101,9 +101,16 @@ svr-random:
 select-study:
 	$(PYTHON) src/select_study.py
 
+# 40 candidatos costaron 1.14 h medidas; los 10 que faltan proyectan 24.2 h más,
+# todos lineales con C grande. Se cortó ahí. `--finalizar` cierra el reporte con
+# lo medido: anota los que faltan con su proyección y puntúa el mejor en prueba.
+# `--resume` reanuda desde el JSON si alguna vez interesa pagar esas 24 h.
 prep-search:
 	$(PYTHON) src/prep_search.py --check --tope 1800
 	$(PYTHON) src/prep_search.py --tope 1800
+
+prep-search-cerrar:
+	$(PYTHON) src/prep_search.py --finalizar
 
 # El modelo a JSON para la demo del sitio, con su prueba de paridad.
 export-demo:
@@ -153,6 +160,7 @@ help:
 	@echo "  make svr-random     La búsqueda aleatoria del ejercicio 2"
 	@echo "  make select-study   La selección de variables del ejercicio 3"
 	@echo "  make prep-search    El preprocesamiento dentro de la búsqueda, ejercicio 5"
+	@echo "  make prep-search-cerrar  Cerrar esa búsqueda con lo medido"
 	@echo "  make export-demo    El modelo a JSON para la demo del sitio"
 	@echo "  make predict RUN_ID=<id>   Predecir (--demo o INPUT=archivo.csv)"
 	@echo "  make site RUN_ID=<id>      Generar los datos del sitio (web/public/data/)"

@@ -1,0 +1,545 @@
+{
+  "n_train": 5000,
+  "cv": 3,
+  "n_iter": 50,
+  "seed": 42,
+  "tope_segundos": 1800.0,
+  "resultados": [
+    {
+      "clave": "rbf|C=27.45|gamma=2.4|k=18|unif",
+      "C": 27.45263779609172,
+      "gamma": 2.400422887393024,
+      "kernel": "rbf",
+      "knn__n_neighbors": 18,
+      "knn__weights": "uniform",
+      "cv_rmse": 0.8875084531544649,
+      "seconds": 2.5682097079989035,
+      "proyectado": 1.0774686714188912
+    },
+    {
+      "clave": "rbf|C=29.02|gamma=1.24|k=10|unif",
+      "C": 29.024473725786336,
+      "gamma": 1.2401627989937203,
+      "kernel": "rbf",
+      "knn__n_neighbors": 10,
+      "knn__weights": "uniform",
+      "cv_rmse": 0.7087990149575557,
+      "seconds": 0.8052142500237096,
+      "proyectado": 1.1967127901248678
+    },
+    {
+      "clave": "rbf|C=28.09|gamma=0.9405|k=28|unif",
+      "C": 28.091684688049394,
+      "gamma": 0.9404920709825931,
+      "kernel": "rbf",
+      "knn__n_neighbors": 28,
+      "knn__weights": "uniform",
+      "cv_rmse": 0.650399639321642,
+      "seconds": 0.9585127499885857,
+      "proyectado": 1.2290872660204664
+    },
+    {
+      "clave": "rbf|C=33.63|gamma=1.28|k=6|unif",
+      "C": 33.62608541208132,
+      "gamma": 1.280129748994866,
+      "kernel": "rbf",
+      "knn__n_neighbors": 6,
+      "knn__weights": "uniform",
+      "cv_rmse": 0.7215223643487186,
+      "seconds": 0.7960281250125263,
+      "proyectado": 1.2470166254156443
+    },
+    {
+      "clave": "rbf|C=46.07|gamma=0.9633|k=23|unif",
+      "C": 46.07398046075728,
+      "gamma": 0.9633456769068319,
+      "kernel": "rbf",
+      "knn__n_neighbors": 23,
+      "knn__weights": "uniform",
+      "cv_rmse": 0.6539178939814416,
+      "seconds": 0.9195921659993473,
+      "proyectado": 1.4271687180013972
+    },
+    {
+      "clave": "rbf|C=109.8|gamma=3.493|k=12|unif",
+      "C": 109.76094001532081,
+      "gamma": 3.4928071327362264,
+      "kernel": "rbf",
+      "knn__n_neighbors": 12,
+      "knn__weights": "uniform",
+      "cv_rmse": 0.9942696215261057,
+      "seconds": 0.7787602089811116,
+      "proyectado": 1.5717920484056505
+    },
+    {
+      "clave": "rbf|C=75.96|gamma=0.6723|k=6|unif",
+      "C": 75.9642901690651,
+      "gamma": 0.6722721094736362,
+      "kernel": "rbf",
+      "knn__n_neighbors": 6,
+      "knn__weights": "uniform",
+      "cv_rmse": 0.604611976858502,
+      "seconds": 1.1229279999970458,
+      "proyectado": 1.7467282623540077
+    },
+    {
+      "clave": "rbf|C=72.28|gamma=0.3455|k=15|unif",
+      "C": 72.27788542433055,
+      "gamma": 0.34551551200240227,
+      "kernel": "rbf",
+      "knn__n_neighbors": 15,
+      "knn__weights": "uniform",
+      "cv_rmse": 0.5951454984253054,
+      "seconds": 2.639566249999916,
+      "proyectado": 1.8792739736082764
+    },
+    {
+      "clave": "rbf|C=161.1|gamma=1.036|k=9|dist",
+      "C": 161.0694206063219,
+      "gamma": 1.036124341547692,
+      "kernel": "rbf",
+      "knn__n_neighbors": 9,
+      "knn__weights": "distance",
+      "cv_rmse": 0.6753078936344424,
+      "seconds": 0.9070705840131268,
+      "proyectado": 2.0793610502004998
+    },
+    {
+      "clave": "rbf|C=94.23|gamma=0.2469|k=9|unif",
+      "C": 94.23107906242373,
+      "gamma": 0.24687827915069688,
+      "kernel": "rbf",
+      "knn__n_neighbors": 9,
+      "knn__weights": "uniform",
+      "cv_rmse": 0.5954795265000062,
+      "seconds": 4.191670375003014,
+      "proyectado": 2.1326829769041002
+    },
+    {
+      "clave": "rbf|C=184.1|gamma=1.15|k=29|unif",
+      "C": 184.13309784549523,
+      "gamma": 1.1496851404879345,
+      "kernel": "rbf",
+      "knn__n_neighbors": 29,
+      "knn__weights": "uniform",
+      "cv_rmse": 0.6894894082937285,
+      "seconds": 0.8463225419982336,
+      "proyectado": 2.1372349004912627
+    },
+    {
+      "clave": "rbf|C=149.6|gamma=0.5387|k=11|unif",
+      "C": 149.5518344286938,
+      "gamma": 0.5387278760218775,
+      "kernel": "rbf",
+      "knn__n_neighbors": 11,
+      "knn__weights": "uniform",
+      "cv_rmse": 0.5935939381243959,
+      "seconds": 1.564957583002979,
+      "proyectado": 2.216922062498012
+    },
+    {
+      "clave": "rbf|C=163.2|gamma=0.5571|k=13|dist",
+      "C": 163.21897486179836,
+      "gamma": 0.5570576927486144,
+      "kernel": "rbf",
+      "knn__n_neighbors": 13,
+      "knn__weights": "distance",
+      "cv_rmse": 0.5917996504565094,
+      "seconds": 1.4702888329920825,
+      "proyectado": 2.2674269712775104
+    },
+    {
+      "clave": "rbf|C=106.7|gamma=0.2026|k=26|unif",
+      "C": 106.74065525207914,
+      "gamma": 0.20261142283225705,
+      "kernel": "rbf",
+      "knn__n_neighbors": 26,
+      "knn__weights": "uniform",
+      "cv_rmse": 0.6234747244099327,
+      "seconds": 5.340420416992856,
+      "proyectado": 2.275268690958341
+    },
+    {
+      "clave": "rbf|C=569.6|gamma=3.568|k=12|unif",
+      "C": 569.5717033712594,
+      "gamma": 3.5677981382916997,
+      "kernel": "rbf",
+      "knn__n_neighbors": 12,
+      "knn__weights": "uniform",
+      "cv_rmse": 0.9994813633134972,
+      "seconds": 0.8047533750068396,
+      "proyectado": 2.604594681406527
+    },
+    {
+      "clave": "rbf|C=154.7|gamma=0.1277|k=24|dist",
+      "C": 154.68964313293583,
+      "gamma": 0.1276803915456468,
+      "kernel": "rbf",
+      "knn__n_neighbors": 24,
+      "knn__weights": "distance",
+      "cv_rmse": 0.6212704003276351,
+      "seconds": 8.997166499990271,
+      "proyectado": 2.712639538502649
+    },
+    {
+      "clave": "rbf|C=787.6|gamma=1.695|k=1|dist",
+      "C": 787.6400035089212,
+      "gamma": 1.6951694172789828,
+      "kernel": "rbf",
+      "knn__n_neighbors": 1,
+      "knn__weights": "distance",
+      "cv_rmse": 0.8247579334610856,
+      "seconds": 0.8389698329847306,
+      "proyectado": 3.177796811473942
+    },
+    {
+      "clave": "rbf|C=402.6|gamma=0.2488|k=3|dist",
+      "C": 402.5924410685014,
+      "gamma": 0.24877044240020718,
+      "kernel": "rbf",
+      "knn__n_neighbors": 3,
+      "knn__weights": "distance",
+      "cv_rmse": 0.6609066815111907,
+      "seconds": 7.594034625013592,
+      "proyectado": 3.3343790298772147
+    },
+    {
+      "clave": "rbf|C=876.1|gamma=1.409|k=13|unif",
+      "C": 876.1161535811306,
+      "gamma": 1.4087491475385834,
+      "kernel": "rbf",
+      "knn__n_neighbors": 13,
+      "knn__weights": "uniform",
+      "cv_rmse": 0.7410705337033278,
+      "seconds": 0.7640639169840142,
+      "proyectado": 3.365674586104479
+    },
+    {
+      "clave": "rbf|C=4972|gamma=1.187|k=2|unif",
+      "C": 4971.550572918415,
+      "gamma": 1.1867386132926785,
+      "kernel": "rbf",
+      "knn__n_neighbors": 2,
+      "knn__weights": "uniform",
+      "cv_rmse": 0.7177141671993909,
+      "seconds": 0.8373688329884317,
+      "proyectado": 5.881949810241536
+    },
+    {
+      "clave": "rbf|C=9471|gamma=1.096|k=8|unif",
+      "C": 9470.981893157157,
+      "gamma": 1.0963818478042127,
+      "kernel": "rbf",
+      "knn__n_neighbors": 8,
+      "knn__weights": "uniform",
+      "cv_rmse": 0.6813417149098835,
+      "seconds": 0.8735445420024917,
+      "proyectado": 7.251519011944805
+    },
+    {
+      "clave": "rbf|C=6226|gamma=0.4018|k=23|dist",
+      "C": 6226.191912244243,
+      "gamma": 0.401818801251301,
+      "kernel": "rbf",
+      "knn__n_neighbors": 23,
+      "knn__weights": "distance",
+      "cv_rmse": 0.6062006710665454,
+      "seconds": 2.999853625020478,
+      "proyectado": 7.280961140511687
+    },
+    {
+      "clave": "rbf|C=4697|gamma=0.08431|k=27|dist",
+      "C": 4696.960319025734,
+      "gamma": 0.08430956798241278,
+      "kernel": "rbf",
+      "knn__n_neighbors": 27,
+      "knn__weights": "distance",
+      "cv_rmse": 0.936978692175733,
+      "seconds": 118.35435629202402,
+      "proyectado": 8.214538045457134
+    },
+    {
+      "clave": "rbf|C=1.636e+04|gamma=0.4585|k=2|unif",
+      "C": 16364.223037236829,
+      "gamma": 0.458522799264304,
+      "kernel": "rbf",
+      "knn__n_neighbors": 2,
+      "knn__weights": "uniform",
+      "cv_rmse": 0.5975505027747188,
+      "seconds": 2.509493958001258,
+      "proyectado": 9.638618829619507
+    },
+    {
+      "clave": "linear|C=21.34|gamma=-|k=27|dist",
+      "C": 21.34495367264743,
+      "kernel": "linear",
+      "knn__n_neighbors": 27,
+      "knn__weights": "distance",
+      "cv_rmse": 0.5009026445957575,
+      "seconds": 13.014456500008237,
+      "proyectado": 9.848546495179951
+    },
+    {
+      "clave": "rbf|C=2.101e+04|gamma=0.5537|k=10|unif",
+      "C": 21012.398903194065,
+      "gamma": 0.5536563610069876,
+      "kernel": "rbf",
+      "knn__n_neighbors": 10,
+      "knn__weights": "uniform",
+      "cv_rmse": 0.5927153866712733,
+      "seconds": 1.264031792001333,
+      "proyectado": 10.153635411423704
+    },
+    {
+      "clave": "rbf|C=3.416e+04|gamma=1.003|k=28|unif",
+      "C": 34159.50068591647,
+      "gamma": 1.003494190520531,
+      "kernel": "rbf",
+      "knn__n_neighbors": 28,
+      "knn__weights": "uniform",
+      "cv_rmse": 0.6618066338964832,
+      "seconds": 0.38840395800070837,
+      "proyectado": 10.89887083708722
+    },
+    {
+      "clave": "linear|C=27.12|gamma=-|k=19|unif",
+      "C": 27.116455919853777,
+      "kernel": "linear",
+      "knn__n_neighbors": 19,
+      "knn__weights": "uniform",
+      "cv_rmse": 0.520689711712414,
+      "seconds": 13.64119308401132,
+      "proyectado": 12.22991785743074
+    },
+    {
+      "clave": "rbf|C=5.831e+04|gamma=0.9191|k=3|unif",
+      "C": 58308.863783075045,
+      "gamma": 0.9190821536272645,
+      "kernel": "rbf",
+      "knn__n_neighbors": 3,
+      "knn__weights": "uniform",
+      "cv_rmse": 0.6587065884863881,
+      "seconds": 0.814437833003467,
+      "proyectado": 13.004185379348343
+    },
+    {
+      "clave": "rbf|C=1.014e+05|gamma=1.053|k=7|dist",
+      "C": 101445.66881340076,
+      "gamma": 1.052904084582266,
+      "kernel": "rbf",
+      "knn__n_neighbors": 7,
+      "knn__weights": "distance",
+      "cv_rmse": 0.681026372470002,
+      "seconds": 0.9824376670003403,
+      "proyectado": 15.150147812178677
+    },
+    {
+      "clave": "linear|C=45.19|gamma=-|k=8|dist",
+      "C": 45.18559484031389,
+      "kernel": "linear",
+      "knn__n_neighbors": 8,
+      "knn__weights": "distance",
+      "cv_rmse": 0.4916595038533,
+      "seconds": 26.583623000013176,
+      "proyectado": 19.413178812954566
+    },
+    {
+      "clave": "linear|C=54.03|gamma=-|k=17|unif",
+      "C": 54.025115450878126,
+      "kernel": "linear",
+      "knn__n_neighbors": 17,
+      "knn__weights": "uniform",
+      "cv_rmse": 0.5187085433706068,
+      "seconds": 26.22411587499664,
+      "proyectado": 22.819789522792302
+    },
+    {
+      "clave": "linear|C=331.2|gamma=-|k=9|unif",
+      "C": 331.2493450823467,
+      "kernel": "linear",
+      "knn__n_neighbors": 9,
+      "knn__weights": "uniform",
+      "cv_rmse": 0.5079937755387901,
+      "seconds": 151.6845154580078,
+      "proyectado": 117.74979817379788
+    },
+    {
+      "clave": "linear|C=383.8|gamma=-|k=3|unif",
+      "C": 383.8400220312376,
+      "kernel": "linear",
+      "knn__n_neighbors": 3,
+      "knn__weights": "uniform",
+      "cv_rmse": 0.501897519786097,
+      "seconds": 180.8666792079748,
+      "proyectado": 134.54523556771522
+    },
+    {
+      "clave": "linear|C=629.8|gamma=-|k=8|dist",
+      "C": 629.7823295913721,
+      "kernel": "linear",
+      "knn__n_neighbors": 8,
+      "knn__weights": "distance",
+      "cv_rmse": 0.49194844930799847,
+      "seconds": 281.59017545799725,
+      "proyectado": 210.5980861790911
+    },
+    {
+      "clave": "linear|C=717.4|gamma=-|k=24|unif",
+      "C": 717.3632997255093,
+      "kernel": "linear",
+      "knn__n_neighbors": 24,
+      "knn__weights": "uniform",
+      "cv_rmse": 0.5264127692010923,
+      "seconds": 316.8245848340157,
+      "proyectado": 236.9323303807755
+    },
+    {
+      "clave": "linear|C=759.5|gamma=-|k=11|dist",
+      "C": 759.5494758347379,
+      "kernel": "linear",
+      "knn__n_neighbors": 11,
+      "knn__weights": "distance",
+      "cv_rmse": 0.49286647636215725,
+      "seconds": 408.1444443340006,
+      "proyectado": 249.5058390108785
+    },
+    {
+      "clave": "linear|C=761.4|gamma=-|k=16|dist",
+      "C": 761.4316758498787,
+      "kernel": "linear",
+      "knn__n_neighbors": 16,
+      "knn__weights": "distance",
+      "cv_rmse": 0.49564992095124216,
+      "seconds": 373.16928349999944,
+      "proyectado": 250.06525052123894
+    },
+    {
+      "clave": "linear|C=1268|gamma=-|k=28|unif",
+      "C": 1267.7306883072517,
+      "kernel": "linear",
+      "knn__n_neighbors": 28,
+      "knn__weights": "uniform",
+      "cv_rmse": 0.5304398679838364,
+      "seconds": 583.6194762079976,
+      "proyectado": 396.63472853423906
+    },
+    {
+      "clave": "linear|C=3582|gamma=-|k=23|dist",
+      "C": 3582.05527804896,
+      "kernel": "linear",
+      "knn__n_neighbors": 23,
+      "knn__weights": "distance",
+      "cv_rmse": 0.4992193130008778,
+      "seconds": 1572.284550167009,
+      "proyectado": 1015.284944084124
+    }
+  ],
+  "saltados": [
+    {
+      "clave": "linear|C=4685|gamma=-|k=7|dist",
+      "C": 4684.769969422578,
+      "kernel": "linear",
+      "knn__n_neighbors": 7,
+      "knn__weights": "distance",
+      "proyectado": 1294.3669121454095
+    },
+    {
+      "clave": "linear|C=4880|gamma=-|k=11|dist",
+      "C": 4880.12141816351,
+      "kernel": "linear",
+      "knn__n_neighbors": 11,
+      "knn__weights": "distance",
+      "proyectado": 1343.11174777218
+    },
+    {
+      "clave": "linear|C=1.22e+04|gamma=-|k=17|unif",
+      "C": 12196.833268473754,
+      "kernel": "linear",
+      "knn__n_neighbors": 17,
+      "knn__weights": "uniform",
+      "proyectado": 3076.7289845845107
+    },
+    {
+      "clave": "linear|C=1.344e+04|gamma=-|k=27|dist",
+      "C": 13441.860100312215,
+      "kernel": "linear",
+      "knn__n_neighbors": 27,
+      "knn__weights": "distance",
+      "proyectado": 3359.59088175182
+    },
+    {
+      "clave": "linear|C=3.235e+04|gamma=-|k=9|unif",
+      "C": 32345.801622286308,
+      "kernel": "linear",
+      "knn__n_neighbors": 9,
+      "knn__weights": "uniform",
+      "proyectado": 7436.541653349688
+    },
+    {
+      "clave": "linear|C=3.395e+04|gamma=-|k=1|dist",
+      "C": 33946.15706493403,
+      "kernel": "linear",
+      "knn__n_neighbors": 1,
+      "knn__weights": "distance",
+      "proyectado": 7768.708730258811
+    },
+    {
+      "clave": "linear|C=3.425e+04|gamma=-|k=2|unif",
+      "C": 34246.751946327975,
+      "kernel": "linear",
+      "knn__n_neighbors": 2,
+      "knn__weights": "uniform",
+      "proyectado": 7830.931534074643
+    },
+    {
+      "clave": "linear|C=4.974e+04|gamma=-|k=14|dist",
+      "C": 49737.65352922646,
+      "kernel": "linear",
+      "knn__n_neighbors": 14,
+      "knn__weights": "distance",
+      "proyectado": 10976.503102416946
+    },
+    {
+      "clave": "linear|C=7.078e+04|gamma=-|k=15|unif",
+      "C": 70775.17729558474,
+      "kernel": "linear",
+      "knn__n_neighbors": 15,
+      "knn__weights": "uniform",
+      "proyectado": 15103.863990762484
+    },
+    {
+      "clave": "linear|C=1.452e+05|gamma=-|k=9|dist",
+      "C": 145228.2903205766,
+      "kernel": "linear",
+      "knn__n_neighbors": 9,
+      "knn__weights": "distance",
+      "proyectado": 28944.45824857476
+    }
+  ],
+  "mejor": {
+    "clave": "linear|C=45.19|gamma=-|k=8|dist",
+    "C": 45.18559484031389,
+    "kernel": "linear",
+    "knn__n_neighbors": 8,
+    "knn__weights": "distance",
+    "cv_rmse": 0.4916595038533,
+    "seconds": 26.583623000013176,
+    "proyectado": 19.413178812954566,
+    "test_rmse": 1.3262543766047346,
+    "test_rmse_recortado": 0.5123339750769154,
+    "rango_objetivo": [
+      0.175,
+      5.00001
+    ],
+    "pred_max": 72.4500924172108,
+    "fuera_de_rango": 54,
+    "n_test": 4128
+  },
+  "recorte": {
+    "motivo": "presupuesto de reloj de la busqueda completa",
+    "ejecutados": 40,
+    "sin_ejecutar": 10,
+    "reloj_medido_horas": 1.1446054322689048,
+    "reloj_proyectado_restante_horas": 24.20411271824757
+  }
+}

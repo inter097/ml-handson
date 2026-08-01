@@ -126,6 +126,70 @@ def guardar(estado: dict) -> None:
     os.replace(tmp, OUT)
 
 
+def cerrar(estado: dict, Xs, ys, X_test, y_test) -> dict:
+    """Elegir el mejor de lo medido y puntuarlo en prueba.
+
+    El recorte al rango del objetivo no es cosmético. El kernel lineal no está
+    acotado, así que una fila con un valor muy fuera del rango de entrenamiento
+    sale por donde quiera: dos distritos del test tienen `AveOccup` de 599.7 y
+    1243.3 contra un máximo de 21.33 en las 5,000 filas, y el modelo los predice
+    en 34 y 72 sobre un objetivo que topa en 5. Se guardan las dos cifras porque
+    la diferencia entre ellas es el resultado.
+    """
+    mejor = min(estado["resultados"], key=lambda r: r["cv_rmse"])
+    final = pipeline_de(mejor, Xs).fit(Xs, ys)
+    pred = final.predict(X_test)
+    lo, hi = float(np.min(ys)), float(np.max(ys))
+    rmse = float(np.sqrt(mean_squared_error(y_test, pred)))
+    rmse_rec = float(np.sqrt(mean_squared_error(y_test, np.clip(pred, lo, hi))))
+    estado["mejor"] = {**mejor, "test_rmse": rmse, "test_rmse_recortado": rmse_rec,
+                       "rango_objetivo": [lo, hi], "pred_max": float(pred.max()),
+                       "fuera_de_rango": int(((pred < lo) | (pred > hi)).sum()),
+                       "n_test": int(len(y_test))}
+    guardar(estado)
+    return estado["mejor"]
+
+
+def finalizar() -> None:
+    """Cerrar la búsqueda con lo medido, anotando lo que queda sin ejecutar.
+
+    El tope por candidato recorta uno a uno; esto recorta la búsqueda entera.
+    Los pendientes quedan con su proyección, que es el número por el que se
+    recortó, y no se pierde la diferencia entre «se midió y salió peor» y «no
+    se midió».
+    """
+    estado = json.loads(OUT.read_text())
+    X_train = pd.read_parquet(PROCESSED_DIR / "X_train.parquet")
+    X_test = pd.read_parquet(PROCESSED_DIR / "X_test.parquet")
+    y_train = pd.read_parquet(PROCESSED_DIR / "y_train.parquet").values.ravel()
+    y_test = pd.read_parquet(PROCESSED_DIR / "y_test.parquet").values.ravel()
+    Xs, ys = X_train.iloc[:N_TRAIN], y_train[:N_TRAIN]
+
+    pl, pr = modelo_de_costo()
+    hechos = {r["clave"] for r in estado["resultados"]}
+    pendientes = [c for c in sortear() if clave(c) not in hechos]
+    restante = sum(proyectar(c, pl, pr) for c in pendientes)
+    for cand in sorted(pendientes, key=lambda c: proyectar(c, pl, pr)):
+        estado["saltados"].append({"clave": clave(cand), **cand,
+                                   "proyectado": proyectar(cand, pl, pr)})
+    estado["recorte"] = {
+        "motivo": "presupuesto de reloj de la busqueda completa",
+        "ejecutados": len(estado["resultados"]),
+        "sin_ejecutar": len(pendientes),
+        "reloj_medido_horas": sum(r["seconds"] for r in estado["resultados"]) / 3600,
+        "reloj_proyectado_restante_horas": restante / 3600,
+    }
+    mejor = cerrar(estado, Xs, ys, X_test, y_test)
+    print(f"[prep] {len(estado['resultados'])} ejecutados en "
+          f"{estado['recorte']['reloj_medido_horas']:.2f} h de reloj medido")
+    print(f"[prep] {len(pendientes)} sin ejecutar, {restante / 3600:.1f} h proyectadas")
+    print(f"[prep] Mejor: {mejor['clave']} → CV {mejor['cv_rmse']:.4f} | "
+          f"Test {mejor['test_rmse']:.4f} crudo | {mejor['test_rmse_recortado']:.4f} "
+          f"recortado al rango del objetivo")
+    print(f"[prep] {mejor['fuera_de_rango']} de {mejor['n_test']} predicciones fuera "
+          f"de rango, la mayor {mejor['pred_max']:.1f}")
+
+
 def main(resume: bool, tope: float | None) -> None:
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)
     X_train = pd.read_parquet(PROCESSED_DIR / "X_train.parquet")
@@ -164,13 +228,9 @@ def main(resume: bool, tope: float | None) -> None:
         guardar(estado)
         print(f"RMSE={-scores.mean():.4f}  {secs:7.1f}s", flush=True)
 
-    mejor = min(estado["resultados"], key=lambda r: r["cv_rmse"])
-    final = pipeline_de(mejor, Xs).fit(Xs, ys)
-    rmse = float(np.sqrt(mean_squared_error(y_test, final.predict(X_test))))
-    estado["mejor"] = {**mejor, "test_rmse": rmse}
-    guardar(estado)
-    print(f"\n[prep] Mejor: {mejor['clave']} → CV {mejor['cv_rmse']:.4f} | Test {rmse:.4f}",
-          flush=True)
+    mejor = cerrar(estado, Xs, ys, X_test, y_test)
+    print(f"\n[prep] Mejor: {mejor['clave']} → CV {mejor['cv_rmse']:.4f} | "
+          f"Test {mejor['test_rmse']:.4f}", flush=True)
     if estado["saltados"]:
         print(f"[prep] {len(estado['saltados'])} sin ejecutar por el tope", flush=True)
 
@@ -179,9 +239,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="La búsqueda del ejercicio 5.")
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--resume", action="store_true")
+    parser.add_argument("--finalizar", action="store_true")
     parser.add_argument("--tope", type=float, default=None)
     args = parser.parse_args()
     if args.check:
         check(args.tope)
+    elif args.finalizar:
+        finalizar()
     else:
         main(args.resume, args.tope)
